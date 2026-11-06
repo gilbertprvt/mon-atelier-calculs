@@ -599,7 +599,7 @@ let saved = load('atelier-valeurs',{});
 let items = load('atelier-liste',[]);
 if(!Array.isArray(items)) items=[];
 let app = load('atelier-apparence',{skin:'atelier',size:'normal'});
-function applyApp(){ if(!STYLES.some(s=>s[0]===app.skin)) app.skin='atelier'; document.documentElement.dataset.skin=app.skin; document.documentElement.dataset.size=app.size||'normal'; }
+function applyApp(){ app={skin:'atelier',size:'normal'}; document.documentElement.dataset.skin=app.skin; document.documentElement.dataset.size=app.size||'normal'; }
 applyApp();
 
 /* ============ AFFICHAGE ============ */
@@ -619,14 +619,7 @@ golist.addEventListener('click', ()=>go('liste'));
 function showHome(){
   sub.textContent='Choisissez le type de travaux.';
   view.innerHTML=`<div class="grid">${FAMILLES.map(f=>
-    `<button class="tile" type="button" data-go="${f.id}">${ICONES[f.id]?`<svg viewBox="0 0 48 48" aria-hidden="true">${ICONES[f.id]}</svg>`:''}<b>${f.nom}</b></button>`).join('')}</div>
-    <section class="card" style="margin-top:28px"><h2>Apparence</h2><p class="hint">Touchez un style pour l’essayer. Votre choix est gardé.</p>
-      <div class="skins">${STYLES.map(([id,nom,c])=>`<button class="skin" type="button" data-skin="${id}" aria-pressed="${app.skin===id}">
-        <span class="sw">${c.map(x=>`<i style="background:${x}"></i>`).join('')}</span>${nom}${app.skin===id?' ✓':''}</button>`).join('')}</div>
-      <b>Taille du texte</b>
-      <div class="sizes">${TAILLES.map(([id,nom],i)=>`<button class="size" type="button" data-size="${id}" aria-pressed="${app.size===id}">
-        <b style="font-size:${1.1+i*0.35}rem">A</b><span>${nom}</span></button>`).join('')}</div>
-    </section>`;
+    `<button class="tile" type="button" data-go="${f.id}">${ICONES[f.id]?`<svg viewBox="0 0 48 48" aria-hidden="true">${ICONES[f.id]}</svg>`:''}<b>${f.nom}</b></button>`).join('')}</div>`;
 }
 view.addEventListener('click', e=>{
   const s=e.target.closest('button.skin'), z=e.target.closest('button.size');
