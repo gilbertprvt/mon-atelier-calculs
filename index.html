@@ -360,7 +360,7 @@ const TOOLS = {
     }},
 
   /* ---------- DIVERS ---------- */
-  electricite:{nom:'Câbles et gaines', aide:'Estimation des longueurs pour un circuit. Respectez la norme NF C 15-100 et faites contrôler par un professionnel.',
+  cables:{nom:'Câbles et gaines', aide:'Estimation des longueurs pour un circuit. Respectez la norme NF C 15-100 et faites contrôler par un professionnel.',
     champs:[S('type','Type de circuit',[['ecl','Éclairage (fil 1,5 mm², 8 points max)'],['p16','Prises 16 A (fil 1,5 mm², 8 prises max)'],['p20','Prises 20 A (fil 2,5 mm², 12 prises max)']],'p20'),
       N('n','Nombre de points (prises ou lumières)','',6),N('d','Distance du tableau au premier point','m',10),N('e','Distance moyenne entre deux points','m',3),N('m','Marge pour les montées et descentes','%',20)],
     calc(v){
@@ -430,7 +430,7 @@ const TOOLS = {
       return {big:`${fr(vb+vp,2)} m³ de béton`, detail:det,
         item:[`Fondations : ${sacs} sacs de ciment, ${fr(vt*680,0)} kg de sable, ${fr(vt*1175,0)} kg de gravier`, fil?`Armatures de semelle ${fr(v.fer)} m : ${arm}`:`Cages d’armature pour plots : ${arm}`]};
     }},
-  tableau:{nom:'Tableau électrique', aide:'Prépare la composition et le plan d’un tableau en monophasé, selon les règles courantes de la norme NF C 15-100. À faire vérifier par un électricien.',
+  tableau:{nom:'Tableau électrique (boîte à fusibles)', aide:'Prépare la composition et le plan d’un tableau en monophasé, selon les règles courantes de la norme NF C 15-100. À faire vérifier par un électricien.',
     champs:[N('surf','Surface du logement','m²',90),N('ecl','Nombre de points lumineux','',14),N('pr','Nombre de prises (hors appareils ci-dessous)','',24),
       S('prt','Circuits de prises',[['20','20 A, fil 2,5 mm² (12 prises max)'],['16','16 A, fil 1,5 mm² (8 prises max)']],'20'),
       N('chauf','Chauffage électrique, puissance totale (0 si aucun)','W',0),N('vr','Nombre de circuits de volets roulants','',0),
@@ -536,7 +536,7 @@ const FAMILLES = [
   {id:'murs',       nom:'Murs',       desc:'Peinture, papier peint, placo', outils:['papier-peint','peinture','placo','isolation','enduit']},
   {id:'sols',       nom:'Sols',       desc:'Carrelage, parquet, terrasse', outils:['carrelage','parquet','plinthes','terrasse']},
   {id:'maconnerie', nom:'Maçonnerie', desc:'Béton, fondations, parpaings', outils:['beton','fondations','mortier','parpaings','pente']},
-  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:['electricite','tableau']},
+  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:['cables','tableau']},
   {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, volumes',    outils:['unites','surfaces','volumes']},
 ];
 
@@ -562,7 +562,7 @@ const listCount = () => { golist.textContent = `Ma liste (${items.length})`; };
 
 function route(){
   const h=location.hash.slice(1);
-  if(TOOLS[h]) showTool(h); else if(FAMILLES.some(f=>f.id===h)) showFamille(h); else showHome();
+  if(FAMILLES.some(f=>f.id===h)) showFamille(h); else if(TOOLS[h]) showTool(h); else showHome();
   window.scrollTo(0,0); listCount();
 }
 window.addEventListener('hashchange', route);
