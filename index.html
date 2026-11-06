@@ -144,6 +144,10 @@ input,select{font:inherit;font-size:1.2rem;padding:11px 13px;border:2px solid va
 .tab-g ul,.tab-notes ul{margin:4px 0 0;padding-left:22px;font-size:.95rem}
 .tab-g .u{color:var(--muted);font-size:.9rem}
 .tab-notes p{margin:8px 0 0}
+.phases{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.phases div{display:grid;grid-template-columns:2.2em minmax(0,1fr) 4em;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.phases i{display:block;height:16px;border-radius:3px;background:var(--accent);min-width:2px}
+.phases b{text-align:right}
 footer{color:var(--muted);font-size:.9rem}
 </style>
 </head>
@@ -430,19 +434,23 @@ const TOOLS = {
       return {big:`${fr(vb+vp,2)} m³ de béton`, detail:det,
         item:[`Fondations : ${sacs} sacs de ciment, ${fr(vt*680,0)} kg de sable, ${fr(vt*1175,0)} kg de gravier`, fil?`Armatures de semelle ${fr(v.fer)} m : ${arm}`:`Cages d’armature pour plots : ${arm}`]};
     }},
-  tableau:{nom:'Tableau électrique (boîte à fusibles)', aide:'Prépare la composition et le plan d’un tableau en monophasé, selon les règles courantes de la norme NF C 15-100. À faire vérifier par un électricien.',
-    champs:[N('surf','Surface du logement','m²',90),N('ecl','Nombre de points lumineux','',14),N('pr','Nombre de prises (hors appareils ci-dessous)','',24),
+  tableau:{nom:'Tableau électrique (boîte à fusibles)', aide:'Prépare la composition et le plan d’un tableau en monophasé ou en triphasé, selon les règles courantes de la norme NF C 15-100. À faire vérifier par un électricien.',
+    champs:[S('res','Type de branchement',[['mono','Monophasé (2 fils : phase et neutre)'],['tri','Triphasé (4 fils : 3 phases et neutre)']],'mono'),
+      N('surf','Surface du logement','m²',90),N('ecl','Nombre de points lumineux','',14),N('pr','Nombre de prises (hors appareils ci-dessous)','',24),
       S('prt','Circuits de prises',[['20','20 A, fil 2,5 mm² (12 prises max)'],['16','16 A, fil 1,5 mm² (8 prises max)']],'20'),
       N('chauf','Chauffage électrique, puissance totale (0 si aucun)','W',0),N('vr','Nombre de circuits de volets roulants','',0),
       S('rang','Taille des rangées du coffret',[['13','13 modules'],['18','18 modules']],'13'),
-      C('plaque','Plaque de cuisson',true),C('four','Four',true),C('ll','Lave-linge',true),C('lv','Lave-vaisselle',true),
+      C('plaque','Plaque de cuisson',true),C('pltri','Plaque de cuisson branchée en triphasé',true,{k:'res',v:['tri']}),
+      C('four','Four',true),C('ll','Lave-linge',true),C('lv','Lave-vaisselle',true),
       C('sl','Sèche-linge',false),C('cong','Congélateur',false),C('ce','Chauffe-eau électrique (avec contacteur heures creuses)',true),
       C('vmc','VMC',true),C('ve','Prise pour voiture électrique',false),C('pf','Parafoudre',true)],
     calc(v){
-      const cir=[], add=(nom,cal,sec,k,o={})=>cir.push({nom,cal,sec,k,w:cal*(o.plein?1:0.5),A:!!o.A,seul:!!o.seul,ct:!!o.ct});
+      const tri=v.res==='tri', PH=['L1','L2','L3'];
+      const cir=[], add=(nom,cal,sec,k,o={})=>cir.push({nom,cal,sec,k,w:cal*(o.plein?1:0.5),A:!!o.A,seul:!!o.seul,ct:!!o.ct,t3:!!o.t3});
       const ne=up(Math.max(0,v.ecl)/8); for(let i=0;i<ne;i++) add(`Éclairage ${i+1}`,16,'1,5','ecl');
       const pm=v.prt==='20'?12:8, np=up(Math.max(0,v.pr)/pm); for(let i=0;i<np;i++) add(`Prises ${i+1}`,+v.prt,v.prt==='20'?'2,5':'1,5','pr');
-      if(v.plaque) add('Plaque de cuisson',32,'6','pl',{A:true});
+      const pl3 = tri && v.plaque && v.pltri;
+      if(v.plaque){ if(pl3) add('Plaque de cuisson',20,'2,5','pl',{A:true,t3:true}); else add('Plaque de cuisson',32,'6','pl',{A:true}); }
       if(v.four) add('Four',20,'2,5','four');
       if(v.ll) add('Lave-linge',20,'2,5','ll',{A:true});
       if(v.lv) add('Lave-vaisselle',20,'2,5','lv');
@@ -455,33 +463,64 @@ const TOOLS = {
       if(v.ve) add('Voiture électrique',20,'2,5','ve',{plein:true,seul:true,A:true});
       if(!cir.length) return {big:'—', detail:['Indiquez au moins un circuit.']};
 
-      // Différentiels : minimum selon la surface, 8 circuits maximum chacun, 63 A maximum
+      // Différentiels : minimum selon la surface, 8 circuits maximum chacun, 63 A maximum.
+      // En triphasé, chaque différentiel bipolaire est raccordé sur une phase ; celui de la plaque triphasée est tétrapolaire.
+      const ph={L1:0,L2:0,L3:0}, minPh=()=>PH.reduce((b,p)=>ph[p]<ph[b]?p:b,'L1');
       const nAC = v.surf<=35 ? 1 : v.surf<=100 ? 2 : 3;
-      const G=[]; for(let i=0;i<nAC;i++) G.push({t:'AC',c:[],load:0}); G.push({t:'A',c:[],load:0});
+      const G=[]; let rr=0;
+      const newG=(t,o={})=>{ const g={t,c:[],load:0,p4:!!o.p4,seul:!!o.seul,ph:null}; if(tri && !g.p4) g.ph=PH[rr++%3]; G.push(g); return g; };
+      for(let i=0;i<nAC;i++) newG('AC'); newG('A',{p4:pl3});
+      const score=(g,c)=>g.load+12*g.c.filter(y=>y.k===c.k).length+(tri?0.8*(g.p4?ph[minPh()]:ph[g.ph]):0);
+      const put1=(g,c)=>{ g.c.push(c); g.load+=c.w;
+        if(!tri) return;
+        if(c.t3){ PH.forEach(p=>ph[p]+=c.w/3); c.ph='L1 L2 L3'; }
+        else { c.ph = g.p4 ? minPh() : g.ph; ph[c.ph]+=c.w; } };
       const place=(c)=>{
-        if(c.seul){ G.push({t:'A',c:[c],load:c.w,seul:true}); return; }
+        if(c.seul){ const g=newG('A',{seul:true}); put1(g,c); return; }
+        if(c.t3){ put1(G.find(g=>g.p4),c); return; }
         const ok=G.filter(g=>!g.seul && (!c.A || g.t==='A') && g.c.length<8 && g.load+c.w<=63);
-        let g;
-        if(ok.length) g=ok.reduce((b,x)=>{ const sx=x.load+12*x.c.filter(y=>y.k===c.k).length, sb=b.load+12*b.c.filter(y=>y.k===c.k).length; return sx<sb?x:b; });
-        else { g={t:c.A?'A':'AC',c:[],load:0}; G.push(g); }
-        g.c.push(c); g.load+=c.w;
+        const g = ok.length ? ok.reduce((b,x)=>score(x,c)<score(b,c)?x:b) : newG(c.A?'A':'AC');
+        put1(g,c);
       };
-      cir.filter(c=>c.A||c.seul).forEach(place);
+      cir.filter(c=>c.t3).forEach(place);
+      cir.filter(c=>(c.A||c.seul)&&!c.t3).forEach(place);
       cir.filter(c=>!c.A&&!c.seul).sort((a,b)=>b.w-a.w).forEach(place);
-      G.forEach((g,i)=>{ g.cal = (v.surf<=35 && g.t==='AC' && g.load<=25) ? 25 : g.load<=40 ? 40 : 63; });
+      // Triphasé : on cherche la répartition qui charge le plus pareil possible les trois phases
+      if(tri){
+        const calc3=()=>{ PH.forEach(p=>ph[p]=0); G.forEach(g=>g.c.forEach(c=>{ if(c.t3) PH.forEach(p=>ph[p]+=c.w/3); else ph[g.p4?c.ph:g.ph]+=c.w; })); const x=PH.map(p=>ph[p]); return Math.max(...x)-Math.min(...x); };
+        const bip=G.filter(g=>!g.p4);
+        const bestPhases=()=>{ let best=calc3(), keep=bip.map(g=>g.ph);
+          for(let m=0;m<3**bip.length && m<20000;m++){ let x=m; bip.forEach(g=>{ g.ph=PH[x%3]; x=Math.floor(x/3); }); const e=calc3(); if(e<best-1e-9){ best=e; keep=bip.map(g=>g.ph); } }
+          bip.forEach((g,i)=>g.ph=keep[i]); return calc3(); };
+        let cur=bestPhases();
+        for(let it=0; it<60; it++){
+          let best=null;
+          G.forEach(g1=>{ if(g1.seul) return; g1.c.forEach(c=>{ if(c.t3) return;
+            if(g1.p4) PH.forEach(p=>{ if(p===c.ph) return; const o=c.ph; c.ph=p; const e=calc3(); c.ph=o; if(e<cur-0.5 && (!best||e<best.e)) best={e,f:()=>{c.ph=p;}}; });
+            G.forEach(g2=>{ if(g2===g1||g2.seul||(c.A&&g2.t!=='A')||g2.c.length>=8||g2.load+c.w>63||g2.c.some(y=>y.k===c.k)) return;
+              const o=c.ph; g1.c.splice(g1.c.indexOf(c),1); g2.c.push(c); if(g2.p4) c.ph=minPh();
+              const e=calc3(); g2.c.pop(); g1.c.push(c); c.ph=o;
+              if(e<cur-0.5 && (!best||e<best.e)) best={e,f:()=>{ g1.c.splice(g1.c.indexOf(c),1); g1.load-=c.w; g2.c.push(c); g2.load+=c.w; if(g2.p4){ calc3(); c.ph=minPh(); } }}; });
+          }); });
+          if(!best) break; best.f(); cur=bestPhases();
+        }
+        calc3(); G.forEach(g=>g.c.forEach(c=>{ if(!c.t3 && !g.p4) c.ph=g.ph; }));
+      }
+      G.forEach(g=>{ g.cal = (v.surf<=35 && g.t==='AC' && g.load<=25) ? 25 : g.load<=40 ? 40 : 63; });
       const order=[...G.filter(g=>g.t==='AC'),...G.filter(g=>g.t==='A'&&!g.seul),...G.filter(g=>g.seul)];
 
-      const court=n=>n.replace('Plaque de cuisson','Plaque').replace('Lave-vaisselle','L-vaisselle').replace('Lave-linge','L-linge').replace('Sèche-linge','S-linge').replace('Voiture électrique','Voiture').replace('Volets roulants','Volets').replace('Éclairage','Éclair.').replace('Chauffage','Chauff.').replace('Congélateur','Congél.');
       // Plan du coffret : 20 % de place libre gardée sur chaque rangée
+      const court=n=>n.replace('Plaque de cuisson','Plaque').replace('Lave-vaisselle','L-vaisselle').replace('Lave-linge','L-linge').replace('Sèche-linge','S-linge').replace('Voiture électrique','Voiture').replace('Volets roulants','Volets').replace('Éclairage','Éclair.').replace('Chauffage','Chauff.').replace('Congélateur','Congél.');
       const per=+v.rang, cap=Math.floor(per*0.8), rows=[[]]; let used=0;
       const room=()=>cap-rows[rows.length-1].reduce((s,x)=>s+x.m,0);
       const put=it=>{ if(room()<it.m) rows.push([]); rows[rows.length-1].push(it); used+=it.m; };
-      if(v.pf){ put({cl:'m-pf',m:2,lab:'Parafoudre'}); put({cl:'m-dj',m:1,lab:'Disj. PF'}); }
+      if(v.pf){ put({cl:'m-pf',m:tri?4:2,lab:tri?'Parafoudre tri':'Parafoudre'}); put({cl:'m-dj',m:1,lab:'Disj. PF'}); }
       order.forEach((g,i)=>{
-        const items=[{cl:'m-id',m:2,lab:`Diff. ${i+1}<br>${g.cal}A type ${g.t}`}];
-        g.c.forEach(c=>{ items.push({cl:'m-dj',m:1,lab:`${c.cal}A ${court(c.nom)}`}); if(c.ct) items.push({cl:'m-ct',m:1,lab:'Contact. HC'}); });
+        const items=[{cl:'m-id',m:g.p4?4:2,lab:`Diff. ${i+1}<br>${g.cal}A type ${g.t}${tri?(g.p4?' · tétra':' · '+g.ph):''}`}];
+        g.c.forEach(c=>{ items.push({cl:'m-dj',m:c.t3?4:1,lab:`${c.cal}A ${court(c.nom)}${c.t3?' tri':''}`}); if(c.ct) items.push({cl:'m-ct',m:1,lab:'Contact. HC'}); });
         const size=items.reduce((s,x)=>s+x.m,0), r=rows[rows.length-1];
-        if(r.length && room()<size) rows.push([]);
+        if(r.some(x=>x.grp) || (r.length && room()<size)) rows.push([]);
+        items.forEach(x=>x.grp=true);
         items.forEach(put);
       });
       const total=rows.length*per, free=total-used;
@@ -491,32 +530,41 @@ const TOOLS = {
           r.map(x=>`<div class="mod ${x.cl}" style="grid-column:span ${x.m}"><span>${x.lab}</span></div>`).join('')}${
           '<div class="mod m-free"></div>'.repeat(per-n)}</div></figure>`;
       }).join('');
-      const leg=order.map((g,i)=>`<div class="tab-g"><b>Différentiel ${i+1} : ${g.cal} A, type ${g.t}, 30 mA</b>
+      const pose=g=> !tri ? '' : g.p4 ? ', tétrapolaire, sur les 3 phases' : `, bipolaire, raccordé sur la phase ${g.ph}`;
+      const leg=order.map((g,i)=>`<div class="tab-g"><b>Différentiel ${i+1} : ${g.cal} A, type ${g.t}, 30 mA${pose(g)}</b>
         <span class="u"> · ${g.c.length} circuit${g.c.length>1?'s':''} · intensité de calcul ≈ ${fr(g.load,0)} A</span>
-        <ul>${g.c.map(c=>`<li>${c.nom} : disjoncteur ${c.cal} A, fil ${c.sec} mm²${c.ct?' (+ contacteur heures creuses)':''}</li>`).join('')||'<li>Aucun circuit pour l’instant (réserve)</li>'}</ul></div>`).join('');
+        <ul>${g.c.map(c=>`<li>${c.nom} : disjoncteur ${c.cal} A${c.t3?' tétrapolaire, câble 5G2,5 (3 phases + neutre + terre)':`, fil ${c.sec} mm²`}${c.ct?' (+ contacteur heures creuses)':''}${tri&&g.p4&&!c.t3?` · phase ${c.ph}`:''}</li>`).join('')||'<li>Aucun circuit pour l’instant (réserve)</li>'}</ul></div>`).join('');
+      let equil='';
+      if(tri){
+        const vals=PH.map(p=>ph[p]), mx=Math.max(...vals), mn=Math.min(...vals), moy=vals.reduce((a,b)=>a+b,0)/3;
+        equil=`<div class="tab-g"><b>Équilibrage des phases</b><div class="phases">${PH.map(p=>`<div><span>${p}</span><i style="width:${mx?ph[p]/mx*100:0}%"></i><b>${fr(ph[p],0)} A</b></div>`).join('')}</div>
+          <span class="u">Écart entre la phase la plus chargée et la moins chargée : ${fr(mx-mn,0)} A${moy&&(mx-mn)>moy*0.3?' (à améliorer en déplaçant un circuit)':' (bon équilibre)'}</span></div>`;
+      }
       const notes=[
-        'En amont du tableau : le disjoncteur de branchement, installé par le fournisseur d’électricité.',
+        tri ? 'En amont du tableau : le disjoncteur de branchement tétrapolaire, installé par le fournisseur d’électricité.' : 'En amont du tableau : le disjoncteur de branchement, installé par le fournisseur d’électricité.',
+        tri ? 'Chaque différentiel bipolaire est alimenté par une seule phase et le neutre. Les circuits sont répartis pour que les trois phases soient chargées à peu près pareil.' : null,
         'Chaque différentiel protège 8 circuits au maximum. Plaque de cuisson, lave-linge et voiture électrique sont sur un différentiel de type A.',
         'Intensité de calcul d’un différentiel : chauffage, chauffe-eau et voiture comptés en entier, les autres circuits pour moitié. Au-delà de 40 A, on prend un 63 A.',
-        `Au moins 20 % de place libre est gardée sur chaque rangée pour les ajouts futurs.`,
-        'Prévoir un peigne d’alimentation par rangée et un bornier de terre.',
+        pl3 ? 'Plaque en triphasé : disjoncteur 20 A tétrapolaire et câble 5G2,5, à condition que la plaque le permette (voir sa notice).' : null,
+        'Au moins 20 % de place libre est gardée sur chaque rangée pour les ajouts futurs. La largeur des appareils varie un peu selon les marques.',
+        tri ? 'Prévoir des peignes adaptés au triphasé et un bornier de terre.' : 'Prévoir un peigne d’alimentation par rangée et un bornier de terre.',
         v.pf ? 'Parafoudre : obligatoire dans certaines communes exposées à la foudre, conseillé partout.' : 'Pensez au parafoudre : obligatoire dans certaines communes exposées à la foudre.',
         v.chauf>0 ? 'Chauffage : un circuit de 20 A par tranche de 4 500 W au maximum.' : null,
         'Pompe à chaleur ou climatisation : prévoir un différentiel de type F, selon la notice de l’appareil.',
       ].filter(Boolean);
       const extra=`<div class="tab">${plan}<div class="legend-mods"><span><i class="mod m-id"></i>Différentiel</span><span><i class="mod m-dj"></i>Disjoncteur</span><span><i class="mod m-ct"></i>Contacteur</span><span><i class="mod m-pf"></i>Parafoudre</span><span><i class="mod m-free"></i>Libre</span></div>
-        ${leg}<div class="tab-notes"><b>À savoir</b><ul>${notes.map(n=>`<li>${n}</li>`).join('')}</ul>
+        ${equil}${leg}<div class="tab-notes"><b>À savoir</b><ul>${notes.map(n=>`<li>${n}</li>`).join('')}</ul>
         <p class="warn">Plan indicatif. Faites vérifier l’installation par un électricien qualifié, et par le Consuel pour une installation neuve.</p></div></div>`;
       const cnt=(arr,key)=>arr.reduce((m,x)=>(m[key(x)]=(m[key(x)]||0)+1,m),{});
-      const ids=cnt(order,g=>`${g.cal} A type ${g.t}`), djs=cnt(cir,c=>c.cal);
+      const ids=cnt(order,g=>`${g.cal} A type ${g.t}${tri?(g.p4?' tétrapolaire':' bipolaire'):''}`), djs=cnt(cir,c=>`${c.cal} A${c.t3?' tétrapolaire':''}`);
       const items=[`Coffret ${rows.length} rangée${rows.length>1?'s':''} de ${per} modules`,
         ...Object.entries(ids).map(([k,n])=>`Interrupteur différentiel 30 mA ${k} : ${n}`),
-        ...Object.entries(djs).sort((a,b)=>a[0]-b[0]).map(([k,n])=>`Disjoncteur ${k} A : ${n}`),
-        ...(v.ce?['Contacteur heures creuses : 1']:[]), ...(v.pf?['Parafoudre avec son disjoncteur : 1']:[]),
+        ...Object.entries(djs).sort((a,b)=>parseFloat(a[0])-parseFloat(b[0])).map(([k,n])=>`Disjoncteur ${k} : ${n}`),
+        ...(v.ce?['Contacteur heures creuses : 1']:[]), ...(v.pf?[`Parafoudre ${tri?'triphasé ':''}avec son disjoncteur : 1`]:[]),
         `Peignes d’alimentation : ${rows.length}`];
-      return {big:`${rows.length} rangée${rows.length>1?'s':''} de ${per} modules`,
-        detail:[`${order.length} interrupteurs différentiels · ${cir.length} disjoncteurs`,`${free} modules libres sur ${total} (${fr(free/total*100,0)} %)`],
-        extra, item:items};
+      const det=[`${order.length} interrupteurs différentiels · ${cir.length} disjoncteurs`,`${free} modules libres sur ${total} (${fr(free/total*100,0)} %)`];
+      if(tri) det.push(`Phases : L1 ≈ ${fr(ph.L1,0)} A · L2 ≈ ${fr(ph.L2,0)} A · L3 ≈ ${fr(ph.L3,0)} A`);
+      return {big:`${rows.length} rangée${rows.length>1?'s':''} de ${per} modules`, detail:det, extra, item:items};
     }},
   liste:{nom:'Liste de courses', aide:'Les matériaux que vous avez ajoutés depuis les calculateurs.', special:'liste'},
 };
