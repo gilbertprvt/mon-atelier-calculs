@@ -1,7 +1,7 @@
 {
   "name": "Mon Atelier Calculs",
   "short_name": "Atelier",
-  "description": "Calculs de bricolage : bois, murs, sols, maçonnerie et divers.",
+  "description": "Calculs de bricolage : bois, murs, sols, maçonnerie, électricité et conversions.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",

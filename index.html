@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mon Atelier Calculs</title>
 <meta name="theme-color" content="#f2c230">
-<meta name="description" content="Calculs de bricolage : bois, murs, sols, maçonnerie et divers.">
+<meta name="description" content="Calculs de bricolage : bois, murs, sols, maçonnerie, électricité et conversions.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icone-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -126,6 +126,24 @@ input,select{font:inherit;font-size:1.2rem;padding:11px 13px;border:2px solid va
 .list li:last-child{border-bottom:0}
 .list li b{min-width:0}
 .empty{color:var(--muted)}
+[hidden]{display:none!important}
+.tab{display:flex;flex-direction:column;gap:14px}
+.tab figure{margin:0;display:flex;flex-direction:column;gap:4px}
+.tab figcaption{font-weight:700;font-size:.9rem}
+.tab-row{display:grid;gap:2px;padding:6px;border:2px solid var(--ink);border-radius:6px;background:var(--panel)}
+.mod{height:118px;border-radius:3px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:.66rem;font-weight:700;line-height:1.1;min-width:0}
+.mod span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap}
+.m-id{background:var(--ink);color:var(--bg)}
+.m-dj{background:var(--piece);border:1.5px solid var(--piece-line);color:var(--ink)}
+.m-ct{background:var(--ruler);color:var(--ruler-ink)}
+.m-pf{background:var(--warn);color:var(--surface)}
+.m-free{border:1.5px dashed var(--line)}
+.legend-mods{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem}
+.legend-mods span{display:flex;align-items:center;gap:6px}
+.legend-mods i{display:inline-block;width:16px;height:16px}
+.tab-g ul,.tab-notes ul{margin:4px 0 0;padding-left:22px;font-size:.95rem}
+.tab-g .u{color:var(--muted);font-size:.9rem}
+.tab-notes p{margin:8px 0 0}
 footer{color:var(--muted);font-size:.9rem}
 </style>
 </head>
@@ -145,9 +163,10 @@ footer{color:var(--muted);font-size:.9rem}
 /* ============ OUTILS DE CALCUL ============ */
 const fr = (x, d=1) => (isFinite(x)?x:0).toLocaleString('fr-FR', {maximumFractionDigits:d});
 const up = x => Math.ceil(x - 1e-9);
-const N = (id, lab, u, def) => ({type:'num', id, lab, u, def});
-const S = (id, lab, options, def) => ({type:'sel', id, lab, options, def});
-const C = (id, lab, def) => ({type:'chk', id, lab, def});
+/* le dernier paramètre « si » affiche le champ seulement pour certains choix : {k:'champ', v:['valeur', …]} */
+const N = (id, lab, u, def, si) => ({type:'num', id, lab, u, def, si});
+const S = (id, lab, options, def, si) => ({type:'sel', id, lab, options, def, si});
+const C = (id, lab, def, si) => ({type:'chk', id, lab, def, si});
 const P = (id, cols, def) => ({type:'pcs', id, cols, def});
 
 const UNITS = [
@@ -341,7 +360,7 @@ const TOOLS = {
     }},
 
   /* ---------- DIVERS ---------- */
-  electricite:{nom:'Électricité', aide:'Estimation des longueurs pour un circuit. Respectez la norme NF C 15-100 et faites contrôler par un professionnel.',
+  electricite:{nom:'Câbles et gaines', aide:'Estimation des longueurs pour un circuit. Respectez la norme NF C 15-100 et faites contrôler par un professionnel.',
     champs:[S('type','Type de circuit',[['ecl','Éclairage (fil 1,5 mm², 8 points max)'],['p16','Prises 16 A (fil 1,5 mm², 8 prises max)'],['p20','Prises 20 A (fil 2,5 mm², 12 prises max)']],'p20'),
       N('n','Nombre de points (prises ou lumières)','',6),N('d','Distance du tableau au premier point','m',10),N('e','Distance moyenne entre deux points','m',3),N('m','Marge pour les montées et descentes','%',20)],
     calc(v){
@@ -350,13 +369,154 @@ const TOOLS = {
       return {big:`${fr(g,0)} m de gaine`, detail:[`${c} circuit(s) nécessaire(s)`,`Fil ${sec} mm² : ${fr(g,0)} m de chaque couleur (phase, neutre, terre), soit ${cour} couronne(s) de 100 m par couleur`],
         item:[`Gaine : ${fr(g,0)} m`,`Fil ${sec} mm² : ${cour} couronne(s) de 100 m × 3 couleurs`]};
     }},
-  conversions:{nom:'Conversions', aide:'Entrez une valeur et son unité : toutes les équivalences s’affichent.',
+  unites:{nom:'Conversions d’unités', aide:'Entrez une valeur et son unité : toutes les équivalences s’affichent.',
     champs:[N('x','Valeur','',1),S('u','Unité',UNITS,'m')],
     calc(v){
       const fam=UNITS.find(f=>f.u.some(u=>u[0]===v.u)), base=v.x*fam.u.find(u=>u[0]===v.u)[2];
       const lines=fam.u.filter(u=>u[0]!==v.u).map(u=>`${fr(base/u[2],4)} ${u[1]}`);
       const me=fam.u.find(u=>u[0]===v.u);
       return {big:`${fr(v.x,4)} ${me[1]}`, detail:lines.map(l=>'= '+l)};
+    }},
+  surfaces:{nom:'Surfaces', aide:'Choisissez la forme et l’unité de vos mesures, puis entrez les dimensions.',
+    champs:[S('f','Forme',[['rect','Rectangle ou carré'],['tri','Triangle'],['disque','Cercle (disque)'],['trap','Trapèze'],['L','Pièce en L (deux rectangles)']],'rect'),
+      S('u','Unité des mesures',[['m','mètres'],['cm','centimètres'],['mm','millimètres']],'m'),
+      N('rL','Longueur','',4,{k:'f',v:['rect']}),N('rl','Largeur','',3,{k:'f',v:['rect']}),
+      N('tb','Base','',4,{k:'f',v:['tri']}),N('th','Hauteur (perpendiculaire à la base)','',2,{k:'f',v:['tri']}),
+      N('dd','Diamètre','',2,{k:'f',v:['disque']}),
+      N('ga','Grande base','',5,{k:'f',v:['trap']}),N('pb','Petite base','',3,{k:'f',v:['trap']}),N('zh','Hauteur','',2,{k:'f',v:['trap']}),
+      N('L1','Partie 1 : longueur','',5,{k:'f',v:['L']}),N('l1','Partie 1 : largeur','',3,{k:'f',v:['L']}),
+      N('L2','Partie 2 : longueur','',2,{k:'f',v:['L']}),N('l2','Partie 2 : largeur','',2,{k:'f',v:['L']})],
+    calc(v){
+      const k={m:1,cm:0.01,mm:0.001}[v.u]; let s=0, per=null;
+      if(v.f==='rect'){ s=v.rL*v.rl*k*k; per=2*(v.rL+v.rl)*k; }
+      if(v.f==='tri') s=v.tb*v.th/2*k*k;
+      if(v.f==='disque'){ s=Math.PI*(v.dd/2)**2*k*k; per=Math.PI*v.dd*k; }
+      if(v.f==='trap') s=(v.ga+v.pb)/2*v.zh*k*k;
+      if(v.f==='L') s=(v.L1*v.l1+v.L2*v.l2)*k*k;
+      const det=[`Soit ${fr(s*1e4,0)} cm²`];
+      if(per!==null) det.push(`Périmètre : ${fr(per,2)} m`);
+      return {big:`${fr(s,2)} m²`, detail:det};
+    }},
+  volumes:{nom:'Volumes', aide:'Choisissez la forme et l’unité de vos mesures, puis entrez les dimensions.',
+    champs:[S('f','Forme',[['pave','Pavé (dalle, bac, tranchée, pièce)'],['cyl','Cylindre (poteau, puits, cuve)'],['cone','Cône (tas de sable ou de gravier)']],'pave'),
+      S('u','Unité des mesures',[['m','mètres'],['cm','centimètres'],['mm','millimètres']],'m'),
+      N('pL','Longueur','',3,{k:'f',v:['pave']}),N('pl','Largeur','',2,{k:'f',v:['pave']}),N('ph','Hauteur ou épaisseur','',0.5,{k:'f',v:['pave']}),
+      N('cd','Diamètre','',0.4,{k:'f',v:['cyl']}),N('ch','Hauteur','',2,{k:'f',v:['cyl']}),
+      N('od','Diamètre au sol','',2,{k:'f',v:['cone']}),N('oh','Hauteur du tas','',0.8,{k:'f',v:['cone']})],
+    calc(v){
+      const k={m:1,cm:0.01,mm:0.001}[v.u]; let vol=0;
+      if(v.f==='pave') vol=v.pL*v.pl*v.ph*k**3;
+      if(v.f==='cyl') vol=Math.PI*(v.cd/2)**2*v.ch*k**3;
+      if(v.f==='cone') vol=Math.PI*(v.od/2)**2*v.oh/3*k**3;
+      return {big:`${fr(vol,3)} m³`, detail:[`Soit ${fr(vol*1000,0)} litres`,`Rempli de béton, cela pèserait environ ${fr(vol*2.4,2)} tonnes`]};
+    }},
+  fondations:{nom:'Fondations', aide:'Semelle filante sous un mur, ou plots pour un abri, une terrasse ou un poteau. Profondeur hors gel : 50 à 90 cm selon la région.',
+    champs:[S('t','Type de fondation',[['fil','Semelle filante (sous les murs)'],['plot','Plots (semelles isolées)']],'fil'),
+      N('L','Longueur totale des semelles','m',30,{k:'t',v:['fil']}),N('l','Largeur de la semelle','cm',50,{k:'t',v:['fil']}),
+      N('n','Nombre de plots','',6,{k:'t',v:['plot']}),N('c','Côté d’un plot (plot carré)','cm',60,{k:'t',v:['plot']}),
+      N('h','Hauteur de béton','cm',35),N('p','Profondeur de la fouille','cm',80),N('pr','Béton de propreté au fond','cm',5),
+      N('dos','Dosage en ciment','kg par m³',350),N('sac','Poids d’un sac de ciment','kg',35),
+      N('fer','Longueur d’une armature de semelle','m',6,{k:'t',v:['fil']})],
+    calc(v){
+      const fil=v.t==='fil', A=fil ? v.L*v.l/100 : v.n*(v.c/100)**2;
+      const vb=A*v.h/100, vp=A*v.pr/100, vf=A*v.p/100, cim=vb*v.dos+vp*150, sacs=v.sac?up(cim/v.sac):0, vt=vb+vp;
+      const arm = fil ? (v.fer>0.5?up(v.L/(v.fer-0.5)):0) : v.n;
+      const det=[`Béton de fondation : ${fr(vb,2)} m³ · béton de propreté : ${fr(vp,2)} m³`,
+        `Ciment ≈ ${fr(cim,0)} kg, soit ${sacs} sacs · sable ≈ ${fr(vt*680,0)} kg · gravier ≈ ${fr(vt*1175,0)} kg · eau ≈ ${fr(vt*175,0)} litres`,
+        `Terre à creuser : ${fr(vf,2)} m³, soit environ ${fr(vf*1.25,2)} m³ à évacuer (la terre gonfle une fois sortie)`,
+        fil ? `Ferraillage : ${arm} armatures de ${fr(v.fer)} m (50 cm de recouvrement entre deux), plus une équerre par angle`
+            : `Ferraillage : ${arm} cage(s) ou treillis, un par plot`];
+      if(v.p < v.h+v.pr) det.push({warn:'La fouille est moins profonde que le béton prévu : vérifiez la profondeur.'});
+      return {big:`${fr(vb+vp,2)} m³ de béton`, detail:det,
+        item:[`Fondations : ${sacs} sacs de ciment, ${fr(vt*680,0)} kg de sable, ${fr(vt*1175,0)} kg de gravier`, fil?`Armatures de semelle ${fr(v.fer)} m : ${arm}`:`Cages d’armature pour plots : ${arm}`]};
+    }},
+  tableau:{nom:'Tableau électrique', aide:'Prépare la composition et le plan d’un tableau en monophasé, selon les règles courantes de la norme NF C 15-100. À faire vérifier par un électricien.',
+    champs:[N('surf','Surface du logement','m²',90),N('ecl','Nombre de points lumineux','',14),N('pr','Nombre de prises (hors appareils ci-dessous)','',24),
+      S('prt','Circuits de prises',[['20','20 A, fil 2,5 mm² (12 prises max)'],['16','16 A, fil 1,5 mm² (8 prises max)']],'20'),
+      N('chauf','Chauffage électrique, puissance totale (0 si aucun)','W',0),N('vr','Nombre de circuits de volets roulants','',0),
+      S('rang','Taille des rangées du coffret',[['13','13 modules'],['18','18 modules']],'13'),
+      C('plaque','Plaque de cuisson',true),C('four','Four',true),C('ll','Lave-linge',true),C('lv','Lave-vaisselle',true),
+      C('sl','Sèche-linge',false),C('cong','Congélateur',false),C('ce','Chauffe-eau électrique (avec contacteur heures creuses)',true),
+      C('vmc','VMC',true),C('ve','Prise pour voiture électrique',false),C('pf','Parafoudre',true)],
+    calc(v){
+      const cir=[], add=(nom,cal,sec,k,o={})=>cir.push({nom,cal,sec,k,w:cal*(o.plein?1:0.5),A:!!o.A,seul:!!o.seul,ct:!!o.ct});
+      const ne=up(Math.max(0,v.ecl)/8); for(let i=0;i<ne;i++) add(`Éclairage ${i+1}`,16,'1,5','ecl');
+      const pm=v.prt==='20'?12:8, np=up(Math.max(0,v.pr)/pm); for(let i=0;i<np;i++) add(`Prises ${i+1}`,+v.prt,v.prt==='20'?'2,5':'1,5','pr');
+      if(v.plaque) add('Plaque de cuisson',32,'6','pl',{A:true});
+      if(v.four) add('Four',20,'2,5','four');
+      if(v.ll) add('Lave-linge',20,'2,5','ll',{A:true});
+      if(v.lv) add('Lave-vaisselle',20,'2,5','lv');
+      if(v.sl) add('Sèche-linge',20,'2,5','sl');
+      if(v.cong) add('Congélateur',20,'2,5','cong');
+      if(v.ce) add('Chauffe-eau',20,'2,5','ce',{plein:true,ct:true});
+      if(v.vmc) add('VMC',2,'1,5','vmc');
+      for(let i=0;i<Math.max(0,Math.round(v.vr));i++) add(`Volets roulants ${i+1}`,16,'1,5','vr');
+      const nch=up(Math.max(0,v.chauf)/4500); for(let i=0;i<nch;i++) add(`Chauffage ${i+1}`,20,'2,5','ch',{plein:true});
+      if(v.ve) add('Voiture électrique',20,'2,5','ve',{plein:true,seul:true,A:true});
+      if(!cir.length) return {big:'—', detail:['Indiquez au moins un circuit.']};
+
+      // Différentiels : minimum selon la surface, 8 circuits maximum chacun, 63 A maximum
+      const nAC = v.surf<=35 ? 1 : v.surf<=100 ? 2 : 3;
+      const G=[]; for(let i=0;i<nAC;i++) G.push({t:'AC',c:[],load:0}); G.push({t:'A',c:[],load:0});
+      const place=(c)=>{
+        if(c.seul){ G.push({t:'A',c:[c],load:c.w,seul:true}); return; }
+        const ok=G.filter(g=>!g.seul && (!c.A || g.t==='A') && g.c.length<8 && g.load+c.w<=63);
+        let g;
+        if(ok.length) g=ok.reduce((b,x)=>{ const sx=x.load+12*x.c.filter(y=>y.k===c.k).length, sb=b.load+12*b.c.filter(y=>y.k===c.k).length; return sx<sb?x:b; });
+        else { g={t:c.A?'A':'AC',c:[],load:0}; G.push(g); }
+        g.c.push(c); g.load+=c.w;
+      };
+      cir.filter(c=>c.A||c.seul).forEach(place);
+      cir.filter(c=>!c.A&&!c.seul).sort((a,b)=>b.w-a.w).forEach(place);
+      G.forEach((g,i)=>{ g.cal = (v.surf<=35 && g.t==='AC' && g.load<=25) ? 25 : g.load<=40 ? 40 : 63; });
+      const order=[...G.filter(g=>g.t==='AC'),...G.filter(g=>g.t==='A'&&!g.seul),...G.filter(g=>g.seul)];
+
+      const court=n=>n.replace('Plaque de cuisson','Plaque').replace('Lave-vaisselle','L-vaisselle').replace('Lave-linge','L-linge').replace('Sèche-linge','S-linge').replace('Voiture électrique','Voiture').replace('Volets roulants','Volets').replace('Éclairage','Éclair.').replace('Chauffage','Chauff.').replace('Congélateur','Congél.');
+      // Plan du coffret : 20 % de place libre gardée sur chaque rangée
+      const per=+v.rang, cap=Math.floor(per*0.8), rows=[[]]; let used=0;
+      const room=()=>cap-rows[rows.length-1].reduce((s,x)=>s+x.m,0);
+      const put=it=>{ if(room()<it.m) rows.push([]); rows[rows.length-1].push(it); used+=it.m; };
+      if(v.pf){ put({cl:'m-pf',m:2,lab:'Parafoudre'}); put({cl:'m-dj',m:1,lab:'Disj. PF'}); }
+      order.forEach((g,i)=>{
+        const items=[{cl:'m-id',m:2,lab:`Diff. ${i+1}<br>${g.cal}A type ${g.t}`}];
+        g.c.forEach(c=>{ items.push({cl:'m-dj',m:1,lab:`${c.cal}A ${court(c.nom)}`}); if(c.ct) items.push({cl:'m-ct',m:1,lab:'Contact. HC'}); });
+        const size=items.reduce((s,x)=>s+x.m,0), r=rows[rows.length-1];
+        if(r.length && room()<size) rows.push([]);
+        items.forEach(put);
+      });
+      const total=rows.length*per, free=total-used;
+      const plan=rows.map((r,i)=>{
+        const n=r.reduce((s,x)=>s+x.m,0);
+        return `<figure><figcaption>Rangée ${i+1}</figcaption><div class="tab-row" style="grid-template-columns:repeat(${per},minmax(0,1fr))">${
+          r.map(x=>`<div class="mod ${x.cl}" style="grid-column:span ${x.m}"><span>${x.lab}</span></div>`).join('')}${
+          '<div class="mod m-free"></div>'.repeat(per-n)}</div></figure>`;
+      }).join('');
+      const leg=order.map((g,i)=>`<div class="tab-g"><b>Différentiel ${i+1} : ${g.cal} A, type ${g.t}, 30 mA</b>
+        <span class="u"> · ${g.c.length} circuit${g.c.length>1?'s':''} · intensité de calcul ≈ ${fr(g.load,0)} A</span>
+        <ul>${g.c.map(c=>`<li>${c.nom} : disjoncteur ${c.cal} A, fil ${c.sec} mm²${c.ct?' (+ contacteur heures creuses)':''}</li>`).join('')||'<li>Aucun circuit pour l’instant (réserve)</li>'}</ul></div>`).join('');
+      const notes=[
+        'En amont du tableau : le disjoncteur de branchement, installé par le fournisseur d’électricité.',
+        'Chaque différentiel protège 8 circuits au maximum. Plaque de cuisson, lave-linge et voiture électrique sont sur un différentiel de type A.',
+        'Intensité de calcul d’un différentiel : chauffage, chauffe-eau et voiture comptés en entier, les autres circuits pour moitié. Au-delà de 40 A, on prend un 63 A.',
+        `Au moins 20 % de place libre est gardée sur chaque rangée pour les ajouts futurs.`,
+        'Prévoir un peigne d’alimentation par rangée et un bornier de terre.',
+        v.pf ? 'Parafoudre : obligatoire dans certaines communes exposées à la foudre, conseillé partout.' : 'Pensez au parafoudre : obligatoire dans certaines communes exposées à la foudre.',
+        v.chauf>0 ? 'Chauffage : un circuit de 20 A par tranche de 4 500 W au maximum.' : null,
+        'Pompe à chaleur ou climatisation : prévoir un différentiel de type F, selon la notice de l’appareil.',
+      ].filter(Boolean);
+      const extra=`<div class="tab">${plan}<div class="legend-mods"><span><i class="mod m-id"></i>Différentiel</span><span><i class="mod m-dj"></i>Disjoncteur</span><span><i class="mod m-ct"></i>Contacteur</span><span><i class="mod m-pf"></i>Parafoudre</span><span><i class="mod m-free"></i>Libre</span></div>
+        ${leg}<div class="tab-notes"><b>À savoir</b><ul>${notes.map(n=>`<li>${n}</li>`).join('')}</ul>
+        <p class="warn">Plan indicatif. Faites vérifier l’installation par un électricien qualifié, et par le Consuel pour une installation neuve.</p></div></div>`;
+      const cnt=(arr,key)=>arr.reduce((m,x)=>(m[key(x)]=(m[key(x)]||0)+1,m),{});
+      const ids=cnt(order,g=>`${g.cal} A type ${g.t}`), djs=cnt(cir,c=>c.cal);
+      const items=[`Coffret ${rows.length} rangée${rows.length>1?'s':''} de ${per} modules`,
+        ...Object.entries(ids).map(([k,n])=>`Interrupteur différentiel 30 mA ${k} : ${n}`),
+        ...Object.entries(djs).sort((a,b)=>a[0]-b[0]).map(([k,n])=>`Disjoncteur ${k} A : ${n}`),
+        ...(v.ce?['Contacteur heures creuses : 1']:[]), ...(v.pf?['Parafoudre avec son disjoncteur : 1']:[]),
+        `Peignes d’alimentation : ${rows.length}`];
+      return {big:`${rows.length} rangée${rows.length>1?'s':''} de ${per} modules`,
+        detail:[`${order.length} interrupteurs différentiels · ${cir.length} disjoncteurs`,`${free} modules libres sur ${total} (${fr(free/total*100,0)} %)`],
+        extra, item:items};
     }},
   liste:{nom:'Liste de courses', aide:'Les matériaux que vous avez ajoutés depuis les calculateurs.', special:'liste'},
 };
@@ -367,14 +527,17 @@ const ICONES = {
   murs:'<rect x="7" y="6" width="28" height="12" rx="3"/><path d="M35 12h5v10H22v6"/><rect x="19" y="28" width="6" height="14" rx="2"/>',
   sols:'<rect x="6" y="6" width="16" height="16"/><rect x="26" y="6" width="16" height="16"/><rect x="6" y="26" width="16" height="16"/><rect x="26" y="26" width="16" height="16"/>',
   maconnerie:'<rect x="4" y="8" width="40" height="32"/><path d="M4 18.7h40M4 29.3h40M16 8v10.7M32 8v10.7M24 18.7v10.6M10 29.3V40M38 29.3V40"/>',
+  electricite:'<path d="M27 4L10 27h12l-3 17 19-25H25z"/>',
+  conversions:'<path d="M7 6v36h36z"/><path d="M14 23v12h12z"/><path d="M7 14h5M7 22h3M7 30h5"/>',
   divers:'<rect x="5" y="16" width="38" height="24" rx="2"/><path d="M17 16v-5h14v5M5 26h38M21 26v4h6v-4"/>',
 };
 const FAMILLES = [
   {id:'bois',       nom:'Bois',       desc:'Découpes, planches',          outils:['panneaux','tasseaux','planches']},
   {id:'murs',       nom:'Murs',       desc:'Peinture, papier peint, placo', outils:['papier-peint','peinture','placo','isolation','enduit']},
   {id:'sols',       nom:'Sols',       desc:'Carrelage, parquet, terrasse', outils:['carrelage','parquet','plinthes','terrasse']},
-  {id:'maconnerie', nom:'Maçonnerie', desc:'Béton, mortier, parpaings',    outils:['beton','mortier','parpaings','pente']},
-  {id:'divers',     nom:'Divers',     desc:'Électricité, conversions, liste', outils:['electricite','conversions','liste']},
+  {id:'maconnerie', nom:'Maçonnerie', desc:'Béton, fondations, parpaings', outils:['beton','fondations','mortier','parpaings','pente']},
+  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:['electricite','tableau']},
+  {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, volumes',    outils:['unites','surfaces','volumes']},
 ];
 
 /* ============ APPARENCE ============ */
@@ -437,12 +600,12 @@ function getDef(t,c){ const s=vals(t)[c.id]; return s!==undefined ? s : JSON.par
 
 function fieldHTML(t,c){
   const id=`f-${t}-${c.id}`, val=getDef(t,c);
-  if(c.type==='num') return `<label for="${id}">${c.lab}${c.u?` <span class="u">(${c.u})</span>`:''}<input id="${id}" data-id="${c.id}" inputmode="decimal" value="${String(val).replace('.',',')}"></label>`;
-  if(c.type==='chk') return `<label class="check" for="${id}" style="grid-column:1/-1"><input type="checkbox" id="${id}" data-id="${c.id}" ${val?'checked':''}>${c.lab}</label>`;
+  if(c.type==='num') return `<label for="${id}" data-f="${c.id}">${c.lab}${c.u?` <span class="u">(${c.u})</span>`:''}<input id="${id}" data-id="${c.id}" inputmode="decimal" value="${String(val).replace('.',',')}"></label>`;
+  if(c.type==='chk') return `<label class="check" for="${id}" data-f="${c.id}" style="grid-column:1/-1"><input type="checkbox" id="${id}" data-id="${c.id}" ${val?'checked':''}>${c.lab}</label>`;
   if(c.type==='sel'){
     const opts = c.options[0].g ? c.options.map(g=>`<optgroup label="${g.g}">${g.u.map(u=>`<option value="${u[0]}" ${u[0]===val?'selected':''}>${u[1]}</option>`).join('')}</optgroup>`).join('')
       : c.options.map(o=>`<option value="${o[0]}" ${o[0]===val?'selected':''}>${o[1]}</option>`).join('');
-    return `<label for="${id}">${c.lab}<select id="${id}" data-id="${c.id}">${opts}</select></label>`;
+    return `<label for="${id}" data-f="${c.id}">${c.lab}<select id="${id}" data-id="${c.id}">${opts}</select></label>`;
   }
   if(c.type==='pcs') return `<div style="grid-column:1/-1" class="pieces" data-pcs="${c.id}"></div>`;
 }
@@ -456,8 +619,8 @@ function piecesHTML(t,c){
 
 function showTool(t){
   cur=t; const T=TOOLS[t], f=familleDe(t);
-  sub.textContent=`${f.nom} › ${T.nom}`;
-  const back=`<div class="row" style="margin-bottom:16px"><button class="back" type="button" data-go="${f.id}">← ${f.nom}</button><button class="back" type="button" data-go="">Accueil</button></div>`;
+  sub.textContent= f ? `${f.nom} › ${T.nom}` : T.nom;
+  const back=`<div class="row" style="margin-bottom:16px">${f?`<button class="back" type="button" data-go="${f.id}">← ${f.nom}</button>`:''}<button class="back" type="button" data-go="">${f?'':'← '}Accueil</button></div>`;
   if(T.special==='liste'){ view.innerHTML=back+`<section class="card"><h2>${T.nom}</h2><p class="hint">${T.aide}</p><ul class="list" id="list"></ul>
       <div class="row"><button class="btn ghost" id="clear" type="button">Vider la liste</button><button class="btn ghost" id="copy" type="button">Copier la liste</button><p class="toast" id="toast"></p></div></section>`;
     drawList(); return; }
@@ -489,6 +652,7 @@ function readValues(){
 }
 function update(){
   const v=readValues();
+  TOOLS[cur].champs.forEach(c=>{ if(!c.si) return; const el=view.querySelector(`[data-f="${c.id}"]`); if(el) el.hidden=!c.si.v.includes(String(v[c.si.k])); });
   try{ last=TOOLS[cur].calc(v); }catch(e){ last={big:'—',detail:['Vérifiez les valeurs saisies.']}; }
   document.getElementById('big').textContent=last.big;
   const d=document.getElementById('detail'); d.innerHTML='';
@@ -524,6 +688,7 @@ let tt; function say(m){ const t=document.getElementById('toast'); if(!t) return
 
 route();
 </script>
+
 <script>
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
   window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
