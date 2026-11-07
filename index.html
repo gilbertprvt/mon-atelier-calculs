@@ -25,17 +25,18 @@
   --bg:#f3f4f1; --surface:#ffffff; --ink:#22262a; --muted:#5c646b; --line:#d5d9d6;
   --ruler:#f2c230; --ruler-ink:#2a2306; --accent:#1f5d8c; --ok:#2f7a45; --warn:#a4461d;
   --piece:#cfe0ee; --piece-line:#1f5d8c; --panel:#efe6d2; --pattern:none;
+  --c-ph:#d32f2f; --c-ne:#1f6fd1; --c-te:#2e9d4b; --c-te2:#f2d22e; --c-rt:#ef7d00; --c-n1:#8e44ad; --c-n2:#8b5a2b; --c-cmd:#4a4f55; --c-flow:rgba(255,255,255,.95); --hl:rgba(31,93,140,.12); --sch-bg:#fbfbf8;
   --display:"Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
   --body:"Atkinson Hyperlegible", Verdana, system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#171a1d; --surface:#22262b; --ink:#eef0ee; --muted:#a6adb3; --line:#3a4047;
   --ruler:#e6b81f; --ruler-ink:#1d1803; --accent:#7fb6e0; --ok:#6cc488; --warn:#f0946a;
-  --piece:#28455e; --piece-line:#7fb6e0; --panel:#3b352a; color-scheme:dark }}
+  --piece:#28455e; --piece-line:#7fb6e0; --panel:#3b352a; --c-ne:#4c97f0; --c-cmd:#b8bec5; --c-n2:#b07a45; --c-n1:#b072d6; --hl:rgba(127,182,224,.18); --sch-bg:#1d2125; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#171a1d; --surface:#22262b; --ink:#eef0ee; --muted:#a6adb3; --line:#3a4047;
   --ruler:#e6b81f; --ruler-ink:#1d1803; --accent:#7fb6e0; --ok:#6cc488; --warn:#f0946a;
-  --piece:#28455e; --piece-line:#7fb6e0; --panel:#3b352a; color-scheme:dark }
+  --piece:#28455e; --piece-line:#7fb6e0; --panel:#3b352a; --c-ne:#4c97f0; --c-cmd:#b8bec5; --c-n2:#b07a45; --c-n1:#b072d6; --hl:rgba(127,182,224,.18); --sch-bg:#1d2125; color-scheme:dark }
 
 /* Style « Établi » : bois clair, noyer et vert forêt */
 :root[data-skin="etabli"]{
@@ -144,6 +145,80 @@ input,select{font:inherit;font-size:1.2rem;padding:11px 13px;border:2px solid va
 .tab-g ul,.tab-notes ul{margin:4px 0 0;padding-left:22px;font-size:.95rem}
 .tab-g .u{color:var(--muted);font-size:.9rem}
 .tab-notes p{margin:8px 0 0}
+/* Bibliothèque de schémas */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chipb{font:inherit;font-size:.95rem;font-weight:700;padding:9px 14px;border-radius:999px;border:2px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.chipb[aria-pressed="true"]{background:var(--ruler);color:var(--ruler-ink);border-color:var(--ruler)}
+#sch-view{display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--line);padding-top:16px}
+#sch-view h3{font-family:var(--display);font-weight:800;font-size:1.4rem;margin:0}
+.sch-res{margin:-6px 0 0;color:var(--muted)}
+.sch-fig{background:var(--sch-bg);border:1px solid var(--line);border-radius:12px;padding:6px}
+.sch-fig svg{width:100%;height:auto;display:block}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg .btn{padding:10px 14px}
+.seg .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.fils{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9rem}
+.fils span{display:flex;align-items:center;gap:8px}
+i.sw{display:inline-block;width:28px;height:7px;border-radius:3px;flex:0 0 28px}
+i.k-ph{background:var(--c-ph)} i.k-ne{background:var(--c-ne)} i.k-rt{background:var(--c-rt)} i.k-rt2,i.k-n1{background:var(--c-n1)} i.k-n2{background:var(--c-n2)} i.k-cmd{background:var(--c-cmd)}
+i.k-te{background:repeating-linear-gradient(90deg,var(--c-te) 0 7px,var(--c-te2) 7px 11px)}
+.sch-txt{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;font-size:.95rem}
+.sch-txt ol,.sch-txt ul{margin:6px 0 0;padding-left:22px}
+.sch-txt li+li{margin-top:4px}
+#sch-svg .w{fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+#sch-svg .k-ph{stroke:var(--c-ph)} #sch-svg .k-ne{stroke:var(--c-ne)} #sch-svg .k-te{stroke:var(--c-te)} #sch-svg .te2{stroke:var(--c-te2);stroke-dasharray:5 7}
+#sch-svg .k-rt{stroke:var(--c-rt)} #sch-svg .k-rt2,#sch-svg .k-n1{stroke:var(--c-n1)} #sch-svg .k-n2{stroke:var(--c-n2)} #sch-svg .k-cmd{stroke:var(--c-cmd)}
+.flow{fill:none;stroke:var(--c-flow);stroke-width:1.8;stroke-dasharray:3 9;stroke-linecap:round;animation:flow .9s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-12}}
+#sch-svg .dot{fill:var(--ink)} #sch-svg .term{fill:var(--surface);stroke:var(--ink);stroke-width:1.5}
+#sch-svg .blade{stroke:var(--ink);stroke-width:3;stroke-linecap:round;fill:none}
+#sch-svg .hit{fill:transparent;rx:6px}
+#sch-svg .act{cursor:pointer} #sch-svg .act:focus{outline:none} #sch-svg .act:hover .hit,#sch-svg .act:focus-visible .hit{fill:var(--hl)}
+#sch-svg .tb{fill:var(--panel);stroke:var(--ink);stroke-width:1.5} #sch-svg .bx{fill:var(--surface);stroke:var(--ink);stroke-width:1.5}
+#sch-svg .lbl{font:700 11px var(--body);fill:var(--ink)} #sch-svg .sm{font:400 10px var(--body);fill:var(--ink)} #sch-svg .xs{font:400 8.5px var(--body);fill:var(--muted)} #sch-svg .b{font-weight:700}
+#sch-svg .lamp{fill:var(--surface);stroke:var(--ink);stroke-width:2} #sch-svg .lamp.on{fill:#ffd54a} #sch-svg .lampx{stroke:var(--ink);stroke-width:1.6}
+#sch-svg .glow{fill:#ffd54a;opacity:.35} #sch-svg .rays{stroke:#f2b400;stroke-width:2.2;stroke-linecap:round}
+#sch-svg .coil{fill:var(--surface);stroke:var(--ink);stroke-width:1.5} #sch-svg .coil.on{fill:var(--c-rt)}
+#sch-svg .inner{stroke:var(--ink);stroke-width:1.5;fill:none}
+#sch-svg .bphead{fill:var(--muted)} #sch-svg .bphead.on{fill:var(--c-rt)}
+#sch-svg .prise{fill:var(--surface);stroke:var(--ink);stroke-width:2} #sch-svg .prise.on{stroke:var(--c-rt);stroke-width:3}
+#sch-svg .trou{fill:var(--ink)} #sch-svg .fiche{fill:var(--accent);opacity:.85}
+#sch-svg .motor{fill:var(--surface);stroke:var(--ink);stroke-width:2} #sch-svg .motor.on{fill:var(--hl);stroke:var(--c-rt)}
+#sch-svg .win{fill:#bfe0f5;stroke:var(--ink);stroke-width:2} #sch-svg .shut{fill:#c9ccd0;stroke:var(--ink);stroke-width:1} #sch-svg .slat{stroke:#8b9097;stroke-width:1}
+#sch-svg .sel{fill:var(--ruler);stroke:var(--ruler-ink);stroke-width:1} #sch-svg .sel+text{fill:var(--ruler-ink)}
+#sch-svg .tank{fill:#dbe9f6;stroke:var(--ink);stroke-width:2} #sch-svg .tank.hot{fill:#f6d9cf}
+#sch-svg .res{fill:none;stroke:#8b9097;stroke-width:2} #sch-svg .res.on{stroke:#ff6a00;stroke-width:2.6}
+#sch-svg .bub{fill:#fff;stroke:#7aa7d6;animation:bub 1.6s ease-in infinite} #sch-svg .b2{animation-delay:.5s} #sch-svg .b3{animation-delay:1s}
+@keyframes bub{from{transform:translateY(10px);opacity:0}30%{opacity:1}to{transform:translateY(-30px);opacity:0}}
+#sch-svg .rad{fill:var(--surface);stroke:var(--ink);stroke-width:2} #sch-svg .fin{stroke:var(--line);stroke-width:2}
+#sch-svg .wave{fill:none;stroke:#ff6a00;stroke-width:2.4;stroke-linecap:round;animation:rise 2s ease-in-out infinite}
+@keyframes rise{50%{transform:translateY(-4px)}}
+#sch-svg .scope{fill:#10261a;stroke:var(--ink)} #sch-svg .axis{stroke:#2f5f45;stroke-width:1} #sch-svg .sig{fill:none;stroke:#5cf08a;stroke-width:2}
+#sch-svg .dome{fill:var(--muted)} #sch-svg .cone{stroke:var(--c-rt);stroke-width:1.5;stroke-dasharray:3 4;fill:none}
+#sch-svg .pers{stroke:var(--ink);stroke-width:2.5;fill:none} #sch-svg .pers circle{fill:var(--ink)}
+#sch-svg .wall{fill:var(--surface);stroke:var(--ink);stroke-width:2} #sch-svg .scr{fill:var(--line)} #sch-svg .scr.on{fill:#3fb86a}
+#sch-svg .cord{fill:none;stroke:var(--ink);stroke-width:3} #sch-svg .car{fill:var(--accent);stroke:var(--ink);stroke-width:1.5} #sch-svg .wheel{fill:var(--ink)}
+#sch-svg .batt{fill:var(--surface);stroke:var(--ink);stroke-width:1.5} #sch-svg .battf{fill:#3fb86a}
+@media (prefers-reduced-motion:reduce){.flow,#sch-svg .bub,#sch-svg .wave{animation:none}}
+.symb{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.sy{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px}
+.sy svg{width:76px;flex:0 0 76px;height:auto;fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sy div{display:flex;flex-direction:column;min-width:0} .sy span{color:var(--muted);font-size:.85rem}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.cols div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px} .cols span{flex-basis:100%;color:var(--muted);font-size:.9rem}
+.tbl{overflow-x:auto} .tbl table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
+.tbl th,.tbl td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top} .tbl th{font-size:.85rem;color:var(--muted);font-weight:700}
+.tbl .u{color:var(--muted);font-size:.85rem}
+.stair{width:100%;height:auto;max-height:440px;display:block;background:var(--sch-bg);border:1px solid var(--line);border-radius:12px}
+.stair .st-floor{fill:var(--ink)}
+.stair .st-step{fill:var(--piece);stroke:var(--piece-line);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.stair .st-limon{fill:var(--panel);stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
+.stair .st-beton{fill:#b9bcbf;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.stair .st-slab{fill:var(--panel);stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.stair .st-dash{stroke:var(--warn);stroke-width:2;stroke-dasharray:6 5;fill:none;vector-effect:non-scaling-stroke}
+.stair text{fill:var(--ink);font-family:var(--body);font-weight:700}
+.stair text.st-dlab{fill:var(--warn)}
+
 .phases{display:flex;flex-direction:column;gap:6px;margin:8px 0}
 .phases div{display:grid;grid-template-columns:2.2em minmax(0,1fr) 4em;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
 .phases i{display:block;height:16px;border-radius:3px;background:var(--accent);min-width:2px}
@@ -566,6 +641,123 @@ const TOOLS = {
       if(tri) det.push(`Phases : L1 ≈ ${fr(ph.L1,0)} A · L2 ≈ ${fr(ph.L2,0)} A · L3 ≈ ${fr(ph.L3,0)} A`);
       return {big:`${rows.length} rangée${rows.length>1?'s':''} de ${per} modules`, detail:det, extra, item:items};
     }},
+  crepi:{nom:'Enduits de façade (crépi)', aide:'Dosages par couche et quantités pour crépir un mur, selon le type d’enduit. Le gobetis accroche, le corps d’enduit dresse le mur, la finition donne l’aspect.',
+    champs:[S('t','Type d’enduit',[['ciment','Enduit au ciment (3 couches)'],['batard','Enduit bâtard ciment + chaux (3 couches)'],['nhl','Enduit à la chaux hydraulique NHL (3 couches)'],['cl','Enduit à la chaux aérienne CL (3 couches)'],['mono','Monocouche prêt à l’emploi (1 couche)']],'nhl'),
+      N('s','Surface à enduire','m²',30),
+      S('fin','Finition',[['taloche','Talochée (environ 5 mm)'],['ecrase','Écrasée ou projetée (environ 7 mm)'],['gratte','Grattée (environ 12 mm)']],'taloche',{k:'t',v:['ciment','batard','nhl','cl']}),
+      N('ep','Épaisseur du monocouche','mm',15,{k:'t',v:['mono']}),
+      N('p','Pertes','%',10)],
+    calc(v){
+      const lc=t=>t.charAt(0).toLowerCase()+t.slice(1);
+      const DENS={'Ciment':1.2,'Chaux NHL':0.8,'Chaux NHL 5':0.8,'Chaux NHL 3,5':0.8,'Chaux NHL 2 ou 3,5':0.8,'Chaux aérienne CL 90':0.5}, SAC={'Ciment':35};
+      const fin={taloche:5,ecrase:7,gratte:12}[v.fin]||5, k=1+v.p/100;
+      if(v.t==='mono'){
+        const kg=v.s*v.ep*1.4*k, sacs=up(kg/25);
+        return {big:`${sacs} sacs de 25 kg`, detail:[`Environ ${fr(kg,0)} kg de monocouche pour ${fr(v.s)} m² sur ${fr(v.ep,0)} mm (pertes comprises)`,
+          'Consommation comptée : 1,4 kg par m² et par mm. Vérifiez la valeur sur le sac (souvent 1,3 à 1,6).',
+          {warn: v.ep<10 ? 'Épaisseur trop faible : 10 mm au minimum en tout point.' : null}].filter(x=>!(x&&x.warn===null)),
+          extra:`<div class="tab-notes"><b>Bon à savoir</b><ul><li>Un seul produit, déjà dosé : il suffit d’ajouter l’eau indiquée sur le sac.</li><li>Appliquer en deux passes « frais dans frais », puis finir (gratté, taloché…) selon la notice.</li><li>Travailler entre 5 et 30 °C, à l’abri du plein soleil, du vent et de la pluie.</li></ul></div>`,
+          item:`Enduit monocouche : ${sacs} sacs de 25 kg`};
+      }
+      const T={
+        ciment:{c:[['Gobetis (accrochage)',5,[['Ciment',500]]],['Corps d’enduit',15,[['Ciment',400]]],['Finition',fin,[['Ciment',300]]]],
+          delai:'48 heures au moins entre deux couches, en réhumidifiant la couche précédente.',
+          note:'Dur et peu perméable. À éviter sur les murs anciens (pierre, terre, brique pleine) : il empêche le mur de respirer et provoque des remontées d’humidité.'},
+        batard:{c:[['Gobetis (accrochage)',5,[['Ciment',450]]],['Corps d’enduit',15,[['Ciment',175],['Chaux NHL',175]]],['Finition',fin,[['Ciment',125],['Chaux NHL',125]]]],
+          delai:'48 heures au moins entre deux couches, en réhumidifiant la couche précédente.',
+          note:'Compromis entre la solidité du ciment et la souplesse de la chaux. Convient bien aux parpaings et briques.'},
+        nhl:{c:[['Gobetis (accrochage)',5,[['Chaux NHL 5',400]]],['Corps d’enduit (dressage)',15,[['Chaux NHL 3,5',320]]],['Finition',fin,[['Chaux NHL 2 ou 3,5',240]]]],
+          delai:'Plusieurs jours entre deux couches (environ une semaine pour le corps d’enduit), en humidifiant.',
+          note:'Laisse respirer le mur : le bon choix pour les maisons anciennes en pierre. Durcit plus lentement que le ciment.'},
+        cl:{c:[['Gobetis (accrochage)',5,[['Chaux aérienne CL 90',325]]],['Corps d’enduit (dressage)',15,[['Chaux aérienne CL 90',250]]],['Finition',fin,[['Chaux aérienne CL 90',200]]]],
+          delai:'Une semaine ou plus entre deux couches : la chaux aérienne durcit au contact de l’air.',
+          note:'Très souple et perméable, mais lente à durcir. Plutôt pour l’intérieur, la restauration ou une façade bien abritée.'},
+      }[v.t];
+      const tot={}; let sableTot=0;
+      const rows=T.c.map(([nom,e,liants])=>{
+        const vs=v.s*e/1000*k; sableTot+=vs;
+        const qte=liants.map(([l,d])=>{ const kg=vs*d; tot[l]=(tot[l]||0)+kg; return `${fr(kg,0)} kg de ${lc(l)}`; }).join(' + ');
+        const L=liants.map(([l,d])=>d/100/(DENS[l]||0.8));
+        const rec = L.length===1 ? `1 seau de liant pour ${fr(Math.round(10/L[0]*2)/2,1)} seaux de sable`
+          : `1 seau de ciment + ${fr(Math.round(L[1]/L[0]*2)/2,1)} seau de chaux pour ${fr(Math.round(10/L[0]*2)/2,1)} seaux de sable`;
+        return `<tr><td>${nom}</td><td>${e} mm</td><td>${liants.map(([l,d])=>`${d} kg ${lc(l)}`).join(' + ')}</td><td>${rec}</td><td>${qte}<br><span class="u">sable ≈ ${fr(vs*1500,0)} kg</span></td></tr>`;
+      }).join('');
+      const sacs=Object.entries(tot).map(([l,kg])=>{ const sz=SAC[l]||25; return [l,kg,up(kg/sz),sz]; });
+      const table=`<div class="tbl"><table><thead><tr><th>Couche</th><th>Épaisseur</th><th>Dosage par m³ de sable</th><th>Recette au seau</th><th>Pour votre surface</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      const notes=`<div class="tab-notes"><b>Bon à savoir</b><ul><li>${T.note}</li><li>Délais : ${T.delai}</li>
+        <li>Le dosage diminue d’une couche à l’autre : la couche du dessous doit toujours être plus dure que celle du dessus.</li>
+        <li>Mouiller le mur la veille et le jour même, sans le détremper. Gobetis projeté à la truelle, très fluide.</li>
+        <li>Travailler entre 5 et 30 °C, jamais par gel, plein soleil, vent sec ou pluie. Protéger l’enduit frais.</li>
+        <li>Sable propre 0/2 à 0/4. Un seau de 10 litres de sable sec pèse environ 15 kg.</li></ul></div>`;
+      return {big:sacs.map(([l,,n,sz])=>`${n} sac${n>1?'s':''} de ${lc(l)}`).join(' + '),
+        detail:[`Sable : environ ${fr(sableTot*1500,0)} kg (${fr(sableTot,2)} m³) pour ${fr(v.s)} m², pertes comprises`,
+          sacs.map(([l,kg,n,sz])=>`${l} : ${fr(kg,0)} kg, soit ${n} sac${n>1?'s':''} de ${sz} kg`).join(' · '),
+          `Épaisseur totale : environ ${5+15+fin} mm en 3 couches`],
+        extra:table+notes,
+        item:[...sacs.map(([l,,n,sz])=>`${l} (enduit) : ${n} sacs de ${sz} kg`),`Sable 0/4 pour enduit : ${fr(sableTot*1500,0)} kg`]};
+    }},
+  escalier:{nom:'Escalier', aide:'Calcule les marches, la longueur au sol et l’ouverture dans le plancher pour un escalier droit, en bois ou en béton.',
+    champs:[N('H','Hauteur à monter (de sol fini à sol fini)','cm',270),N('ep','Épaisseur du plancher du haut','cm',20),
+      N('larg','Largeur de l’escalier','cm',80),N('rec','Longueur disponible au sol (0 si pas de limite)','cm',0),
+      N('nb','Nombre de marches imposé (0 = automatique)','',0),
+      S('mat','Matériau',[['bois','Bois'],['beton','Béton (en dur)']],'bois'),
+      N('em','Épaisseur des marches','cm',4,{k:'mat',v:['bois']}),N('pa','Épaisseur de la paillasse (dalle sous les marches)','cm',15,{k:'mat',v:['beton']})],
+    calc(v){
+      const H=v.H; if(H<=0) return {big:'—',detail:['Indiquez la hauteur à monter.']};
+      let n = v.nb>1 ? Math.round(v.nb) : Math.max(2,Math.round(H/17.5));
+      if(!(v.nb>1)){ while(H/n>18.5) n++; while(H/n<16.5 && n>2) n--; }
+      const h=H/n, nG=n-1; let g=63-2*h, lim=false;
+      if(v.rec>0 && nG*g>v.rec){ g=v.rec/nG; lim=true; }
+      const recul=nG*g, bl=2*h+g, ang=Math.atan(h/g)*180/Math.PI, trem=(200+v.ep)*g/h, tremMin=(190+v.ep)*g/h, ramp=Math.hypot(recul,H);
+      const det=[`Dont ${nG} marches à fabriquer : la dernière marche est le plancher du haut`,
+        `Giron (profondeur où l’on pose le pied) : ${fr(g,1)} cm`,
+        `Longueur au sol (reculement) : ${fr(recul,0)} cm`,
+        `Loi de Blondel : 2 × ${fr(h,1)} + ${fr(g,1)} = ${fr(bl,1)} cm (confortable entre 60 et 64)`,
+        `Pente : ${fr(ang,0)}°`,
+        `Trémie (ouverture dans le plancher du haut) : ${fr(trem,0)} cm de long pour 2 m de passage de tête (${fr(tremMin,0)} cm au minimum pour 1,90 m)`];
+      const W=[];
+      if(lim) W.push('Le giron a été réduit pour tenir dans la longueur disponible.');
+      if(h>19) W.push('Marches hautes : l’escalier sera fatigant. Ajoutez une marche si possible.');
+      if(g<24) W.push('Giron court : 24 cm au minimum conseillés dans une maison.');
+      if(bl<58||bl>66) W.push('Loi de Blondel hors limites (58 à 66 cm) : l’escalier sera inconfortable.');
+      else if(bl<60||bl>64) W.push('Loi de Blondel un peu en dehors de l’idéal (60 à 64 cm).');
+      if(ang>42) W.push('Escalier raide : plus de 42°.');
+      if(v.larg<70) W.push('Largeur faible : 80 cm sont conseillés pour un escalier principal.');
+      W.forEach(w=>det.push({warn:w}));
+      let items=[];
+      if(v.mat==='bois'){
+        det.push(`Bois : 2 limons d’environ ${fr(ramp+30,0)} cm · ${nG} marches de ${fr(v.larg,0)} × ${fr(g+3,0)} cm (avec 3 cm de nez) en ${fr(v.em,0)} cm d’épaisseur`);
+        items=[`Escalier bois : 2 limons de ${fr(ramp+30,0)} cm`,`Escalier bois : ${nG} marches ${fr(v.larg,0)} × ${fr(g+3,0)} cm, épaisseur ${fr(v.em,0)} cm`];
+      } else {
+        const vol=v.larg/100*(ramp*v.pa + n*g*h/2)/1e4, sacs=up(vol*350/35);
+        det.push(`Béton : environ ${fr(vol,2)} m³ (paillasse + marches), soit ${sacs} sacs de ciment de 35 kg à 350 kg/m³`);
+        items=[`Escalier béton : ${fr(vol,2)} m³, ${sacs} sacs de ciment`];
+      }
+      // Dessin de profil, en centimètres
+      const xt=recul-trem, x0=Math.min(-50,xt-30), x1=recul+90, top=H+30, fs=(x1-x0)/26, Y=y=>-y;
+      let prof=`M0 0`; for(let i=1;i<=nG;i++) prof+=` V${Y(i*h)} H${i*g}`; prof+=` V${Y(H)}`;
+      const lim1=`M0 0 L0 ${Y(h+5)} L${recul} ${Y(H+5)} L${recul} ${Y(nG*h-20)} L${Math.min(recul,20*g/h)} 0Z`;
+      const bet=`${prof} L${recul} ${Y(H-v.ep)} L${Math.min(recul,1.5*g)} 0Z`;
+      const svg=`<svg class="stair" viewBox="${x0} ${-top-fs} ${x1-x0} ${top+fs*3.2}" role="img" aria-label="Escalier vu de côté">
+        <rect class="st-floor" x="${x0}" y="0" width="${x1-x0}" height="${fs*0.5}"/>
+        ${v.mat==='bois'?`<path class="st-limon" d="${lim1}"/><path class="st-step" d="${prof}"/>`:`<path class="st-beton" d="${bet}"/>`}
+        ${xt>x0?`<rect class="st-slab" x="${x0}" y="${Y(H)}" width="${xt-x0}" height="${v.ep}"/>`:''}
+        <rect class="st-slab" x="${recul}" y="${Y(H)}" width="${x1-recul}" height="${v.ep}"/>
+        ${xt>0?`<path class="st-dash" d="M${xt} ${Y(H-v.ep)} V${Y(h+xt*h/g)}"/><path class="st-dash" d="M${xt-fs*0.4} ${Y(h+xt*h/g)} H${xt+fs*0.4}"/>`:''}
+        <text x="${recul+fs*0.4}" y="${Y(H/2)}" font-size="${fs}">H ${fr(H,0)}</text>
+        <text x="${recul/2}" y="${fs*1.8}" font-size="${fs}" text-anchor="middle">Au sol : ${fr(recul,0)} cm</text>
+        <text x="${(Math.max(xt,x0)+recul)/2}" y="${Y(H+fs*0.5)}" font-size="${fs}" text-anchor="middle">Trémie ${fr(trem,0)}</text>
+        ${xt>0?`<text x="${xt+fs*0.4}" y="${Y(H-v.ep-100)}" font-size="${fs*0.85}" class="st-dlab">2 m</text>`:''}
+      </svg>`;
+      const notes=`<div class="tab-notes"><b>Bon à savoir</b><ul>
+        <li>Hauteur de marche idéale : 16 à 18 cm. Giron : 24 cm au minimum dans une maison, 25 à 30 cm pour un escalier confortable.</li>
+        <li>Toutes les marches doivent avoir exactement la même hauteur, y compris la première et la dernière : mesurez de sol fini à sol fini (avec carrelage ou parquet).</li>
+        <li>Passage de tête : 1,90 m au minimum, 2 m ou plus conseillés.</li>
+        <li>Garde-corps : 90 cm de haut au minimum (1 m conseillé), 11 cm au plus entre deux barreaux.</li></ul></div>`;
+      return {big:`${n} marches de ${fr(h,1)} cm`, detail:det, extra:svg+notes, item:items};
+    }},
+  schemas:{nom:'Bibliothèque de schémas', aide:'Schémas de câblage commentés et animés, de l’ampoule à la borne de recharge.', special:'schemas'},
+  symboles:{nom:'Symboles et couleurs', aide:'Les symboles des plans électriques, les couleurs des fils et les sections courantes.', special:'symboles'},
   liste:{nom:'Liste de courses', aide:'Les matériaux que vous avez ajoutés depuis les calculateurs.', special:'liste'},
 };
 
@@ -576,6 +768,7 @@ const ICONES = {
   sols:'<rect x="6" y="6" width="16" height="16"/><rect x="26" y="6" width="16" height="16"/><rect x="6" y="26" width="16" height="16"/><rect x="26" y="26" width="16" height="16"/>',
   maconnerie:'<rect x="4" y="8" width="40" height="32"/><path d="M4 18.7h40M4 29.3h40M16 8v10.7M32 8v10.7M24 18.7v10.6M10 29.3V40M38 29.3V40"/>',
   electricite:'<path d="M27 4L10 27h12l-3 17 19-25H25z"/>',
+  construction:'<path d="M5 42h9v-8h9v-8h9v-8h9V10h3"/><path d="M5 42V36"/>',
   conversions:'<path d="M7 6v36h36z"/><path d="M14 23v12h12z"/><path d="M7 14h5M7 22h3M7 30h5"/>',
   divers:'<rect x="5" y="16" width="38" height="24" rx="2"/><path d="M17 16v-5h14v5M5 26h38M21 26v4h6v-4"/>',
 };
@@ -583,8 +776,9 @@ const FAMILLES = [
   {id:'bois',       nom:'Bois',       desc:'Découpes, planches',          outils:['panneaux','tasseaux','planches']},
   {id:'murs',       nom:'Murs',       desc:'Peinture, papier peint, placo', outils:['papier-peint','peinture','placo','isolation','enduit']},
   {id:'sols',       nom:'Sols',       desc:'Carrelage, parquet, terrasse', outils:['carrelage','parquet','plinthes','terrasse']},
-  {id:'maconnerie', nom:'Maçonnerie', desc:'Béton, fondations, parpaings', outils:['beton','fondations','mortier','parpaings','pente']},
-  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:['cables','tableau']},
+  {id:'maconnerie', nom:'Maçonnerie', desc:'Béton, fondations, parpaings', outils:['beton','fondations','mortier','crepi','parpaings','pente']},
+  {id:'construction',nom:'Construction',desc:'Escalier',                 outils:['escalier']},
+  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:['cables','tableau','schemas','symboles']},
   {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, volumes',    outils:['unites','surfaces','volumes']},
 ];
 
@@ -609,6 +803,7 @@ const go = h => { location.hash = h ? '#'+h : '#'; };
 const listCount = () => { golist.textContent = `Ma liste (${items.length})`; };
 
 function route(){
+  if(typeof schStop==='function') schStop();
   const h=location.hash.slice(1);
   if(FAMILLES.some(f=>f.id===h)) showFamille(h); else if(TOOLS[h]) showTool(h); else showHome();
   window.scrollTo(0,0); listCount();
@@ -665,6 +860,8 @@ function showTool(t){
   if(T.special==='liste'){ view.innerHTML=back+`<section class="card"><h2>${T.nom}</h2><p class="hint">${T.aide}</p><ul class="list" id="list"></ul>
       <div class="row"><button class="btn ghost" id="clear" type="button">Vider la liste</button><button class="btn ghost" id="copy" type="button">Copier la liste</button><p class="toast" id="toast"></p></div></section>`;
     drawList(); return; }
+  if(T.special==='schemas'){ view.innerHTML=back+schemasHTML(); let last1=null; try{ last1=localStorage.getItem('atelier-schema'); }catch(e){} schOpen(last1||SCHEMAS[0].id); return; }
+  if(T.special==='symboles'){ view.innerHTML=back+symbolesHTML(); return; }
   view.innerHTML=back+`<section class="card" id="calc"><h2>${T.nom}</h2><p class="hint">${T.aide}</p>
     <div class="fields">${T.champs.map(c=>fieldHTML(t,c)).join('')}</div>
     <div class="result"><div class="big" id="big"></div><div class="detail" id="detail"></div></div>
@@ -726,6 +923,269 @@ function drawList(){
   ul.querySelectorAll('li b').forEach((b,i)=>b.textContent=items[i]);
 }
 let tt; function say(m){ const t=document.getElementById('toast'); if(!t) return; t.textContent=m; clearTimeout(tt); tt=setTimeout(()=>t.textContent='',2200); }
+
+/* ============ BIBLIOTHÈQUE DE SCHÉMAS ÉLECTRIQUES ============ */
+const FILS={ph:'Phase',ne:'Neutre',te:'Terre',rt:'Retour lampe',rt2:'Retour lampe 2',n1:'Navette',n2:'Navette',cmd:'Commande / fil pilote'};
+const sP=pts=>'M'+pts.map(p=>p.join(' ')).join(' L');
+function fil(pts,k,live){ const d=sP(pts); let s=`<path class="w k-${k}" d="${d}"/>`; if(k==='te') s+=`<path class="w te2" d="${d}"/>`; if(live) s+=`<path class="flow" d="${d}"/>`; return s; }
+const sDot=(x,y)=>`<circle class="dot" cx="${x}" cy="${y}" r="3.4"/>`;
+const sTxt=(x,y,t,a='middle',cl='lbl')=>`<text class="${cl}" x="${x}" y="${y}" text-anchor="${a}">${t}</text>`;
+const sTerm=(x,y)=>`<circle class="term" cx="${x}" cy="${y}" r="3"/>`;
+const act=(id,lab,inner,hit)=>`<g class="act" data-act="${id}" tabindex="0" role="button" aria-label="${lab}">${hit?`<rect class="hit" x="${hit[0]}" y="${hit[1]}" width="${hit[2]}" height="${hit[3]}"/>`:''}${inner}</g>`;
+function sTab(exits,prot){
+  return `<rect class="tb" x="8" y="30" width="62" height="200" rx="6"/>`+sTxt(39,48,'Tableau','middle','sm b')
+    +prot.map((t,i)=>Array.isArray(t)?sTxt(39,t[0],t[1],'middle','sm'):sTxt(39,128+i*14,t,'middle','sm')).join('')
+    +exits.map(e=>sTxt(64,e[0]-5,e[1],'end','xs')).join('');
+}
+function sLamp(x,y,on){
+  const r=on?[0,45,90,135,180,225,270,315].map(a=>{const c=Math.cos(a*Math.PI/180),s=Math.sin(a*Math.PI/180);return `M${x+c*19} ${y+s*19}L${x+c*25} ${y+s*25}`;}).join(''):'';
+  return `${on?`<circle class="glow" cx="${x}" cy="${y}" r="27"/><path class="rays" d="${r}"/>`:''}<circle class="lamp${on?' on':''}" cx="${x}" cy="${y}" r="14"/><path class="lampx" d="M${x-10} ${y-10}L${x+10} ${y+10}M${x+10} ${y-10}L${x-10} ${y+10}"/>`;
+}
+function sSw(x,y,on,id,lab){
+  const ex=on?x+36:x+31, ey=on?y:y-17;
+  return act(id,lab||'Interrupteur',`${sTerm(x,y)}${sTerm(x+36,y)}<path class="blade" d="M${x} ${y}L${ex} ${ey}"/>${lab?sTxt(x+18,y+24,lab,'middle','sm'):''}`,[x-8,y-30,52,46]);
+}
+function sVv(x,y,pos,id,lab,dir){
+  const ox=x+36*dir, oy=pos?y+14:y-14;
+  return act(id,lab,`${sTerm(x,y)}${sTerm(ox,y-14)}${sTerm(ox,y+14)}<path class="blade" d="M${x} ${y}L${ox-3*dir} ${oy}"/>${sTxt(x+18*dir,y+40,lab,'middle','sm')}`,[Math.min(x,ox)-8,y-24,52,48]);
+}
+function sBp(x,y,pr,id){
+  const by=pr?y-3:y-11;
+  return act(id,'Bouton poussoir',`${sTerm(x,y)}${sTerm(x+36,y)}<path class="blade" d="M${x-1} ${by}H${x+37}M${x+18} ${by}V${by-6}"/><rect class="bphead${pr?' on':''}" x="${x+11}" y="${by-12}" width="14" height="6" rx="2"/>`,[x-8,y-28,52,36]);
+}
+const SCHEMAS=[
+ {id:'simple',titre:'Simple allumage',resume:'Une lampe commandée par un interrupteur : le schéma de base de toute installation.',
+  init:()=>({k:false}), ctrls:[{id:'k',type:'toggle',lab:s=>s.k?'Éteindre la lampe':'Allumer la lampe'}],
+  draw:s=>{const on=s.k; return sTab([[70,'L'],[190,'N'],[215,'⏚']],['Disj.','16 A'])
+    +fil([[70,70],[150,70]],'ph',on)+fil([[186,70],[300,70],[300,116]],'rt',on)+fil([[300,144],[300,190],[70,190]],'ne',on)+fil([[70,215],[340,215],[340,130],[314,130]],'te')
+    +sSw(150,70,on,'k','Interrupteur')+sLamp(300,130,on)+sTxt(266,134,'Lampe','end','sm');},
+  marche:['La phase (rouge) part du tableau et arrive à l’interrupteur. Elle y est toujours présente, même lampe éteinte.','L’interrupteur fermé envoie la phase dans le retour (orange) jusqu’à la lampe.','Le courant revient au tableau par le neutre (bleu). La terre (vert et jaune) va directement au luminaire, pour la sécurité.'],
+  materiel:['Disjoncteur 16 A (ou 10 A), fil de 1,5 mm²','Interrupteur simple','Point lumineux (douille, DCL)','Gaine ICTA de 16 mm et boîte de dérivation'],
+  conseils:['On coupe toujours la phase, jamais le neutre : sinon la douille reste sous tension lampe éteinte.','8 points lumineux au maximum par circuit.']},
+ {id:'double',titre:'Double allumage',resume:'Deux lampes (ou deux groupes) commandées séparément depuis un seul interrupteur à deux touches.',
+  init:()=>({a:false,b:false}), ctrls:[{id:'a',type:'toggle',lab:s=>s.a?'Éteindre la lampe 1':'Allumer la lampe 1'},{id:'b',type:'toggle',lab:s=>s.b?'Éteindre la lampe 2':'Allumer la lampe 2'}],
+  draw:s=>{const a=s.a,b=s.b; return sTab([[70,'L'],[190,'N'],[215,'⏚']],['Disj.','16 A'])
+    +fil([[70,70],[130,70]],'ph',a||b)+fil([[130,70],[130,110]],'ph',b)+sDot(130,70)
+    +fil([[166,70],[340,70],[340,126]],'rt',a)+fil([[166,110],[270,110],[270,126]],'rt2',b)
+    +fil([[340,154],[340,190],[270,190]],'ne',a)+fil([[270,154],[270,190]],'ne',b)+fil([[270,190],[70,190]],'ne',a||b)+sDot(270,190)
+    +fil([[70,215],[372,215],[372,140],[354,140]],'te')+fil([[305,215],[305,140],[284,140]],'te')+sDot(305,215)
+    +sSw(130,70,a,'a','')+sSw(130,110,b,'b','')+sTxt(148,150,'Interrupteur double','middle','sm')
+    +sLamp(340,140,a)+sLamp(270,140,b)+sTxt(318,100,'Lampe 1','end','sm')+sTxt(238,136,'Lampe 2','end','sm');},
+  marche:['La phase arrive sur les deux touches de l’interrupteur, reliées entre elles par un petit pont.','Chaque touche envoie la phase dans son propre retour : orange pour la lampe 1, violet pour la lampe 2.','Les neutres des deux lampes se rejoignent et reviennent au tableau.'],
+  materiel:['Disjoncteur 16 A, fil de 1,5 mm²','Interrupteur double allumage','2 points lumineux','Fils de retour de deux couleurs différentes'],
+  conseils:['Repérez les deux retours par des couleurs différentes : c’est plus simple en cas de panne.']},
+ {id:'vv',titre:'Va-et-vient',resume:'Une lampe commandée depuis deux endroits, par exemple en haut et en bas d’un escalier.',
+  init:()=>({p1:false,p2:false}), ctrls:[{id:'p1',type:'toggle',lab:()=>'Basculer l’interrupteur 1'},{id:'p2',type:'toggle',lab:()=>'Basculer l’interrupteur 2'}],
+  draw:s=>{const a=s.p1?1:0,b=s.p2?1:0,on=a===b; return sTab([[70,'L'],[190,'N'],[215,'⏚']],['Disj.','16 A'])
+    +fil([[70,70],[110,70],[110,110],[130,110]],'ph',on)
+    +fil([[166,96],[250,96]],'n1',on&&a===0)+fil([[166,124],[250,124]],'n2',on&&a===1)
+    +fil([[286,110],[340,110],[340,136]],'rt',on)+fil([[340,164],[340,190],[70,190]],'ne',on)+fil([[70,215],[372,215],[372,150],[354,150]],'te')
+    +sVv(130,110,a,'p1','Interrupteur 1',1)+sVv(286,110,b,'p2','Interrupteur 2',-1)+sTxt(208,90,'navettes','middle','xs')
+    +sLamp(340,150,on)+sTxt(320,140,'Lampe','end','sm');},
+  marche:['Chaque interrupteur a une borne commune (la plus seule) et deux autres bornes.','Les deux interrupteurs sont reliés par deux fils appelés navettes (violet et marron).','La lampe s’allume quand les deux interrupteurs « choisissent » la même navette. Basculez l’un ou l’autre : l’état de la lampe change à chaque fois.'],
+  materiel:['Disjoncteur 16 A, fil de 1,5 mm²','2 interrupteurs va-et-vient','1 point lumineux','2 fils de navette entre les interrupteurs'],
+  conseils:['La phase arrive sur la borne commune du premier interrupteur, le retour lampe part de la borne commune du second.','Au-delà de deux points de commande, passez au télérupteur.']},
+ {id:'tl',titre:'Télérupteur',resume:'Une lampe commandée depuis 3 endroits ou plus, avec des boutons poussoirs. Pratique pour un couloir.',
+  init:()=>({tl:false,pr:null}), ctrls:[{id:'b1',type:'push',lab:()=>'Appuyer sur le bouton 1'},{id:'b2',type:'push',lab:()=>'Appuyer sur le bouton 2'},{id:'b3',type:'push',lab:()=>'Appuyer sur le bouton 3'}],
+  press:(s,id)=>{ s.tl=!s.tl; s.pr=id; },
+  draw:s=>{const p=s.pr, L=s.tl; return sTab([[70,'L'],[190,'N'],[215,'⏚']],['Disj.','16 A'])
+    +fil([[70,70],[100,70]],'ph',L||!!p)+fil([[100,70],[266,70],[266,120]],'ph',L)+fil([[100,70],[100,160]],'ph',!!p)+sDot(100,70)
+    +[100,130,160].map((y,i)=>fil([[100,y],[110,y]],'ph',p==='b'+(i+1))+fil([[146,y],[170,y]],'cmd',p==='b'+(i+1))+sBp(110,y,p==='b'+(i+1),'b'+(i+1))).join('')
+    +sDot(100,100)+sDot(100,130)+fil([[170,160],[170,100]],'cmd',p==='b3'||p==='b2')+sDot(170,100)+sDot(170,130)+fil([[170,100],[230,100],[230,120]],'cmd',!!p)
+    +`<rect class="bx" x="214" y="120" width="88" height="60" rx="4"/><rect class="coil${p?' on':''}" x="223" y="134" width="14" height="32" rx="2"/><path class="inner" d="M230 120V134M230 166V180M266 120V136M288 120V150"/>`
+    +`<path class="blade" d="M266 136L${L?'288 150':'280 130'}"/>`+sTxt(258,176,'Télérupteur','middle','xs')
+    +sTxt(230,116,'A1','middle','xs')+sTxt(266,116,'1','middle','xs')+sTxt(288,116,'2','middle','xs')
+    +fil([[230,180],[230,190]],'ne',!!p)+fil([[288,120],[288,100],[340,100],[340,136]],'rt',L)
+    +fil([[340,164],[340,190],[230,190]],'ne',L)+fil([[230,190],[70,190]],'ne',L||!!p)+sDot(230,190)+fil([[70,215],[385,215],[385,150],[354,150]],'te')
+    +sLamp(340,150,L)+sTxt(128,182,'Boutons poussoirs','middle','xs');},
+  marche:['Chaque bouton poussoir, quand on appuie, envoie une brève impulsion dans la bobine du télérupteur (fil de commande).','À chaque impulsion, le télérupteur change d’état : il ferme ou il ouvre son contact, comme un interrupteur qui bascule tout seul.','Le contact du télérupteur alimente la lampe. Les boutons sont tous branchés côte à côte : on peut en ajouter autant qu’on veut.'],
+  materiel:['Disjoncteur 16 A, fil de 1,5 mm²','Télérupteur (dans le tableau ou en boîte)','Boutons poussoirs (autant que de points de commande)','Points lumineux'],
+  conseils:['Un télérupteur fait un petit « clac » à chaque appui : on le place souvent dans le tableau.','Si la lampe s’allume puis s’éteint aussitôt, un bouton reste peut-être bloqué.']},
+ {id:'prises',titre:'Circuit de prises',resume:'Plusieurs prises de courant branchées les unes après les autres sur le même circuit.',
+  init:()=>({p1:false,p2:false,p3:false}), ctrls:[1,2,3].map(i=>({id:'p'+i,type:'toggle',lab:s=>s['p'+i]?`Débrancher l’appareil de la prise ${i}`:`Brancher un appareil sur la prise ${i}`})),
+  draw:s=>{const o=[s.p1,s.p2,s.p3], X=[170,260,350], any=o.some(Boolean);
+    let g=sTab([[70,'L'],[190,'N'],[215,'⏚']],['Disj.','20 A']);
+    g+=fil([[70,70],[170,70]],'ph',any)+fil([[170,70],[260,70]],'ph',o[1]||o[2])+fil([[260,70],[350,70]],'ph',o[2])+sDot(170,70)+sDot(260,70);
+    g+=fil([[342,190],[252,190]],'ne',o[2])+fil([[252,190],[162,190]],'ne',o[1]||o[2])+fil([[162,190],[70,190]],'ne',any)+sDot(162,190)+sDot(252,190);
+    g+=fil([[70,215],[358,215]],'te');
+    X.forEach((x,i)=>{ g+=fil([[x,70],[x,108]],'ph',o[i])+fil([[x-8,152],[x-8,190]],'ne',o[i])+fil([[x+8,215],[x+8,152]],'te')+(i<2?sDot(x+8,215):'')
+      +act('p'+(i+1),'Prise '+(i+1),`<rect class="prise${o[i]?' on':''}" x="${x-22}" y="108" width="44" height="44" rx="9"/><circle class="trou" cx="${x-8}" cy="131" r="3.5"/><circle class="trou" cx="${x+8}" cy="131" r="3.5"/><rect class="trou" x="${x-2}" y="114" width="4" height="7" rx="1"/>${o[i]?`<rect class="fiche" x="${x-15}" y="121" width="30" height="22" rx="6"/>`:''}`,[x-24,106,48,48])
+      +sTxt(x+6,96,'Prise '+(i+1),'start','sm'); });
+    return g;},
+  marche:['La phase, le neutre et la terre passent de prise en prise : chaque prise est branchée « en dérivation ».','Quand on branche un appareil, le courant passe par la phase, traverse l’appareil et revient par le neutre.','Plus l’appareil est loin du tableau, plus le courant traverse de longueur de fil : c’est pourquoi on limite le nombre de prises par circuit.'],
+  materiel:['Disjoncteur 20 A avec fil de 2,5 mm² (12 prises au plus), ou 16 A avec 1,5 mm² (8 prises au plus)','Prises 2P+T 16 A','Bornes automatiques ou repiquage dans la prise'],
+  conseils:['La terre est obligatoire sur toutes les prises.','Dans la cuisine, prévoir des circuits à part pour le four, le lave-vaisselle, etc.']},
+ {id:'volet',titre:'Volet roulant',resume:'Un moteur de volet commandé par un inverseur « montée / stop / descente ».',
+  init:()=>({m:'stop',pos:40}), ctrls:[{id:'m',type:'choice',options:[['up','Monter'],['stop','Stop'],['down','Descendre']]}],
+  cycle:{m:['stop','up','stop','down']},
+  tick:s=>{ if(s.m==='up'){ s.pos=Math.min(100,s.pos+3); if(s.pos>=100) s.m='stop'; return true;} if(s.m==='down'){ s.pos=Math.max(0,s.pos-3); if(s.pos<=0) s.m='stop'; return true;} return false; },
+  draw:s=>{const up=s.m==='up',dn=s.m==='down',mv=up||dn, sh=Math.round(130*(100-s.pos)/100);
+    const lev=up?'166 102':dn?'166 138':'162 120';
+    return sTab([[70,'L'],[190,'N'],[215,'⏚']],['Disj.','16 A'])
+    +fil([[70,70],[110,70],[110,120],[130,120]],'ph',mv)+fil([[166,100],[290,100],[290,112]],'rt',up)+fil([[166,140],[250,140],[250,130],[272,130]],'n1',dn)
+    +fil([[290,148],[290,190],[70,190]],'ne',mv)+fil([[70,215],[330,215],[330,130],[308,130]],'te')
+    +act('m','Inverseur',`${sTerm(130,120)}${sTerm(166,100)}${sTerm(166,140)}<path class="blade" d="M130 120L${lev}"/>`,[122,92,52,56])
+    +sTxt(148,170,'Inverseur','middle','sm')+sTxt(210,94,'montée','middle','xs')+sTxt(210,154,'descente','middle','xs')
+    +`<circle class="motor${mv?' on':''}" cx="290" cy="130" r="18"/>`+sTxt(290,135,'M','middle','lbl b')+sTxt(290,88,'Moteur','middle','sm')
+    +`<rect class="win" x="342" y="40" width="50" height="130"/><rect class="shut" x="342" y="40" width="50" height="${sh}"/>`
+    +Array.from({length:Math.floor(sh/8)},(_,i)=>`<path class="slat" d="M342 ${48+i*8}H392"/>`).join('')+sTxt(367,186,'Fenêtre','middle','sm');},
+  marche:['La phase arrive sur la borne commune de l’inverseur.','Selon la touche, elle part dans le fil de montée (orange) ou dans celui de descente (violet) : le moteur tourne dans un sens ou dans l’autre.','Le moteur s’arrête tout seul en haut et en bas grâce à ses fins de course internes.'],
+  materiel:['Disjoncteur 16 A, fil de 1,5 mm²','Inverseur pour volet roulant (avec position stop)','Câble du moteur : 4 fils (montée, descente, neutre, terre)'],
+  conseils:['Ne jamais envoyer montée et descente en même temps : les inverseurs du commerce l’empêchent.','Si le volet monte quand on appuie sur « descente », il suffit d’inverser les deux fils de commande.']},
+ {id:'ce',titre:'Chauffe-eau heures creuses',resume:'Un ballon d’eau chaude qui chauffe la nuit, quand l’électricité est moins chère, grâce à un contacteur jour/nuit.',
+  init:()=>({hc:false,mode:'auto',chaud:false}), ctrls:[{id:'hc',type:'toggle',lab:s=>s.hc?'Passer en heures pleines':'Passer en heures creuses'},{id:'mode',type:'choice',options:[['auto','Auto'],['force','Marche forcée'],['off','Arrêt']]},{id:'chaud',type:'toggle',lab:s=>s.chaud?'Puiser de l’eau chaude':'L’eau est chaude (thermostat)'}],
+  cycle:{mode:['auto','force','off']},
+  draw:s=>{const ferme=s.mode==='force'||(s.mode==='auto'&&s.hc), heat=ferme&&!s.chaud;
+    return sTab([[70,'L'],[130,'L'],[190,'N'],[215,'⏚']],[[86,'20 A'],[146,'2 A']])
+    +fil([[70,70],[246,70],[246,100]],'ph',heat)+fil([[70,130],[100,130]],'ph',s.hc)
+    +`<rect class="bx" x="92" y="112" width="58" height="36" rx="4"/>`+sTxt(121,108,'Compteur','middle','xs')+sTerm(100,130)+sTerm(142,130)
+    +`<path class="blade" d="M100 130L${s.hc?'142 130':'136 118'}"/>`+sTxt(100,144,'C1','middle','xs')+sTxt(142,144,'C2','middle','xs')
+    +fil([[142,130],[180,130]],'ph',s.hc)
+    +`<rect class="bx" x="180" y="100" width="82" height="80" rx="4"/><rect class="coil${s.hc?' on':''}" x="188" y="122" width="14" height="30" rx="2"/><path class="inner" d="M180 130H188M195 152V165H180M246 100V110M246 140H262"/>`
+    +`<path class="blade" d="M246 110L${ferme?'246 140':'256 126'}"/>`+sTxt(221,92,'Contacteur jour/nuit','middle','xs')
+    +act('mode','Sélecteur du contacteur',`<rect class="sel" x="192" y="160" width="58" height="16" rx="3"/>${sTxt(221,172,{auto:'AUTO',force:'MARCHE',off:'ARRÊT'}[s.mode],'middle','xs b')}`)
+    +fil([[180,165],[165,165],[165,190]],'ne',s.hc)+sDot(165,190)
+    +fil([[262,140],[300,140]],'ph',heat)
+    +act('chaud','Thermostat',`<rect class="tank${s.chaud?' hot':''}" x="300" y="40" width="70" height="136" rx="22"/><rect class="bx" x="310" y="132" width="50" height="16" rx="3"/>${sTxt(335,144,'Thermostat','middle','xs')}<path class="res${heat?' on':''}" d="M335 148 l0 4 l-8 3 l16 4 l-16 4 l16 4 l-8 3 l0 4"/>${heat?`<circle class="bub" cx="322" cy="120" r="2.5"/><circle class="bub b2" cx="345" cy="110" r="2"/><circle class="bub b3" cx="333" cy="96" r="2.5"/>`:''}`)
+    +sTxt(335,60,'Ballon','middle','sm')+fil([[335,176],[335,190],[165,190]],'ne',heat)+fil([[165,190],[70,190]],'ne',heat||s.hc)
+    +fil([[70,215],[388,215],[388,100],[370,100]],'te');},
+  marche:['Le compteur ferme son contact C1-C2 pendant les heures creuses : la bobine du contacteur reçoit du courant (circuit de commande, disjoncteur 2 A).','La bobine ferme le contact de puissance du contacteur : le ballon est alimenté par son disjoncteur 20 A.','Le thermostat du ballon coupe la résistance quand l’eau est chaude. Le sélecteur permet de forcer la chauffe (Marche) ou de l’arrêter (Arrêt) ; en Auto, il suit les heures creuses.'],
+  materiel:['Disjoncteur 20 A et fil de 2,5 mm² pour le ballon','Disjoncteur 2 A et fil de 1,5 mm² pour la commande','Contacteur jour/nuit 20 A avec sélecteur Auto / Marche / Arrêt','Câble jusqu’au compteur (bornes C1-C2)'],
+  conseils:['Le ballon doit être relié à la terre, et un groupe de sécurité doit être posé sur l’arrivée d’eau froide.','Pensez à remettre le sélecteur sur Auto après une marche forcée.']},
+ {id:'radiateur',titre:'Radiateur avec fil pilote',resume:'Un radiateur électrique piloté à distance (confort, éco, hors-gel, arrêt) par un fil supplémentaire.',
+  init:()=>({o:'confort'}), ctrls:[{id:'o',type:'choice',options:[['confort','Confort'],['eco','Éco'],['hg','Hors-gel'],['arret','Arrêt']]}],
+  cycle:{o:['confort','eco','hg','arret']},
+  draw:s=>{const o=s.o, heat=o!=='arret', sig=o!=='confort', I={confort:1,eco:0.6,hg:0.25,arret:0}[o];
+    let w=''; for(let x=0;x<=120;x+=2){ let y=Math.sin(2*Math.PI*x/40); if(o==='confort') y=0; if(o==='hg'&&y>0) y=0; if(o==='arret'&&y<0) y=0; w+=(x?'L':'M')+(94+x)+' '+(154-y*18).toFixed(1); }
+    return sTab([[70,'L'],[112,'FP'],[190,'N'],[215,'⏚']],['Disj.','20 A'])
+    +act('o','Programmateur',`<rect class="sel" x="14" y="60" width="50" height="22" rx="3"/>${sTxt(39,75,'Prog.','middle','xs b')}`)
+    +fil([[70,70],[230,70],[230,90],[250,90]],'ph',heat)+fil([[70,112],[250,112]],'cmd',sig)
+    +fil([[250,150],[230,150],[230,190],[70,190]],'ne',heat)+fil([[70,215],[388,215],[388,120],[370,120]],'te')
+    +`<rect class="rad" x="250" y="60" width="120" height="110" rx="8"/>`+Array.from({length:9},(_,i)=>`<path class="fin" d="M${262+i*12} 68V162"/>`).join('')
+    +(heat?[0,1,2].map(i=>`<path class="wave" style="opacity:${I}" d="M${272+i*36} 52 q6 -8 0 -16 q-6 -8 0 -16"/>`).join(''):'')
+    +sTxt(310,184,'Radiateur','middle','sm')
+    +`<rect class="scope" x="88" y="128" width="132" height="52" rx="4"/><path class="axis" d="M94 154H214"/><path class="sig" d="${w}"/>`;},
+  marche:['Le radiateur est alimenté normalement par la phase et le neutre.','Le fil pilote (noir ou gris) transmet un ordre venant du programmateur, sous forme d’un signal électrique.','Pas de signal : Confort. Signal complet : Éco. Seulement la moitié négative : Hors-gel. Seulement la moitié positive : Arrêt. L’écran montre le signal envoyé.'],
+  materiel:['Disjoncteur 20 A et fil de 2,5 mm² (4 500 W au plus par circuit)','Câble 3 fils + fil pilote','Programmateur ou gestionnaire d’énergie avec sortie fil pilote'],
+  conseils:['Le fil pilote est sous 230 V : coupez le courant avant de le toucher, et ne le reliez jamais à la terre.','Isolez le bout du fil pilote s’il n’est pas utilisé.']},
+ {id:'detecteur',titre:'Détecteur de mouvement',resume:'Une lampe qui s’allume toute seule quand quelqu’un passe, puis s’éteint après un délai.',
+  init:()=>({on:false}), ctrls:[{id:'pas',type:'push',lab:()=>'Faire passer quelqu’un'}],
+  press:(s)=>{ s.on=true; s.t=Date.now(); }, hold:5000,
+  tick:s=>{ if(s.on && Date.now()-s.t>5000){ s.on=false; return true;} return false; },
+  draw:s=>{const on=s.on; return sTab([[70,'L'],[190,'N'],[215,'⏚']],['Disj.','16 A'])
+    +fil([[70,70],[140,70]],'ph',on)+fil([[210,70],[300,70],[300,116]],'rt',on)+fil([[150,96],[150,190]],'ne',false)
+    +fil([[300,144],[300,190],[150,190]],'ne',on)+fil([[150,190],[70,190]],'ne',on)+sDot(150,190)+fil([[70,215],[340,215],[340,130],[314,130]],'te')
+    +act('pas','Détecteur',`<rect class="bx" x="140" y="50" width="70" height="46" rx="6"/><path class="dome" d="M165 96a10 10 0 0 0 20 0z"/>`)
+    +sTxt(175,44,'Détecteur','middle','sm')+sTxt(146,108,'N','end','xs')
+    +(on?`<path class="cone" d="M175 106 L150 170 M175 106 L200 170 M175 106 L175 175"/><g class="pers"><circle cx="232" cy="132" r="6"/><path d="M232 138V160M232 145L222 152M232 145L242 150M232 160L224 176M232 160L240 176"/></g>`:'')
+    +sLamp(300,130,on)+sTxt(266,134,'Lampe','end','sm');},
+  marche:['Le détecteur est branché sur la phase et le neutre : il reste toujours alimenté pour pouvoir surveiller.','Quand il voit un mouvement (chaleur d’une personne), il envoie la phase dans le retour lampe.','Après le délai réglé (ici 5 secondes), il coupe le retour et la lampe s’éteint.'],
+  materiel:['Disjoncteur 16 A, fil de 1,5 mm²','Détecteur à 3 fils (phase, neutre, retour lampe)','Point lumineux'],
+  conseils:['Le neutre est obligatoire au détecteur : un modèle « 2 fils » existe pour remplacer un simple interrupteur.','Réglez la sensibilité à la lumière pour qu’il ne s’allume pas en plein jour.']},
+ {id:'borne',titre:'Recharge de voiture électrique',resume:'Le circuit dédié d’une prise renforcée ou d’une borne murale pour recharger une voiture électrique.',
+  init:()=>({type:'borne',car:false,lvl:30}), ctrls:[{id:'type',type:'choice',options:[['prise','Prise renforcée 3,7 kW'],['borne','Borne murale 7,4 kW']]},{id:'car',type:'toggle',lab:s=>s.car?'Débrancher la voiture':'Brancher la voiture'}],
+  cycle:{type:['prise','borne']},
+  tick:s=>{ if(s.car && s.lvl<100){ s.lvl=Math.min(100,s.lvl+(s.type==='borne'?2:1)); return true;} return false; },
+  draw:s=>{const ch=s.car&&s.lvl<100, b=s.type==='borne';
+    return sTab([[70,'L'],[190,'N'],[215,'⏚']],['Diff. 30 mA','40 A type A','','Disj.',b?'40 A (C)':'20 A'])
+    +fil([[70,70],[205,70],[205,110],[225,110]],'ph',ch)+fil([[225,135],[215,135],[215,190],[70,190]],'ne',ch)+fil([[70,215],[255,215],[255,155]],'te')
+    +sTxt(138,62,b?'câble 3G10 mm² (selon longueur)':'câble 3G2,5 mm²','middle','xs')
+    +act('type','Type de recharge',b?`<rect class="wall" x="225" y="95" width="60" height="60" rx="8"/><rect class="scr${ch?' on':''}" x="238" y="105" width="34" height="12" rx="2"/><circle class="trou" cx="255" cy="136" r="8"/>`
+      :`<rect class="prise${ch?' on':''}" x="233" y="103" width="44" height="44" rx="9"/><circle class="trou" cx="247" cy="126" r="3.5"/><circle class="trou" cx="263" cy="126" r="3.5"/>`)
+    +sTxt(255,88,b?'Borne 7,4 kW':'Prise renforcée','middle','sm')
+    +(s.car?`<path class="cord" d="M${b?263:262} ${b?140:132} C300 150 300 178 336 176"/>`:'')
+    +`<path class="car" d="M300 196 L300 180 Q304 170 316 168 L330 156 Q336 152 346 152 L366 152 Q376 152 382 160 L392 170 L394 196 Z"/><circle class="wheel" cx="318" cy="198" r="9"/><circle class="wheel" cx="378" cy="198" r="9"/>`
+    +`<rect class="batt" x="318" y="122" width="56" height="16" rx="3"/><rect class="battf" x="320" y="124" width="${52*s.lvl/100}" height="12" rx="2"/>`+sTxt(346,116,`Batterie ${s.lvl} %`,'middle','xs');},
+  marche:['La recharge a toujours son propre circuit, protégé par son propre interrupteur différentiel 30 mA et son propre disjoncteur.','Prise renforcée : environ 3,7 kW (16 A), disjoncteur 20 A et fil de 2,5 mm². Borne murale 7,4 kW : disjoncteur 40 A courbe C, câble de forte section (souvent 10 mm², selon la longueur).','Le courant circule longtemps à pleine puissance : les connexions doivent être parfaitement serrées.'],
+  materiel:['Interrupteur différentiel 30 mA type A (ou type B si la borne ne détecte pas elle-même les fuites de courant continu)','Disjoncteur dédié','Câble dimensionné selon la puissance et la distance','Bonne prise de terre (moins de 100 Ω)'],
+  conseils:['Au-delà de 3,7 kW, la loi impose un installateur qualifié IRVE : c’est aussi la condition pour les aides financières.','Vérifiez que votre abonnement est assez puissant, ou ajoutez un délesteur.']},
+];
+let schCur=null, schState={}, schTimer=null;
+function schStop(){ if(schTimer){ clearInterval(schTimer); schTimer=null; } }
+function schemasHTML(){
+  return `<section class="card"><h2>Bibliothèque de schémas</h2><p class="hint">Choisissez un schéma. Touchez les interrupteurs sur le dessin, ou les boutons en dessous, pour voir le courant circuler.</p>
+    <div class="chips" id="sch-list">${SCHEMAS.map(x=>`<button class="chipb" type="button" data-sch="${x.id}" aria-pressed="false">${x.titre}</button>`).join('')}</div>
+    <div id="sch-view"></div></section>`;
+}
+function schOpen(id){
+  schStop(); const S=SCHEMAS.find(x=>x.id===id)||SCHEMAS[0]; schCur=S; schState=S.init();
+  try{ localStorage.setItem('atelier-schema',S.id); }catch(e){}
+  document.querySelectorAll('#sch-list .chipb').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sch===S.id)));
+  const fils=[...new Set((S.draw(schState).match(/k-(\w+)/g)||[]).map(x=>x.slice(2)))];
+  document.getElementById('sch-view').innerHTML=`<h3>${S.titre}</h3><p class="sch-res">${S.resume}</p>
+    <div class="sch-fig"><svg viewBox="0 0 400 240" id="sch-svg" role="img" aria-label="Schéma : ${S.titre}"></svg></div>
+    <div class="row" id="sch-ctrl"></div>
+    <div class="fils">${fils.map(k=>`<span><i class="sw k-${k}"></i>${FILS[k]}</span>`).join('')}</div>
+    <div class="sch-txt"><div><b>Comment ça marche</b><ol>${S.marche.map(t=>`<li>${t}</li>`).join('')}</ol></div>
+    <div><b>Matériel</b><ul>${S.materiel.map(t=>`<li>${t}</li>`).join('')}</ul></div>
+    <div><b>Bon à savoir</b><ul>${S.conseils.map(t=>`<li>${t}</li>`).join('')}</ul></div></div>
+    <p class="warn">Coupez toujours le disjoncteur du circuit avant d’intervenir, et vérifiez l’absence de tension.</p>`;
+  if(S.tick) schTimer=setInterval(()=>{ if(!document.getElementById('sch-svg')){ schStop(); return; } if(S.tick(schState)) schDraw(); },150);
+  schDraw();
+}
+function schDraw(){
+  const S=schCur, svg=document.getElementById('sch-svg'); if(!S||!svg) return;
+  svg.innerHTML=S.draw(schState);
+  document.getElementById('sch-ctrl').innerHTML=S.ctrls.map(c=>{
+    if(c.type==='choice') return `<div class="seg" role="group">${c.options.map(([v,l])=>`<button type="button" class="btn ghost" data-ctl="${c.id}" data-v="${v}" aria-pressed="${schState[c.id]===v}">${l}</button>`).join('')}</div>`;
+    return `<button type="button" class="btn${c.type==='push'?' ghost':''}" data-ctl="${c.id}">${c.lab(schState)}</button>`;
+  }).join('');
+}
+function schAct(id,v){
+  const S=schCur; if(!S) return; const c=S.ctrls.find(x=>x.id===id);
+  if(c && c.type==='push' || (!c && S.press)){ S.press(schState,id); if(!S.hold){ setTimeout(()=>{ if(schCur===S){ schState.pr=null; schDraw(); } },600); } }
+  else if(c && c.type==='toggle') schState[id]=!schState[id];
+  else if(v!==undefined) schState[id]=v;
+  else if(S.cycle && S.cycle[id]){ const cy=S.cycle[id]; const i=cy.indexOf(schState[id]); schState[id]=cy[(i+1)%cy.length]; }
+  schDraw();
+}
+view.addEventListener('click',e=>{
+  if(cur!=='schemas') return;
+  const ch=e.target.closest('[data-sch]'); if(ch){ schOpen(ch.dataset.sch); return; }
+  const ct=e.target.closest('[data-ctl]'); if(ct){ schAct(ct.dataset.ctl, ct.dataset.v); return; }
+  const a=e.target.closest('[data-act]'); if(a) schAct(a.dataset.act);
+});
+view.addEventListener('keydown',e=>{ if(cur!=='schemas') return; const a=e.target.closest&&e.target.closest('[data-act]'); if(a&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); schAct(a.dataset.act); } });
+
+/* ============ SYMBOLES ============ */
+const SYMB=[
+ ['Point lumineux','Lampe ou luminaire au plafond ou au mur.','<circle cx="45" cy="28" r="14"/><path d="M35 18L55 38M55 18L35 38"/>'],
+ ['Interrupteur simple','Allume ou éteint depuis un seul endroit.','<circle cx="34" cy="34" r="5"/><path d="M37 30L56 12L61 17"/>'],
+ ['Interrupteur double','Deux touches pour deux lampes.','<circle cx="34" cy="34" r="5"/><path d="M37 30L56 12L61 17M51 17L56 22"/>'],
+ ['Va-et-vient','Commande d’une lampe depuis deux endroits.','<circle cx="45" cy="28" r="5"/><path d="M48 24L64 9L68 14M42 32L26 47L22 42"/>'],
+ ['Bouton poussoir','Contact bref, pour télérupteur ou sonnette.','<circle cx="45" cy="28" r="12"/><circle cx="45" cy="28" r="5"/>'],
+ ['Prise de courant 2P+T','Prise 16 A avec terre.','<path d="M29 34a16 16 0 0 1 32 0M27 34H63M45 18V10"/>'],
+ ['Télérupteur','Relais qui change d’état à chaque impulsion.','<rect x="27" y="12" width="36" height="32"/><path d="M27 44L63 12"/>'],
+ ['Disjoncteur','Coupe le circuit en cas de surcharge ou de court-circuit.','<path d="M45 4V18L56 36M45 40V52M41 14L49 22M49 14L41 22"/>'],
+ ['Interrupteur différentiel','Coupe en cas de fuite de courant (30 mA).','<path d="M45 4V18L56 36M45 40V52"/><ellipse cx="45" cy="46" rx="12" ry="4"/>'],
+ ['Fusible','Protection par fil fusible.','<rect x="39" y="10" width="12" height="36"/><path d="M45 2V54"/>'],
+ ['Contacteur','Contact commandé par une bobine.','<path d="M45 4V18L56 36M45 40V52"/><path d="M41 40a4 4 0 0 1 8 0"/>'],
+ ['Bobine','Partie qui commande un contacteur ou un télérupteur.','<rect x="33" y="16" width="24" height="24"/><path d="M45 4V16M45 40V52"/>'],
+ ['Moteur','Volet roulant, VMC, pompe…','<circle cx="45" cy="28" r="16"/><text x="45" y="34" text-anchor="middle" font-size="16" stroke="none" fill="currentColor">M</text>'],
+ ['Résistance chauffante','Chauffe-eau, radiateur, plaque.','<rect x="31" y="20" width="28" height="16"/><path d="M15 28H31M59 28H75"/>'],
+ ['Prise de terre','Liaison avec la terre, pour la sécurité.','<path d="M45 6V28M31 28H59M36 36H54M41 44H49"/>'],
+ ['Boîte de connexion','Point où les fils se raccordent.','<circle cx="45" cy="28" r="10"/><circle cx="45" cy="28" r="2.5" fill="currentColor"/>'],
+];
+function symbolesHTML(){
+  return `<section class="card"><h2>Symboles électriques</h2><p class="hint">Les symboles qu’on trouve sur les plans et les schémas.</p>
+    <div class="symb">${SYMB.map(([n,d,s])=>`<div class="sy"><svg viewBox="0 0 90 56" aria-hidden="true">${s}</svg><div><b>${n}</b><span>${d}</span></div></div>`).join('')}</div></section>
+    <section class="card"><h2>Couleurs des fils</h2>
+    <div class="cols">
+      <div><i class="sw k-ph"></i><b>Phase</b><span>Rouge, marron ou noir. Toujours la couper en premier.</span></div>
+      <div><i class="sw k-ne"></i><b>Neutre</b><span>Toujours bleu clair, et réservé au neutre.</span></div>
+      <div><i class="sw k-te"></i><b>Terre</b><span>Toujours vert et jaune, et réservé à la terre.</span></div>
+      <div><i class="sw k-rt"></i><b>Retours et navettes</b><span>Les autres couleurs : orange, violet, noir, gris, marron…</span></div>
+    </div></section>
+    <section class="card"><h2>Sections et disjoncteurs courants</h2><div class="tbl"><table><thead><tr><th>Circuit</th><th>Disjoncteur</th><th>Fil</th></tr></thead><tbody>
+      <tr><td>Éclairage (8 points au plus)</td><td>16 A</td><td>1,5 mm²</td></tr>
+      <tr><td>Prises (8 au plus)</td><td>16 A</td><td>1,5 mm²</td></tr>
+      <tr><td>Prises (12 au plus)</td><td>20 A</td><td>2,5 mm²</td></tr>
+      <tr><td>Lave-linge, lave-vaisselle, four, chauffe-eau</td><td>20 A</td><td>2,5 mm²</td></tr>
+      <tr><td>Radiateurs (4 500 W au plus)</td><td>20 A</td><td>2,5 mm²</td></tr>
+      <tr><td>Plaque de cuisson (monophasé)</td><td>32 A</td><td>6 mm²</td></tr>
+      <tr><td>Volets roulants</td><td>16 A</td><td>1,5 mm²</td></tr>
+    </tbody></table></div></section>`;
+}
 
 route();
 </script>
