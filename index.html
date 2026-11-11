@@ -218,6 +218,18 @@ i.k-te{background:repeating-linear-gradient(90deg,var(--c-te) 0 7px,var(--c-te2)
 .stair .st-dash{stroke:var(--warn);stroke-width:2;stroke-dasharray:6 5;fill:none;vector-effect:non-scaling-stroke}
 .stair text{fill:var(--ink);font-family:var(--body);font-weight:700}
 .stair text.st-dlab{fill:var(--warn)}
+/* Menuiserie */
+.mv{width:100%;height:auto;max-height:460px;display:block;background:var(--sch-bg);border:1px solid var(--line);border-radius:12px}
+.mv .mv-p{fill:var(--piece);stroke:var(--piece-line);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.mv .mv-m{fill:#d9b98a;stroke:#8a6a3f;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.mv .mv-d{fill:var(--accent);fill-opacity:.1;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 4;vector-effect:non-scaling-stroke}
+.mv .mv-mur{fill:var(--line)}
+.mv .mv-sol{stroke:var(--ink);stroke-width:3;vector-effect:non-scaling-stroke}
+.mv .mv-cote{stroke:var(--muted);stroke-width:1.2;fill:none;vector-effect:non-scaling-stroke}
+.mv text{fill:var(--ink);font-family:var(--body);font-weight:700}
+.mv text.mv-t{fill:var(--muted);font-weight:400}
+.mv .mv-b{fill:#6b1f2a;fill-opacity:.85;stroke:#3d0f16;stroke-width:1;vector-effect:non-scaling-stroke}
+
 
 .phases{display:flex;flex-direction:column;gap:6px;margin:8px 0}
 .phases div{display:grid;grid-template-columns:2.2em minmax(0,1fr) 4em;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
@@ -253,6 +265,278 @@ const UNITS = [
   {g:'Surfaces',  f:'S', u:[['cm2','cm²',0.0001],['m2','m²',1],['are','ares',100],['ha','hectares',10000],['pi2','pieds carrés',0.09290304]]},
   {g:'Volumes',   f:'V', u:[['cm3','cm³',0.000001],['l','litres',0.001],['m3','m³',1]]},
 ];
+
+/* ============ MENUISERIE ============ */
+const MAT={massif:{nom:'bois massif',chant:false,fin:'vernis',flex:80},cp:{nom:'contreplaqué',chant:false,fin:'vernis',flex:80},
+  mdf:{nom:'MDF',chant:false,fin:'peinture',flex:60},mela:{nom:'aggloméré mélaminé',chant:true,fin:null,flex:65},osb:{nom:'OSB',chant:false,fin:'vernis',flex:70}};
+const MATS=[['cp','Contreplaqué'],['massif','Bois massif (pin, lamellé-collé)'],['mela','Aggloméré mélaminé'],['mdf','MDF'],['osb','OSB']];
+const ASS=S('as','Assemblage',[['vis','Vis'],['tour','Tourillons (chevilles bois) et colle']],'vis');
+function mDims(o){ return [N('H','Hauteur','cm',o.H),N('W','Largeur','cm',o.W),N('D','Profondeur','cm',o.D),N('e','Épaisseur des planches','mm',o.e||18),S('mat','Matériau',MATS,o.mat||'cp')]; }
+function visDe(e){ const L=[30,35,40,45,50,60,70,80].find(x=>x>=2.5*e)||80; return `${e<=19?4:e<=25?5:6} × ${L} mm`; }
+function kJ(D){ return D<=300?2:D<=450?3:4; }
+function porteeMax(mat,e){ return Math.round(MAT[mat].flex*10*Math.pow(e/18,0.75)); }
+function charn(h){ return h<=900?2:h<=1600?3:h<=2000?4:5; }
+function mm(x){ return fr(Math.round(x),0); }
+/* R : pieces [{nom,q,L,l,e,t:'p'|'f'|'m'|'t',sec,ch,note}], q (quincaillerie {libellé:nb}), vue (svg), notes, warns, portee, v */
+function meuble(v,R){
+  const P=R.pieces.filter(p=>p.q>0&&p.L>0&&p.l>0), mat=MAT[v.mat]||MAT.cp, W=[...(R.warns||[])], notes=[...(R.notes||[])];
+  const rows=P.map(p=>`<tr><td>${p.nom}${p.note?`<br><span class="u">${p.note}</span>`:''}</td><td>${p.q}</td><td>${p.t==='t'?mm(p.L)+' mm':p.t==='m'?`${mm(p.L)} mm<br><span class="u">section ${p.sec}</span>`:`${mm(p.L)} × ${mm(p.l)}`}</td><td>${p.t==='m'||p.t==='t'?'—':p.e+' mm'}</td></tr>`).join('');
+  const surf={}; P.filter(p=>p.t==='p'||p.t==='f').forEach(p=>{ const k=p.t==='f'?`Fond (contreplaqué ou HDF) ${p.e} mm`:`Panneaux ${p.e} mm`; surf[k]=(surf[k]||0)+p.q*p.L*p.l/1e6; });
+  const lin={}; P.filter(p=>p.t==='m'||p.t==='t').forEach(p=>{ const k=p.t==='t'?`Tasseaux ${p.sec}`:`Bois massif ${p.sec}`; lin[k]=(lin[k]||0)+p.q*p.L/1000; });
+  if(R.portee && v.mat){ const mx=porteeMax(v.mat,R.ep||v.e); if(R.portee>mx) W.push(`Tablettes longues de ${mm(R.portee/10)} cm sans appui : en ${mat.nom} de ${R.ep||v.e} mm, ne dépassez pas environ ${mm(mx/10)} cm pour des livres. Ajoutez un montant au milieu ou prenez des planches plus épaisses.`); }
+  const ch=mat.chant ? P.reduce((s,p)=>s+(p.ch?p.q*p.ch:0),0)/1000*1.1 : 0;
+  const peint=P.filter(p=>p.t==='p'||p.t==='m').reduce((s,p)=>s+p.q*(p.t==='m'?p.L*0.3:2*p.L*p.l)/1e6,0);
+  const q=Object.entries(R.q||{}).filter(([,n])=>n>0);
+  if(ch) q.push([`Bande de chant (rouleau)`,`${fr(ch,1)} m`]);
+  if(mat.fin==='vernis') q.push(['Vernis ou huile (2 couches)',`${fr(Math.max(0.25,peint*2/12),2)} L pour ${fr(peint,1)} m²`]);
+  if(mat.fin==='peinture') q.push(['Sous-couche puis peinture (2 couches)',`${fr(Math.max(0.25,peint*3/10),2)} L pour ${fr(peint,1)} m²`]);
+  const dec={p:[],t:[]}; P.filter(p=>p.t==='p'&&p.e===(R.ep||v.e)).forEach(p=>dec.p.push([Math.round(p.L),Math.round(p.l),p.q])); P.filter(p=>p.t==='t').forEach(p=>dec.t.push([Math.round(p.L),p.q]));
+  const nb=P.reduce((s,p)=>s+p.q,0);
+  const extra=`${R.vue||''}
+    <div class="tab-g"><b>Liste de débit</b><div class="tbl"><table><thead><tr><th>Pièce</th><th>Qté</th><th>Dimensions (mm)</th><th>Épaisseur</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+    <div class="tab-g"><b>Quincaillerie et fournitures</b><ul>${q.map(([k,n])=>`<li>${k} : ${typeof n==='number'?fr(n,0):n}</li>`).join('')}</ul></div>
+    <div class="row">${dec.p.length?`<button class="btn ghost" type="button" data-dec="p">Voir le plan de découpe des panneaux</button>`:''}${dec.t.length?`<button class="btn ghost" type="button" data-dec="t">Voir la découpe des tasseaux</button>`:''}</div>
+    <div class="tab-notes"><b>Bon à savoir</b><ul>${notes.map(n=>`<li>${n}</li>`).join('')}
+      <li>Les longueurs tiennent compte de l’épaisseur des autres planches : tout s’emboîte si les coupes sont justes. Faites couper les panneaux en magasin si possible.</li>
+      ${R.vis!==false?`<li>Avant chaque vis : avant-trou de 3 mm et fraisage de la tête. Vissez à 5 cm des bouts, puis tous les 15 à 20 cm.</li>`:''}</ul></div>`;
+  const det=[...Object.entries(surf).map(([k,s])=>`${k} : ${fr(s,2)} m²`),...Object.entries(lin).map(([k,l])=>`${k} : ${fr(l,2)} m linéaires`),...(R.info||[]),...W.map(w=>({warn:w}))];
+  const items=[...Object.entries(surf).map(([k,s])=>`${R.titre} — ${k} : ${fr(s,2)} m² (voir liste de débit)`),...Object.entries(lin).map(([k,l])=>`${R.titre} — ${k} : ${fr(l,1)} m`),...q.map(([k,n])=>`${R.titre} — ${k} : ${typeof n==='number'?fr(n,0):n}`)];
+  return {big:`${nb} pièce${nb>1?'s':''} à débiter`, detail:det, extra, item:items, decoupe:dec};
+}
+function vue(Wt,Ht,rects,o={}){
+  const m=Math.max(Wt,Ht), pad=m*0.1, fs=m/20, Y=y=>-y;
+  const r=rects.map(x=>x.poly?`<polygon class="${x.cl}" points="${x.poly.map(p=>p[0]+','+Y(p[1])).join(' ')}"/>`:x.path?`<path class="${x.cl}" d="${x.path}"/>`
+    :`<rect class="${x.cl}" x="${x.x}" y="${Y(x.y+x.h)}" width="${x.w}" height="${x.h}"/>`).join('');
+  return `<svg class="mv" viewBox="${-pad-fs} ${-Ht-pad} ${Wt+2*pad+fs*1.2} ${Ht+2*pad+fs*1.4}" role="img" aria-label="${o.titre||'Dessin du meuble'}">
+    ${o.sol!==false?`<path class="mv-sol" d="M${-pad} 0H${Wt+pad}"/>`:''}${r}
+    ${o.cw!==false?`<path class="mv-cote" d="M0 ${fs*0.9}H${Wt}M0 ${fs*0.5}V${fs*1.3}M${Wt} ${fs*0.5}V${fs*1.3}"/><text x="${Wt/2}" y="${fs*2.1}" font-size="${fs}" text-anchor="middle">${o.lw||mm(Wt/10)+' cm'}</text>`:''}
+    ${o.ch!==false?`<path class="mv-cote" d="M${-fs*0.9} 0V${-Ht}M${-fs*1.3} 0H${-fs*0.5}M${-fs*1.3} ${-Ht}H${-fs*0.5}"/><text x="${-fs*1.3}" y="${-Ht/2}" font-size="${fs}" text-anchor="middle" transform="rotate(-90 ${-fs*1.3} ${-Ht/2})" dy="-0.3em">${o.lh||mm(Ht/10)+' cm'}</text>`:''}
+    ${(o.txt||[]).map(t=>`<text x="${t[0]}" y="${Y(t[1])}" font-size="${fs*(t[3]||0.8)}" text-anchor="middle" class="mv-t">${t[2]}</text>`).join('')}
+  </svg>`;
+}
+function addQ(Q,k,n){ if(n>0) Q[k]=(Q[k]||0)+n; }
+function joints(Q,v,nb,D){ if(v.as==='tour'){ addQ(Q,'Tourillons Ø 8 × 40 mm',nb*kJ(D)); addQ(Q,'Colle à bois vinylique (flacon)',1); } else addQ(Q,`Vis à bois ${visDe(v.e)}`,nb*kJ(D)); }
+function fondQ(Q,fond,Hf,Wf,traverses){ if(fond==='cloue'){ addQ(Q,'Pointes 1,4 × 20 mm (ou vis 3 × 16)',Math.ceil(2*(Hf+Wf)/100)+Math.ceil(traverses*Wf/150)); } }
+function caisson(v,o){
+  const H=v.H*10,W=v.W*10,D=v.D*10,e=v.e,so=Math.max(0,(v.so||0)*10),n=Math.max(0,Math.round(v.n)),fe=3,np=+(v.np||0),fond=v.fond||'cloue';
+  const Li=W-2*e, P=[], Q={}, notes=[];
+  P.push({nom:'Côté',q:2,L:H,l:D,e,t:'p',ch:H});
+  P.push({nom:'Dessus',q:1,L:Li,l:D,e,t:'p',ch:Li});
+  P.push({nom:'Dessous',q:1,L:Li,l:D,e,t:'p',ch:Li,note:so?`posé à ${mm(so/10)} cm du sol`:''});
+  if(so) P.push({nom:'Plinthe (socle)',q:1,L:Li,l:so,e,t:'p',ch:Li,note:'en retrait de 1 cm sous le dessous'});
+  const off = fond==='rainure'? 10+fe : 0, mob=!o.fixes;
+  const Lt=mob?Li-2:Li, Dt=D-off-(mob?10:0)-(np?0:0);
+  if(n) P.push({nom:o.fixes?'Tablette fixe':'Tablette mobile',q:n,L:Lt,l:Dt,e,t:'p',ch:Lt,note:mob?'2 mm de jeu en largeur, 1 cm en retrait à l’avant':''});
+  if(fond==='cloue') P.push({nom:'Fond',q:1,L:H-so,l:W,e:fe,t:'f',note:'cloué au dos, sur les chants'});
+  if(fond==='rainure'){ P.push({nom:'Fond',q:1,L:H-so-2*e+16,l:Li+16,e:fe,t:'f',note:'glissé dans une rainure de 8 mm'}); notes.push(`Rainure pour le fond : largeur ${fe+0.5} mm, profondeur 8 mm, à 10 mm du bord arrière, dans les côtés, le dessus et le dessous.`); }
+  let hd=0,wd=0;
+  if(np){ hd=H-so-4; wd=(W-3-(np-1)*3)/np; P.push({nom:'Porte',q:np,L:hd,l:wd,e,t:'p',ch:2*(hd+wd),note:'en applique, 2 à 3 mm de jeu'}); }
+  const hi=H-so-2*e, gap=n?(hi-n*e)/(n+1):hi;
+  joints(Q,v,4+(o.fixes?2*n:0),D); if(so) addQ(Q,v.as==='tour'?'Tourillons Ø 8 × 40 mm':`Vis à bois ${visDe(e)}`,4);
+  if(mob) addQ(Q,'Taquets de tablette (Ø 5 mm)',4*n);
+  fondQ(Q,fond,H-so,W,0);
+  if(np){ addQ(Q,'Charnières invisibles Ø 35 mm avec embases',np*charn(hd)); addQ(Q,'Poignées ou boutons',np); addQ(Q,'Butées ou aimants de porte',np); notes.push('Charnières : perçage Ø 35 mm, profondeur 12 mm, à 22 mm du bord de la porte, à 10 cm du haut et du bas.'); }
+  if(H>=1000||o.mur){ addQ(Q,'Équerres anti-basculement',2); addQ(Q,'Vis et chevilles adaptées au mur',4); notes.push('Fixez toujours un meuble haut au mur : il peut basculer s’il est chargé en haut ou si un enfant s’y accroche.'); }
+  if(mob) notes.push('Trous de taquets : Ø 5 mm, 12 mm de profondeur, à 4 cm de l’avant et de l’arrière, tous les 32 mm.');
+  const R=[{cl:'mv-p',x:0,y:0,w:e,h:H},{cl:'mv-p',x:W-e,y:0,w:e,h:H},{cl:'mv-p',x:e,y:H-e,w:Li,h:e},{cl:'mv-p',x:e,y:so,w:Li,h:e}];
+  if(so) R.push({cl:'mv-m',x:e,y:0,w:Li,h:so});
+  for(let i=1;i<=n;i++) R.push({cl:'mv-p',x:e,y:so+e+i*gap+(i-1)*e,w:Li,h:e});
+  for(let i=0;i<np;i++) R.push({cl:'mv-d',x:1.5+i*(wd+3),y:so+2,w:wd,h:hd});
+  return meuble(v,{titre:o.titre,pieces:P,q:Q,notes,portee:Li,info:[`Hauteur utile entre ${n?'tablettes':'dessous et dessus'} : ${fr(gap/10,1)} cm`],
+    vue:vue(W,H,R,{titre:o.titre})});
+}
+const MENU={
+  'm-etagere':{nom:'Étagère simple', aide:'Deux montants et des tablettes fixes : la plus facile à faire.',
+    pic:'<path d="M10 6v36M38 6v36M10 12h28M10 24h28M10 36h28"/>',
+    champs:[...mDims({H:180,W:80,D:30}),N('n','Nombre de tablettes (haut et bas compris)','',5),N('so','Hauteur de la tablette du bas','cm',8),ASS,
+      S('fond','Fond',[['aucun','Sans fond'],['cloue','Fond cloué au dos (3 mm)']],'aucun')],
+    calc(v){ const H=v.H*10,W=v.W*10,D=v.D*10,e=v.e,n=Math.max(2,Math.round(v.n)),so=v.so*10,Lt=W-2*e,Q={},P=[];
+      P.push({nom:'Montant',q:2,L:H,l:D,e,t:'p',ch:H},{nom:'Tablette',q:n,L:Lt,l:D,e,t:'p',ch:Lt});
+      if(v.fond==='cloue') P.push({nom:'Fond',q:1,L:H-so,l:W,e:3,t:'f'});
+      joints(Q,v,2*n,D); fondQ(Q,v.fond,H-so,W,n);
+      if(H>=1000){ addQ(Q,'Équerres anti-basculement',2); addQ(Q,'Vis et chevilles adaptées au mur',4); }
+      const gap=(H-so-n*e)/(n-1), R=[{cl:'mv-p',x:0,y:0,w:e,h:H},{cl:'mv-p',x:W-e,y:0,w:e,h:H}];
+      for(let i=0;i<n;i++) R.push({cl:'mv-p',x:e,y:so+i*(gap+e),w:Lt,h:e});
+      return meuble(v,{titre:'Étagère',pieces:P,q:Q,portee:Lt,info:[`Hauteur libre entre tablettes : ${fr(gap/10,1)} cm`],
+        notes:[v.fond==='aucun'?'Sans fond, l’étagère peut se déformer en losange : fixez-la au mur ou ajoutez deux écharpes (planchettes en croix) au dos.':'Le fond cloué rend l’étagère bien rigide.', H>=1000?'Fixez l’étagère au mur avec les équerres anti-basculement.':''].filter(Boolean),
+        vue:vue(W,H,R,{titre:'Étagère vue de face'})}); }},
+  'm-biblio':{nom:'Bibliothèque', aide:'Côtés, dessus, socle, fond et tablettes réglables sur taquets.',
+    pic:'<rect x="9" y="5" width="30" height="38"/><path d="M9 15h30M9 25h30M9 34h30"/>',
+    champs:[...mDims({H:200,W:80,D:32}),N('n','Nombre de tablettes réglables','',4),N('so','Hauteur du socle','cm',8),ASS,
+      S('fond','Fond',[['cloue','Fond cloué au dos (3 mm)'],['rainure','Fond encastré dans une rainure'],['aucun','Sans fond']],'cloue')],
+    calc(v){ return caisson(v,{titre:'Bibliothèque'}); }},
+  'm-murale':{nom:'Étagère murale', aide:'Tablettes fixées au mur sur équerres, sur tasseaux ou par fixations invisibles.',
+    pic:'<path d="M8 5v38M8 15h32M8 31h32M14 15v6l-6 0M14 31v6l-6 0"/>',
+    champs:[N('W','Longueur des tablettes','cm',80),N('D','Profondeur','cm',20),N('e','Épaisseur des planches','mm',22),S('mat','Matériau',MATS,'massif'),
+      N('n','Nombre de tablettes','',3),N('ec','Écart entre deux tablettes','cm',35),
+      S('fix','Fixation',[['eq','Équerres'],['tas','Tasseau sous chaque tablette'],['inv','Fixations invisibles (tiges)']],'eq'),
+      S('mur','Type de mur',[['plein','Béton ou brique pleine'],['creux','Brique creuse ou parpaing'],['placo','Plaque de plâtre (placo)']],'plein')],
+    calc(v){ const W=v.W*10,D=v.D*10,e=v.e,n=Math.max(1,Math.round(v.n)),ec=v.ec*10,Q={},P=[],notes=[],warns=[];
+      P.push({nom:'Tablette',q:n,L:W,l:D,e,t:'p',ch:W});
+      const ch={plein:'chevilles nylon Ø 6',creux:'chevilles pour brique creuse Ø 6',placo:'chevilles métalliques à expansion (type Molly) Ø 6'}[v.mur];
+      let portee=0;
+      if(v.fix==='eq'){ const k=Math.max(2,Math.ceil((W-200)/600)+1); portee=(W-200)/(k-1);
+        addQ(Q,`Équerres (branche ≥ ${mm(D*0.7/10)} cm)`,k*n); addQ(Q,'Vis à bois 4 × 20 mm',2*k*n); addQ(Q,`Vis Ø 5 + ${ch}`,2*k*n); }
+      if(v.fix==='tas'){ const k=Math.ceil(W/300)+1; P.push({nom:'Tasseau',q:n,L:W,l:40,t:'t',sec:'27 × 40'});
+        addQ(Q,`Vis Ø 5 × 70 + ${ch}`,k*n); addQ(Q,'Vis à bois 4 × 50 mm (tablette sur tasseau)',k*n); }
+      if(v.fix==='inv'){ const k=Math.ceil(W/300)+1; addQ(Q,'Fixations invisibles (tiges filetées ou supports cachés)',k*n); addQ(Q,`Chevilles adaptées (${ch.replace(/^chevilles /,'')})`,k*n);
+        if(e<25) warns.push('Pour des fixations invisibles, prenez des planches d’au moins 25 à 30 mm pour pouvoir les percer dans l’épaisseur.'); }
+      if(v.mur==='placo') notes.push('Sur plaque de plâtre, ne chargez pas trop : environ 10 kg par cheville métallique. Mieux vaut visser dans un montant de la cloison.');
+      notes.push('Tracez toutes les tablettes au niveau à bulle avant de percer. Vérifiez qu’aucun fil électrique ou tuyau ne passe derrière.');
+      const Ht=(n-1)*ec+e, R=[];
+      for(let i=0;i<n;i++){ const y=i*ec; R.push({cl:'mv-p',x:0,y,w:W,h:e});
+        if(v.fix==='eq'){ const k=Math.max(2,Math.ceil((W-200)/600)+1); for(let j=0;j<k;j++){ const x=100+j*(W-200)/(k-1); R.push({cl:'mv-m',poly:[[x-6,y],[x+6,y],[x+6,y-D*0.6],[x-6,y-D*0.6]]}); } }
+        if(v.fix==='tas') R.push({cl:'mv-m',x:0,y:y-40,w:W,h:40}); }
+      return meuble(v,{titre:'Étagère murale',pieces:P,q:Q,notes,warns,portee:v.fix==='eq'?portee+200:0,
+        vue:vue(W,Ht,R.map(r=>r.poly?r:{...r}),{titre:'Étagère murale vue de face',sol:false,lh:mm(Ht/10)+' cm'})}); }},
+  'm-echelle':{nom:'Étagère échelle', aide:'Deux montants inclinés appuyés au mur, avec des tablettes de plus en plus étroites vers le haut.',
+    pic:'<path d="M32 4L18 44M40 4L26 44M22 34h10M25 24h10M28 14h9"/>',
+    champs:[N('H','Hauteur','cm',180),N('W','Largeur','cm',60),N('D','Profondeur au sol','cm',40),N('wm','Largeur des montants','cm',5),
+      N('e','Épaisseur des planches','mm',22),S('mat','Matériau',MATS,'massif'),N('n','Nombre de tablettes','',4),ASS],
+    calc(v){ const H=v.H*10,W=v.W*10,D=v.D*10,e=v.e,wm=v.wm*10,n=Math.max(1,Math.round(v.n)),Q={},P=[],warns=[];
+      const Lm=Math.hypot(H,D), a=Math.atan(D/H)*180/Math.PI, Lt=W-2*e;
+      P.push({nom:'Montant',q:2,L:Lm,l:wm,e,t:'p',ch:0,note:`bouts coupés à ${fr(a,1)}° pour poser à plat au sol et contre le mur`});
+      const wmh=wm/Math.cos(a*Math.PI/180), R=[{cl:'mv-mur',x:-30,y:0,w:30,h:H+50},{cl:'mv-m',poly:[[D-wmh,0],[D,0],[wmh,H],[0,H]]}];
+      let poses=0;
+      const hmax=Math.max(150,H*(1-130/D)-e);
+      for(let i=0;i<n;i++){ const h=150+(hmax-150)*(n>1?i/(n-1):0), d=Math.floor((D*(1-(h+e)/H)-10)/5)*5;
+        if(d<80){ warns.push(`La tablette ${i+1} serait trop étroite (moins de 8 cm) : réduisez le nombre de tablettes ou augmentez la profondeur.`); continue; }
+        P.push({nom:`Tablette ${i+1}`,q:1,L:Lt,l:d,e,t:'p',ch:Lt,note:`à ${mm(h/10)} cm du sol`}); poses++;
+        R.push({cl:'mv-p',x:D*(1-(h+e)/H)-d,y:h,w:d,h:e}); }
+      joints(Q,v,2*poses,150); addQ(Q,'Fixations murales (obligatoires)',2); addQ(Q,'Vis et chevilles adaptées au mur',2); addQ(Q,'Patins antidérapants',2);
+      return meuble(v,{titre:'Étagère échelle',pieces:P,q:Q,warns,portee:Lt,info:[`Inclinaison des montants : ${fr(a,1)}° par rapport à la verticale`,`Longueur des montants : ${mm(Lm/10)} cm`],
+        notes:['Fixez le haut des montants au mur : une étagère échelle non fixée peut glisser ou basculer.','Les tablettes se vissent à travers les montants (ou sur tourillons), bien de niveau.'],
+        vue:vue(D,H,R,{titre:'Étagère échelle vue de côté',lw:mm(D/10)+' cm'})}); }},
+  'm-casier':{nom:'Casier de rangement', aide:'Un meuble à cases régulières, à empiler ou à poser.',
+    pic:'<rect x="8" y="8" width="32" height="32"/><path d="M8 19h32M8 29h32M19 8v32M29 8v32"/>',
+    champs:[...mDims({H:105,W:105,D:35}),N('r','Nombre de rangées','',3),N('c','Nombre de colonnes','',3),ASS,
+      S('fond','Fond',[['aucun','Sans fond'],['cloue','Fond cloué au dos (3 mm)']],'aucun')],
+    calc(v){ const H=v.H*10,W=v.W*10,D=v.D*10,e=v.e,r=Math.max(1,Math.round(v.r)),c=Math.max(1,Math.round(v.c)),Q={},P=[];
+      const hi=H-2*e, wc=(W-2*e-(c-1)*e)/c, hc=(hi-(r-1)*e)/r;
+      P.push({nom:'Dessus et dessous',q:2,L:W,l:D,e,t:'p',ch:W},{nom:'Côté',q:2,L:hi,l:D,e,t:'p',ch:hi});
+      if(c>1) P.push({nom:'Séparation verticale',q:c-1,L:hi,l:D,e,t:'p',ch:hi});
+      if(r>1) P.push({nom:'Tablette',q:(r-1)*c,L:wc,l:D,e,t:'p',ch:wc});
+      if(v.fond==='cloue') P.push({nom:'Fond',q:1,L:H,l:W,e:3,t:'f'});
+      joints(Q,v,2*(c+1)+2*(r-1)*c,D); fondQ(Q,v.fond,H,W,r-1);
+      const R=[{cl:'mv-p',x:0,y:0,w:W,h:e},{cl:'mv-p',x:0,y:H-e,w:W,h:e},{cl:'mv-p',x:0,y:e,w:e,h:hi},{cl:'mv-p',x:W-e,y:e,w:e,h:hi}];
+      for(let j=1;j<c;j++) R.push({cl:'mv-p',x:e+j*wc+(j-1)*e,y:e,w:e,h:hi});
+      for(let j=0;j<c;j++) for(let i=1;i<r;i++) R.push({cl:'mv-p',x:e+j*(wc+e),y:e+i*hc+(i-1)*e,w:wc,h:e});
+      return meuble(v,{titre:'Casier',pieces:P,q:Q,portee:wc,info:[`Taille d’une case : ${fr(wc/10,1)} × ${fr(hc/10,1)} cm`],
+        notes:['Les tablettes intérieures se vissent de biais ou se montent sur tourillons, car on ne peut pas visser des deux côtés au même endroit.'],
+        vue:vue(W,H,R,{titre:'Casier vu de face'})}); }},
+  'm-bas':{nom:'Meuble bas avec portes', aide:'Un caisson fermé par une ou deux portes, avec tablette intérieure.',
+    pic:'<rect x="7" y="12" width="34" height="28"/><path d="M24 12v28M21 25v4M27 25v4M9 40v4M39 40v4"/>',
+    champs:[...mDims({H:90,W:80,D:45}),N('n','Nombre de tablettes intérieures','',1),N('so','Hauteur du socle','cm',8),
+      S('np','Portes',[['2','2 portes'],['1','1 porte'],['0','Sans porte']],'2'),ASS,
+      S('fond','Fond',[['cloue','Fond cloué au dos (3 mm)'],['rainure','Fond encastré dans une rainure']],'cloue')],
+    calc(v){ return caisson(v,{titre:'Meuble bas'}); }},
+  'm-angle':{nom:'Étagère d’angle murale', aide:'Des tablettes en triangle ou en quart de cercle, fixées au mur sur tasseaux dans un coin.',
+    pic:'<path d="M8 4v40h36"/><path d="M8 32l14 12M8 18l30 26"/>',
+    champs:[N('L1','Longueur le long du mur de gauche','cm',40),N('L2','Longueur le long du mur de droite','cm',40),
+      S('forme','Forme',[['tri','Triangle'],['quart','Quart de cercle']],'tri'),N('n','Nombre de tablettes','',4),N('ec','Écart entre deux tablettes','cm',30),
+      N('e','Épaisseur des planches','mm',18),S('mat','Matériau',MATS,'cp'),
+      S('mur','Type de mur',[['plein','Béton ou brique pleine'],['creux','Brique creuse ou parpaing'],['placo','Plaque de plâtre (placo)']],'plein')],
+    calc(v){ const tri=v.forme==='tri', L1=v.L1*10, L2=tri?v.L2*10:v.L1*10, e=v.e, n=Math.max(1,Math.round(v.n)), Q={}, P=[], notes=[];
+      if(tri) P.push({nom:'Panneau à couper en diagonale',q:Math.ceil(n/2),L:L1,l:L2,e,t:'p',ch:Math.hypot(L1,L2)*2,note:'donne 2 tablettes triangulaires'+(n%2?' (une restera en trop)':'')});
+      else P.push({nom:'Carré à découper en quart de cercle',q:n,L:L1,l:L1,e,t:'p',ch:Math.PI*L1/2,note:`rayon ${mm(L1/10)} cm, tracé au compas depuis le coin`});
+      const t1=L1-20, t2=L2-20-27;
+      P.push({nom:'Tasseau (mur de gauche)',q:n,L:t1,l:40,t:'t',sec:'27 × 40'},{nom:'Tasseau (mur de droite)',q:n,L:t2,l:40,t:'t',sec:'27 × 40'});
+      const ch={plein:'chevilles nylon Ø 6',creux:'chevilles pour brique creuse Ø 6',placo:'chevilles métalliques à expansion Ø 6'}[v.mur];
+      const k=n*(Math.ceil(t1/250)+1+Math.ceil(t2/250)+1); addQ(Q,`Vis Ø 5 × 60 + ${ch}`,k); addQ(Q,'Vis à bois 4 × 40 mm (tablette sur tasseau)',k);
+      notes.push('Les deux murs d’un angle ne sont pas toujours à 90° : présentez une tablette en carton avant de couper le bois.');
+      const R=[{cl:'mv-mur',x:-30,y:0,w:30,h:L2+30},{cl:'mv-mur',x:-30,y:-30,w:L1+30,h:30}];
+      R.push(tri?{cl:'mv-p',poly:[[0,0],[L1,0],[0,L2]]}:{cl:'mv-p',path:`M0 0H${L1}A${L1} ${L1} 0 0 0 0 ${-L1}Z`});
+      R.push({cl:'mv-m',x:0,y:0,w:t1,h:27},{cl:'mv-m',x:0,y:27,w:27,h:t2});
+      return meuble(v,{titre:'Étagère d’angle',pieces:P,q:Q,notes,info:[`Hauteur totale : ${mm(((n-1)*v.ec*10+e)/10)} cm`],
+        vue:vue(L1,L2,R,{titre:'Étagère d’angle vue de dessus',sol:false,lw:mm(L1/10)+' cm',lh:mm(L2/10)+' cm',txt:[[L1*0.3,L2*0.25,'vue de dessus',0.7]]})}); }},
+  'm-etabli':{nom:'Établi', aide:'Un plan de travail solide sur 4 pieds en bois massif, avec étagère basse.',
+    pic:'<path d="M4 13h40v5H4zM9 18v25M39 18v25M9 34h30"/>',
+    champs:[N('H','Hauteur du plan de travail','cm',90),N('W','Longueur','cm',150),N('D','Profondeur','cm',65),
+      S('pl','Plateau',[['2x18','Deux panneaux de 18 mm collés'],['1x30','Un panneau de 30 mm'],['m40','Bois massif 40 mm']],'2x18'),
+      S('sp','Section des pieds',[['70','70 × 70 mm'],['90','90 × 90 mm']],'70'),N('dep','Débord du plateau','cm',5),
+      C('basse','Étagère basse',true),S('mat','Matériau des panneaux',MATS,'cp')],
+    calc(v){ const H=v.H*10,W=v.W*10,D=v.D*10,sp=+v.sp,dep=v.dep*10,ep={'2x18':36,'1x30':30,'m40':40}[v.pl],Q={},P=[],notes=[];
+      const hp=H-ep, cl=W-2*dep+54, cc=D-2*dep, ext=D-2*dep+54;
+      if(v.pl==='2x18') P.push({nom:'Plateau (2 couches collées)',q:2,L:W,l:D,e:18,t:'p',ch:2*(W+D)});
+      else P.push({nom:'Plateau',q:1,L:W,l:D,e:ep,t:'p',ch:2*(W+D),note:v.pl==='m40'?'bois massif lamellé-collé':''});
+      P.push({nom:'Pied',q:4,L:hp,l:sp,t:'m',sec:`${sp} × ${sp}`});
+      P.push({nom:'Ceinture longue (haut)',q:2,L:cl,l:100,t:'m',sec:'27 × 100'},{nom:'Ceinture courte (haut)',q:2,L:cc,l:100,t:'m',sec:'27 × 100'});
+      P.push({nom:'Traverse longue (bas)',q:2,L:cl,l:70,t:'m',sec:'27 × 70',note:'à 15 cm du sol'},{nom:'Traverse courte (bas)',q:2,L:cc,l:70,t:'m',sec:'27 × 70'});
+      if(v.basse) P.push({nom:'Étagère basse',q:1,L:cl,l:ext,e:18,t:'p',ch:0,note:`posée sur les traverses basses, entailler les 4 coins de ${sp+27} × ${sp+27} mm pour les pieds`});
+      addQ(Q,'Vis à bois 6 × 80 mm (ceintures et traverses)',32); addQ(Q,'Équerres 40 mm pour fixer le plateau',8); addQ(Q,'Vis à bois 4 × 30 mm (équerres)',32);
+      if(v.pl==='2x18'){ addQ(Q,'Vis à bois 4 × 30 mm (assemblage des 2 couches)',(Math.floor(W/200)+1)*(Math.floor(D/200)+1)); addQ(Q,'Colle à bois vinylique (flacon)',1); }
+      if(v.basse) addQ(Q,'Vis à bois 4 × 40 mm (étagère basse)',8);
+      notes.push('Hauteur conseillée : celle de vos poignets, bras le long du corps (souvent 85 à 95 cm).','Ceintures et traverses vissées en applique sur l’extérieur des pieds : les courtes sur les côtés, les longues devant et derrière en recouvrant le bout des courtes. Simple et très rigide. Pour plus de solidité, utilisez des boulons de 8 mm.','Pour un plan de travail résistant, appliquez 2 couches d’huile dure ou de vernis.');
+      const x0=dep-27, R=[{cl:'mv-p',x:0,y:hp,w:W,h:ep},{cl:'mv-m',x:dep,y:0,w:sp,h:hp},{cl:'mv-m',x:W-dep-sp,y:0,w:sp,h:hp},
+        {cl:'mv-m',x:x0,y:hp-100,w:cl,h:100},{cl:'mv-m',x:x0,y:150,w:cl,h:70}];
+      if(v.basse) R.push({cl:'mv-p',x:x0,y:220,w:cl,h:18});
+      return meuble({...v,e:18},{titre:'Établi',pieces:P,q:Q,notes,ep:v.pl==='2x18'?18:ep,
+        vue:vue(W,H,R,{titre:'Établi vu de face'})}); }},
+  'm-placard':{nom:'Placard de garage', aide:'Une grande armoire à deux portes et tablettes fixes, pour ranger outils et produits.',
+    pic:'<rect x="11" y="4" width="26" height="40"/><path d="M24 4v40M21 22v4M27 22v4"/>',
+    champs:[...mDims({H:200,W:70,D:50,e:19,mat:'mela'}),N('n','Nombre de tablettes fixes','',4),N('so','Hauteur du socle','cm',8),
+      S('np','Portes',[['2','2 portes'],['1','1 porte'],['0','Sans porte']],'2'),ASS,
+      S('fond','Fond',[['cloue','Fond cloué au dos (3 mm)'],['rainure','Fond encastré dans une rainure']],'cloue')],
+    calc(v){ return caisson(v,{titre:'Placard',fixes:true,mur:true}); }},
+  'm-bouteilles':{nom:'Casier à bouteilles', aide:'Un casier de cave à lattes entaillées ou à cases croisées, calculé d’après le nombre de bouteilles.',
+    pic:'<rect x="6" y="8" width="36" height="32"/><circle cx="15" cy="17" r="4"/><circle cx="24" cy="17" r="4"/><circle cx="33" cy="17" r="4"/><circle cx="15" cy="30" r="4"/><circle cx="24" cy="30" r="4"/><circle cx="33" cy="30" r="4"/>',
+    champs:[S('st','Style',[['lattes','Montants et lattes entaillées'],['cases','Cases croisées à mi-bois']],'lattes'),
+      N('c','Bouteilles par rangée','',6),N('r','Nombre de rangées','',5),
+      S('bt','Type de bouteille',[['76','Bordeaux (Ø 7,6 cm)'],['82','Bourgogne (Ø 8,2 cm)'],['90','Champagne (Ø 9 cm)']],'82'),
+      N('D','Profondeur','cm',25),N('e','Épaisseur des planches','mm',18),S('mat','Matériau',MATS,'massif'),ASS],
+    calc(v){ const c=Math.max(1,Math.round(v.c)), r=Math.max(1,Math.round(v.r)), d=+v.bt, D=v.D*10, e=v.e, Q={}, P=[], notes=[], R=[];
+      const total=c*r, pas=d+15;
+      if(v.st==='lattes'){
+        const pv=d+20, so=50, H=so+r*pv+20, W=c*pas+2*e, Lr=W-2*e, hl=45;
+        P.push({nom:'Montant',q:2,L:H,l:D,e,t:'p',ch:H});
+        P.push({nom:'Latte arrière (sous le corps)',q:r,L:Lr,l:hl,t:'m',sec:`${e} × ${hl}`,note:`${c} entailles en demi-cercle Ø ${Math.round(d+4)} mm, tous les ${pas} mm`});
+        P.push({nom:'Latte avant (sous le col)',q:r,L:Lr,l:hl,t:'m',sec:`${e} × ${hl}`,note:`${c} entailles en demi-cercle Ø 35 mm, tous les ${pas} mm`});
+        P.push({nom:'Dessus',q:1,L:W,l:D,e,t:'p',ch:W,note:'posé sur les montants'});
+        joints(Q,{...v,e},4*r,100); joints(Q,{...v,e},2,D);
+        notes.push(`Position des lattes : l’arrière à 3 cm du fond, l’avant à ${mm((D-40)/10)} cm du fond. Première entaille à ${mm(pas/2)} mm du bout de la latte.`,
+          'Tracez toutes les entailles d’un coup en serrant les lattes ensemble, puis percez à la scie cloche avant de recouper la latte en deux dans la longueur, ou découpez à la scie sauteuse.',
+          'Les bouteilles se rangent couchées, goulot vers l’avant : le bouchon reste humide.');
+        R.push({cl:'mv-p',x:0,y:0,w:e,h:H},{cl:'mv-p',x:W-e,y:0,w:e,h:H},{cl:'mv-p',x:0,y:H,w:W,h:e});
+        for(let i=0;i<r;i++) R.push({cl:'mv-m',x:e,y:so+i*pv-hl,w:Lr,h:hl});
+        for(let i=0;i<r;i++){ const y=so+i*pv; for(let j=0;j<c;j++) R.push({cl:'mv-b',path:`M${e+pas/2+j*pas+d/2} ${-(y+d/2-10)}a${d/2} ${d/2} 0 1 0 0 0.01z`}); }
+        if(H>=1000){ addQ(Q,'Équerres anti-basculement',2); addQ(Q,'Vis et chevilles adaptées au mur',4); }
+        return {...meuble(v,{titre:'Casier à bouteilles',pieces:P,q:Q,notes,info:[`${total} bouteilles`,`Dimensions extérieures : ${mm(W/10)} × ${mm((H+e)/10)} cm, profondeur ${mm(D/10)} cm`],
+          vue:vue(W,H+e,R,{titre:'Casier à bouteilles vu de face'})}), big:`${total} bouteilles · ${mm(W/10)} × ${mm((H+e)/10)} cm`};
+      }
+      const cs=pas, W=c*cs+(c+1)*e, H=r*cs+(r+1)*e;
+      P.push({nom:'Dessus et dessous',q:2,L:W,l:D,e,t:'p',ch:W},{nom:'Côté',q:2,L:H-2*e,l:D,e,t:'p',ch:H-2*e});
+      if(c>1) P.push({nom:'Séparation verticale',q:c-1,L:H-2*e,l:D,e,t:'p',ch:H-2*e,note:r>1?`${r-1} entailles à mi-bois (largeur ${fr(e+0.5,1)} mm, profondeur ${mm(D/2)} mm) par l’arrière`:''});
+      if(r>1) P.push({nom:'Séparation horizontale',q:r-1,L:W-2*e,l:D,e,t:'p',ch:W-2*e,note:c>1?`${c-1} entailles à mi-bois (largeur ${fr(e+0.5,1)} mm, profondeur ${mm(D/2)} mm) par l’avant`:''});
+      joints(Q,v,2*(c+1)+2*(r+1)-4,D); if(r>1&&c>1) addQ(Q,'Colle à bois vinylique (flacon)',1);
+      notes.push(`Les séparations s’emboîtent en croix : chaque entaille va jusqu’au milieu de la planche. Écart entre deux entailles : ${mm(cs+e)} mm d’axe en axe.`,
+        `Case de ${mm(cs/10)} cm : une bouteille par case, couchée, goulot vers l’avant.`);
+      R.push({cl:'mv-p',x:0,y:0,w:W,h:e},{cl:'mv-p',x:0,y:H-e,w:W,h:e},{cl:'mv-p',x:0,y:e,w:e,h:H-2*e},{cl:'mv-p',x:W-e,y:e,w:e,h:H-2*e});
+      for(let j=1;j<c;j++) R.push({cl:'mv-p',x:j*(cs+e),y:e,w:e,h:H-2*e});
+      for(let i=1;i<r;i++) R.push({cl:'mv-p',x:e,y:i*(cs+e),w:W-2*e,h:e});
+      for(let i=0;i<r;i++) for(let j=0;j<c;j++){ const cx=e+j*(cs+e)+cs/2, cy=e+i*(cs+e)+cs/2; R.push({cl:'mv-b',path:`M${cx+d/2} ${-cy}a${d/2} ${d/2} 0 1 0 0 0.01z`}); }
+      if(H>=1000){ addQ(Q,'Équerres anti-basculement',2); addQ(Q,'Vis et chevilles adaptées au mur',4); }
+      return {...meuble(v,{titre:'Casier à bouteilles',pieces:P,q:Q,notes,info:[`${total} bouteilles`,`Dimensions extérieures : ${mm(W/10)} × ${mm(H/10)} cm, profondeur ${mm(D/10)} cm`],
+        vue:vue(W,H,R,{titre:'Casier à bouteilles vu de face'})}), big:`${total} bouteilles · ${mm(W/10)} × ${mm(H/10)} cm`};
+    }},
+  'm-angle-rond':{nom:'Étagère d’angle arrondie', aide:'Un meuble posé au sol dans un coin : deux côtés contre les murs et des tablettes en quart de cercle.',
+    pic:'<path d="M8 4v40M8 44h36"/><path d="M8 14a30 30 0 0 1 30 30"/><path d="M8 28a16 16 0 0 1 16 16"/>',
+    champs:[N('H','Hauteur','cm',180),N('Rr','Profondeur le long de chaque mur','cm',45),N('e','Épaisseur des planches','mm',18),S('mat','Matériau',MATS,'cp'),
+      N('n','Nombre de tablettes (haut et bas compris)','',5),N('so','Hauteur de la tablette du bas','cm',8),ASS],
+    calc(v){ const H=v.H*10, Rr=v.Rr*10, e=v.e, n=Math.max(2,Math.round(v.n)), so=v.so*10, r=Rr-e, Q={}, P=[];
+      P.push({nom:'Côté contre le mur de gauche',q:1,L:H,l:Rr,e,t:'p',ch:H},{nom:'Côté contre le mur de droite',q:1,L:H,l:Rr-e,e,t:'p',ch:H,note:'vient buter contre l’autre côté'});
+      P.push({nom:'Tablette en quart de cercle',q:n,L:r,l:r,e,t:'p',ch:Math.PI*r/2,note:`découpée dans un carré, rayon ${mm(r/10)} cm tracé depuis l’angle`});
+      joints(Q,v,2*n+1,Math.min(r,450)); addQ(Q,'Équerres anti-basculement',2); addQ(Q,'Vis et chevilles adaptées au mur',4);
+      const gap=(H-so-n*e)/(n-1);
+      const R=[{cl:'mv-mur',x:-30,y:-30,w:30,h:Rr+30},{cl:'mv-mur',x:-30,y:-30,w:Rr+30,h:30},
+        {cl:'mv-p',x:0,y:0,w:e,h:Rr},{cl:'mv-p',x:e,y:0,w:Rr-e,h:e},
+        {cl:'mv-p',path:`M${e} ${-e}H${e+r}A${r} ${r} 0 0 0 ${e} ${-(e+r)}Z`}];
+      return meuble(v,{titre:'Étagère d’angle arrondie',pieces:P,q:Q,
+        info:[`Hauteur libre entre tablettes : ${fr(gap/10,1)} cm`,`Hauteur totale : ${mm(H/10)} cm`],
+        notes:['Tracez le quart de cercle avec une ficelle et un crayon fixés à l’angle du carré, puis découpez à la scie sauteuse et poncez le chant.',
+          'Les deux murs d’un angle ne sont pas toujours d’équerre : vérifiez avec une grande équerre ou un gabarit en carton avant de couper les tablettes.',
+          'Vissez les tablettes à travers les côtés (2 vis de chaque côté), puis fixez le haut du meuble au mur.'],
+        vue:vue(Rr,Rr,R,{titre:'Étagère d’angle arrondie vue de dessus',sol:false,lw:mm(Rr/10)+' cm',lh:mm(Rr/10)+' cm',txt:[[Rr*0.62,Rr*0.62,'vue de dessus',0.7]]})}); }},
+};
 
 const TOOLS = {
   /* ---------- BOIS ---------- */
@@ -760,6 +1044,7 @@ const TOOLS = {
   symboles:{nom:'Symboles et couleurs', aide:'Les symboles des plans électriques, les couleurs des fils et les sections courantes.', special:'symboles'},
   liste:{nom:'Liste de courses', aide:'Les matériaux que vous avez ajoutés depuis les calculateurs.', special:'liste'},
 };
+Object.assign(TOOLS, MENU);
 
 /* ============ FAMILLES (ajouter un bouton = ajouter une ligne ici) ============ */
 const ICONES = {
@@ -768,6 +1053,7 @@ const ICONES = {
   sols:'<rect x="6" y="6" width="16" height="16"/><rect x="26" y="6" width="16" height="16"/><rect x="6" y="26" width="16" height="16"/><rect x="26" y="26" width="16" height="16"/>',
   maconnerie:'<rect x="4" y="8" width="40" height="32"/><path d="M4 18.7h40M4 29.3h40M16 8v10.7M32 8v10.7M24 18.7v10.6M10 29.3V40M38 29.3V40"/>',
   electricite:'<path d="M27 4L10 27h12l-3 17 19-25H25z"/>',
+  menuiserie:'<path d="M5 36L29 12h9v8L14 44H5z"/><path d="M10 36l3 3M15 31l3 3M20 26l3 3M25 21l3 3"/><rect x="35" y="3" width="10" height="15" rx="3"/>',
   construction:'<path d="M5 42h9v-8h9v-8h9v-8h9V10h3"/><path d="M5 42V36"/>',
   conversions:'<path d="M7 6v36h36z"/><path d="M14 23v12h12z"/><path d="M7 14h5M7 22h3M7 30h5"/>',
   divers:'<rect x="5" y="16" width="38" height="24" rx="2"/><path d="M17 16v-5h14v5M5 26h38M21 26v4h6v-4"/>',
@@ -778,6 +1064,7 @@ const FAMILLES = [
   {id:'sols',       nom:'Sols',       desc:'Carrelage, parquet, terrasse', outils:['carrelage','parquet','plinthes','terrasse']},
   {id:'maconnerie', nom:'Maçonnerie', desc:'Béton, fondations, parpaings', outils:['beton','fondations','mortier','crepi','parpaings','pente']},
   {id:'construction',nom:'Construction',desc:'Escalier',                 outils:['escalier']},
+  {id:'menuiserie', nom:'Menuiserie', desc:'Étagères, meubles, établi',  outils:['m-etagere','m-biblio','m-murale','m-echelle','m-casier','m-bouteilles','m-bas','m-angle','m-angle-rond','m-etabli','m-placard']},
   {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:['cables','tableau','schemas','symboles']},
   {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, volumes',    outils:['unites','surfaces','volumes']},
 ];
@@ -803,6 +1090,7 @@ const go = h => { location.hash = h ? '#'+h : '#'; };
 const listCount = () => { golist.textContent = `Ma liste (${items.length})`; };
 
 function route(){
+  { const h0=location.hash.slice(1); if(h0!=='panneaux' && h0!=='tasseaux') depuis=null; }
   if(typeof schStop==='function') schStop();
   const h=location.hash.slice(1);
   if(FAMILLES.some(f=>f.id===h)) showFamille(h); else if(TOOLS[h]) showTool(h); else showHome();
@@ -826,11 +1114,11 @@ function showFamille(id){
   const f=FAMILLES.find(f=>f.id===id);
   sub.textContent=f.nom;
   view.innerHTML=`<div class="row" style="margin-bottom:16px"><button class="back" type="button" data-go="">← Accueil</button></div>
-    <div class="grid">${f.outils.map(t=>`<button class="tile tool" type="button" data-go="${t}"><b>${TOOLS[t].nom}</b><span>${TOOLS[t].aide.split('.')[0]}.</span></button>`).join('')}</div>`;
+    <div class="grid">${f.outils.map(t=>`<button class="tile tool" type="button" data-go="${t}">${TOOLS[t].pic?`<svg viewBox="0 0 48 48" aria-hidden="true">${TOOLS[t].pic}</svg>`:''}<b>${TOOLS[t].nom}</b><span>${TOOLS[t].aide.split('.')[0]}.</span></button>`).join('')}</div>`;
 }
 view.addEventListener('click', e=>{ const b=e.target.closest('[data-go]'); if(b) go(b.dataset.go); });
 
-let cur=null, last=null;
+let cur=null, last=null, depuis=null;
 function vals(t){ return saved[t] || (saved[t]={}); }
 function getDef(t,c){ const s=vals(t)[c.id]; return s!==undefined ? s : JSON.parse(JSON.stringify(c.def)); }
 
@@ -856,7 +1144,13 @@ function piecesHTML(t,c){
 function showTool(t){
   cur=t; const T=TOOLS[t], f=familleDe(t);
   sub.textContent= f ? `${f.nom} › ${T.nom}` : T.nom;
-  const back=`<div class="row" style="margin-bottom:16px">${f?`<button class="back" type="button" data-go="${f.id}">← ${f.nom}</button>`:''}<button class="back" type="button" data-go="">${f?'':'← '}Accueil</button></div>`;
+  // Venu d'un meuble (bouton « Voir le plan de découpe ») : on propose d'y revenir
+  const ret = (t==='panneaux'||t==='tasseaux') && depuis && TOOLS[depuis] ? depuis : null;
+  if(t!=='panneaux' && t!=='tasseaux') depuis=null;
+  const fr2 = ret ? familleDe(ret) : null;
+  const back = ret
+    ? `<div class="row" style="margin-bottom:16px"><button class="back" type="button" data-go="${ret}">← ${TOOLS[ret].nom}</button>${fr2?`<button class="back" type="button" data-go="${fr2.id}">${fr2.nom}</button>`:''}<button class="back" type="button" data-go="">Accueil</button></div>`
+    : `<div class="row" style="margin-bottom:16px">${f?`<button class="back" type="button" data-go="${f.id}">← ${f.nom}</button>`:''}<button class="back" type="button" data-go="">${f?'':'← '}Accueil</button></div>`;
   if(T.special==='liste'){ view.innerHTML=back+`<section class="card"><h2>${T.nom}</h2><p class="hint">${T.aide}</p><ul class="list" id="list"></ul>
       <div class="row"><button class="btn ghost" id="clear" type="button">Vider la liste</button><button class="btn ghost" id="copy" type="button">Copier la liste</button><p class="toast" id="toast"></p></div></section>`;
     drawList(); return; }
@@ -909,6 +1203,8 @@ view.addEventListener('click', e=>{
     else return;
     vals(cur)[c.id]=rows; pbox.innerHTML=piecesHTML(cur,c); update(); return;
   }
+  const dk=e.target.closest('[data-dec]');
+  if(dk && last && last.decoupe){ depuis=cur; const k=dk.dataset.dec, tool=k==='p'?'panneaux':'tasseaux'; saved[tool]=Object.assign(saved[tool]||{},{pcs:last.decoupe[k].map(r=>r.map(String))}); store('atelier-valeurs',saved); go(tool); return; }
   if(e.target.id==='add' && last?.item){ [].concat(last.item).forEach(i=>items.push(i)); store('atelier-liste',items); listCount(); say('Ajouté à la liste'); }
   if(e.target.id==='reset'){ delete saved[cur]; store('atelier-valeurs',saved); showTool(cur); say('Valeurs d’exemple remises'); }
   if(e.target.id==='clear'){ items=[]; store('atelier-liste',items); drawList(); listCount(); say('Liste vidée'); }
