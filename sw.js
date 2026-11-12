@@ -1,7 +1,7 @@
 // Fonctionnement hors connexion. Changer le numéro de VERSION à chaque mise à jour de l'application.
-const VERSION = 'atelier-v10';
+const VERSION = 'atelier-v20';
 const FICHIERS = [
-  './', 'index.html', 'manifest.webmanifest',
+  './', 'index.html', 'atelier.html', 'accueil.jpg', 'accueil-flou.jpg', 'papy.webp', 'porte-fermee.webp', 'manifest.webmanifest',
   'icone-192.png', 'icone-512.png', 'icone-masque-512.png', 'apple-touch-icon.png'
 ];
 self.addEventListener('install', e => {
