@@ -209,6 +209,19 @@ i.k-te{background:repeating-linear-gradient(90deg,var(--c-te) 0 7px,var(--c-te2)
 .sy div{display:flex;flex-direction:column;min-width:0} .sy span{color:var(--muted);font-size:.85rem}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .cols div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px} .cols span{flex-basis:100%;color:var(--muted);font-size:.9rem}
+.pl-svg{font-family:inherit}
+.pl-svg rect,.pl-svg polygon,.pl-svg ellipse{stroke:#3a3f44;stroke-width:.8}
+.pl-cu{fill:#cf8a52}.pl-cu2{fill:#b8703c}.pl-lai{fill:#d8b64e}.pl-lai2{fill:#c49b2c}.pl-olive{fill:#e8cf7a}.pl-per{fill:#3d7fd6}.pl-gaine{fill:#e0e3e6}
+.pl-pe{fill:#f4f4f1}.pl-pe2{fill:#ebebe6}.pl-alu{fill:#9ea7ae}.pl-pvc{fill:#a5adb3}.pl-pvc2{fill:#8e979e}.pl-noir{fill:#33373b}.pl-bleu{fill:#2f7fd8}
+.pl-acier{fill:#8f989f}.pl-inox{fill:#7d878e}.pl-joint{fill:#222}.pl-sold{fill:#d9dde1}.pl-colle{fill:#f0c93a}.pl-fil{fill:#c9a764}.pl-gris{fill:#c9ced2}.pl-blanc{fill:#f6f6f3}
+.pl-vide{fill:#1d2a35}.pl-vide2{fill:transparent;stroke-dasharray:3 2}.pl-eau{fill:#bfe0f7;stroke:none!important;opacity:.7}.pl-reflet{fill:#fff;opacity:.28;stroke:none!important}
+.pl-ann{stroke:#9aa1a6;stroke-width:1}.pl-ld{stroke:var(--muted);stroke-width:.8;fill:none}.pl-axe{stroke:var(--muted);stroke-width:.6;stroke-dasharray:8 3 2 3}
+.pl-tx{fill:var(--ink);font-size:10.5px}.pl-flam{fill:#ff8a1c;stroke:#d9480f!important}.pl-fl{stroke:#d32f2f;stroke-width:2;fill:none}
+.pl-fen{fill:#ffd54a}.pl-mach{fill:none;stroke:#d32f2f;stroke-dasharray:4 3;stroke-width:1.2}
+.pl-mur{fill:#c8b79c;stroke:none!important;opacity:.5}.pl-sol{stroke:#6b5a43;stroke-width:2}.pl-toit{stroke:#8a4b2f;stroke-width:3;fill:none}.pl-app{fill:#fff;stroke:#555;stroke-width:1.2}
+.pl-p32,.pl-p40,.pl-p100{fill:none;stroke:#8e979e;stroke-linejoin:round}.pl-p32{stroke-width:4}.pl-p40{stroke-width:5}.pl-p100{stroke-width:9}
+.lien{background:none;border:0;padding:0;color:var(--accent,#1f5d8c);text-decoration:underline;font:inherit;cursor:pointer}
+.tbl tr.hl td{background:var(--hl)}
 .tbl{overflow-x:auto} .tbl table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
 .tbl th,.tbl td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top} .tbl th{font-size:.85rem;color:var(--muted);font-weight:700}
 .tbl .u{color:var(--muted);font-size:.85rem}
@@ -470,6 +483,7 @@ function ordre3(ps){
   for(let a=0;a<n;a++) for(let b=a+1;b<n;b++){ const A=it[a], Bb=it[b];
     if(A.sx[1]<=Bb.sx[0]+E||Bb.sx[1]<=A.sx[0]+E||A.sy[1]<=Bb.sy[0]+E||Bb.sy[1]<=A.sy[0]+E) continue;
     let o=0; for(const i of [0,2,1]){ if(A.mx[i]<=Bb.mn[i]+E){ o=1; break; } if(Bb.mx[i]<=A.mn[i]+E){ o=-1; break; } }
+    if((A.p.sur||[]).includes(Bb.p.id)) o=-1; if((Bb.p.sur||[]).includes(A.p.id)) o=1;
     if(A.p.cl==='mur'&&Bb.p.cl!=='mur') o=1; if(Bb.p.cl==='mur'&&A.p.cl!=='mur') o=-1;
     if(o===1){ avant[a].push(b); deg[b]++; } else if(o===-1){ avant[b].push(a); deg[a]++; } }
   const res=[], pret=it.map((x,i)=>i).filter(i=>!deg[i]), fait=new Array(n).fill(false);
@@ -515,7 +529,7 @@ function notice(M){
   const fin=isoSVG(Object.values(pc),{cotes:M.cotes,titre:'Meuble terminé, en perspective'});
   const acc=new Set();
   const cartes=M.st.map((s,i)=>{ s.add.filter(has).forEach(a=>acc.add(a));
-    const ps=[...acc].map(id=>({...pc[id],nouv:s.add.includes(id)&&pc[id].cl!=='mur'}));
+    const ps=[...acc].filter(id=>!(s.cache||[]).includes(id)).map(id=>({...pc[id],nouv:s.add.includes(id)&&!['mur','o'].includes(pc[id].cl)}));
     return `<div class="nt-s"><b>Étape ${i+1} : ${s.t}</b>${isoSVG(ps,{vis:s.vis,titre:'Étape '+(i+1)})}<p>${s.x}</p></div>`; }).join('');
   return `<div class="notice"><h3>Notice de montage</h3><div class="nt-fin">${fin}</div>
     <p class="nt-leg"><span class="nt-b"></span>pièce à poser à cette étape <span class="nt-r"></span>vis visibles sur le dessin (celles de l’autre côté se posent de la même façon)</p>
@@ -776,6 +790,288 @@ const MENU={
     }},
 };
 
+/* ============ JARDIN ============ */
+MAT.ext={nom:'bois d’extérieur',chant:false,fin:null,flex:80};
+TEINTE.o=[25,30,14];
+function PZ3(id,poly,z0,d,cl){ const a=poly.map(([x,y])=>[x,y,z0]), b=poly.map(([x,y])=>[x,y,z0+d]), f=[a,b];
+  for(let i=0;i<poly.length;i++){ const j=(i+1)%poly.length; f.push([a[i],a[j],b[j],b[i]]); } return {id,cl,...sol3(f)}; }
+const rond=(cx,cy,rx,ry,k=18)=>Array.from({length:k},(_,i)=>{ const t=i/k*2*Math.PI; return [cx+rx*Math.cos(t),cy+ry*Math.sin(t)]; });
+const cm=x=>fr(x/10,1);
+/* Nombre de longueurs du commerce (2,40 m) pour débiter les pièces en bois massif */
+function barres(P,stock=2400){ const g={};
+  P.filter(p=>p.t==='m'&&p.q>0).forEach(p=>{ g[p.sec]=g[p.sec]||[]; for(let i=0;i<p.q;i++) g[p.sec].push(Math.round(p.L)+4); });
+  return Object.entries(g).map(([sec,ls])=>{ ls.sort((a,b)=>b-a); const b=[];
+    ls.forEach(l=>{ const i=b.findIndex(r=>r+l<=Math.max(stock,l)); if(i>=0) b[i]+=l; else b.push(l); });
+    const lg=ls.some(l=>l>stock);
+    return `Bois ${sec} : ${b.length} longueur${b.length>1?'s':''} de ${lg?'plus de ':''}${fr(stock/1000,2)} m`; }); }
+const BOIS_J=S('bois','Bois',[['pin','Pin traité autoclave classe 4'],['douglas','Douglas ou mélèze'],['robinier','Robinier (acacia)']],'pin');
+const BOIS_NOTE={pin:'Pin traité autoclave classe 4 : prévu pour le contact avec la terre humide. Doublez quand même l’intérieur d’un film si vous y cultivez des légumes.',
+  douglas:'Douglas ou mélèze : bois naturellement durable dehors (classe 3), mais qui pourrit plus vite au contact de la terre. Le film à l’intérieur est indispensable.',
+  robinier:'Robinier (acacia) : le plus durable des bois d’Europe, même au contact de la terre, sans aucun traitement. Plus dur à visser : faites toujours un avant-trou.'};
+
+/* Un bac de jardinière : 4 pieds 45 × 45 dans les coins, planches tout autour, 2 tasseaux et un fond à claire-voie */
+function bacJ(B,k,x0,yb,y0,z0,L,Pd,e,bl,nr){
+  const pc=B.pc, sp=45, Hr=nr*bl, yt=y0+Hr, n=s=>s+k, Lc=L-2*e-2*sp, Lf=Pd-2*e;
+  [[x0+e,z0+e],[x0+L-e-sp,z0+e],[x0+e,z0+Pd-e-sp],[x0+L-e-sp,z0+Pd-e-sp]].forEach(([x,z],i)=>{ const id=n('p'+i+'_'); pc[id]=B3(id,x,yb,z,sp,yt-yb,sp,'m'); B.pi.push(id); });
+  const ceint=y0-yb>250;
+  const rang=(y,tag,arr)=>{ arr.push(...[['av',z0+Pd-e],['ar',z0]].map(([s,z])=>{ const id=n(tag+s); pc[id]=B3(id,x0,y,z,L,bl,e,'p'); return id; }),
+      ...[['cg',x0],['cd',x0+L-e]].map(([s,x])=>{ const id=n(tag+s); pc[id]=B3(id,x,y,z0+e,e,bl,Lf,'p'); return id; })); };
+  for(let r=0;r<nr;r++) rang(y0+r*bl,'r'+r,B.pl);
+  if(ceint) rang(yb+100,'cb',B.cb);
+  [['ta',z0+e],['tb',z0+Pd-e-27]].forEach(([s,z])=>{ const id=n(s); pc[id]=B3(id,x0+e+sp,y0,z,Lc,40,27,'m'); B.ta.push(id); });
+  const Li=L-2*e, ns=Math.max(2,Math.floor((Li+10)/(bl+10))), gap=(Li-ns*bl)/(ns-1), yf=y0+40;
+  for(let i=0;i<ns;i++){ const x=x0+e+i*(bl+gap), id=n('f'+i);
+    if(i===0||i===ns-1){ const xa=i===0?x+sp:x, w=bl-sp, xi=i===0?x:x+bl-sp;
+      pc[id]=B3(id,xi,yf,z0+e+sp,sp,e,Lf-2*sp,'p'); pc[id+'b']=B3(id+'b',xa,yf,z0+e,w,e,Lf,'p'); B.fd.push(id,id+'b'); }
+    else { pc[id]=B3(id,x,yf,z0+e,bl,e,Lf,'p'); B.fd.push(id); } }
+  B.vis.push(...[y0+bl*0.3,y0+bl*0.7].map(y=>[x0+L,y,z0+e+sp/2]),...[y0+bl*0.3,y0+bl*0.7].map(y=>[x0+L,y,z0+Pd-e-sp/2]));
+  return {ns,gap,ceint,Lc,Lf,Hr,lit:(L-2*e)*(Pd-2*e)*Math.max(0,Hr-40-e)/1e6};
+}
+function jardiniereCalc(v,etages){
+  const L=v.L*10, Pd=v.P*10, e=v.e, bl=v.bl*10, nb=etages?Math.max(1,Math.min(5,Math.round(v.n))):1;
+  const nr=Math.max(1,Math.ceil(v.H*10/bl-0.15)), Hr=nr*bl, pied=etages?Math.max(0,v.hp*10):(v.pose==='pieds'?Math.max(0,v.hp*10):0), dh=etages?v.dh*10:0;
+  const B={pc:{},pi:[],pl:[],cb:[],ta:[],fd:[],vis:[]}, info=[], warns=[], notes=[], Q={}, P=[];
+  let lit=0, res=[];
+  for(let t=0;t<nb;t++){ const z0=(nb-1-t)*Pd, y0=pied+t*dh; res.push({...bacJ(B,'_'+t,0,0,y0,z0,L,Pd,e,bl,nr),y0}); lit+=res[t].lit; }
+  const r0=res[0], ncb=res.filter(r=>r.ceint).length, nf=res.reduce((s,r)=>s+r.ns,0);
+  P.push({nom:'Planche de façade (devant et derrière)',q:2*nr*nb+2*ncb,L,l:bl,t:'m',sec:`${e} × ${mm(bl)}`});
+  P.push({nom:'Planche de côté',q:2*nr*nb+2*ncb,L:Pd-2*e,l:bl,t:'m',sec:`${e} × ${mm(bl)}`,note:'entre les planches de façade'});
+  res.forEach((r,t)=>P.push({nom:nb>1?`Pied du bac ${t+1}${t===0?' (devant)':t===nb-1?' (derrière)':''}`:'Pied (coin intérieur)',q:4,L:r.y0+Hr,l:45,t:'m',sec:'45 × 45'}));
+  P.push({nom:'Tasseau support du fond',q:2*nb,L:r0.Lc,l:40,t:'m',sec:'27 × 40',note:'en bas, contre les façades, entre les pieds'});
+  P.push({nom:'Latte du fond',q:nf,L:r0.Lf,l:bl,t:'m',sec:`${e} × ${mm(bl)}`,note:`écart ${cm(r0.gap)} cm pour l’eau ; les 2 lattes des bouts entaillées de 4,5 × 4,5 cm aux coins`});
+  const vp=`Vis inox ou zinguées ${visDe(e)} (planches dans les pieds)`;
+  addQ(Q,vp,(16*nr+(0))*nb+16*ncb);
+  addQ(Q,'Vis inox ou zinguées 4 × 40 mm (tasseaux et lattes du fond)',nb*(2*(Math.ceil(r0.Lc/250)+1)+2*r0.ns));
+  if(nb>1) addQ(Q,`Vis ${visDe(e)} pour relier les bacs entre eux`,4*(nb-1)*Math.max(1,Math.ceil(L/500)));
+  const sGeo=nb*(L*Pd/1e6)*1.15, sFilm=nb*2*(L+Pd)*Hr/1e6*1.1;
+  Q['Géotextile (feutre) pour le fond']=`${fr(sGeo,2)} m²`;
+  Q['Film pour l’intérieur des côtés (bâche à excavation à picots ou polyane)']=`${fr(sFilm,2)} m²`;
+  Q['Agrafes inox pour agrafeuse']='1 boîte';
+  Q['Billes d’argile ou graviers (drainage, 3 à 5 cm)']=`${fr(nb*(L-2*e)*(Pd-2*e)*40/1e6,0)} L`;
+  Q['Terreau']=`${fr(lit,0)} L`;
+  if(pied||nb>1) addQ(Q,'Cales sous les pieds (dalles ou briques)',4*nb);
+  const Wt=L, Ht=pied+(nb-1)*dh+Hr, D=nb*Pd;
+  info.push(`Hauteur ${nb>1?'de chaque bac':'du bac'} : ${cm(Hr)} cm (${nr} rangée${nr>1?'s':''} de planches de ${cm(bl)} cm)`,
+    `Encombrement : ${cm(L)} × ${cm(D)} cm, hauteur ${cm(Ht)} cm`,`Terre : ${fr(lit,0)} litres, soit environ ${fr(lit,0)} kg une fois arrosée`,...barres(P));
+  if(L>1200) warns.push('Au-delà de 1,20 m de long, les planches peuvent se bomber sous le poids de la terre : ajoutez une paire de pieds au milieu, ou raccourcissez.');
+  if(Pd>700) warns.push('Au-delà de 70 cm de large, les lattes du fond fléchissent : ajoutez un tasseau au milieu ou réduisez la largeur.');
+  if(nb>1&&dh>Hr) warns.push(`Le décalage (${cm(dh)} cm) est plus grand que la hauteur d’un bac (${cm(Hr)} cm) : les bacs ne se touchent plus et ne se tiennent plus entre eux. Prenez un décalage d’au plus ${cm(Hr)} cm.`);
+  notes.push(BOIS_NOTE[v.bois]||BOIS_NOTE.pin,
+    'Agrafez le film sur l’intérieur des côtés seulement, jamais sur le fond : l’eau doit pouvoir s’écouler.',
+    'Remplissage : géotextile sur les lattes du fond, 3 à 5 cm de billes d’argile ou de graviers, puis le terreau jusqu’à 2 cm du bord.',
+    'Utilisez des vis inox (ou au moins zinguées) : des vis ordinaires rouillent et tachent le bois.');
+  if(pied||nb>1) notes.push('Posez les pieds sur des dalles ou des briques, pas directement dans la terre : ils dureront beaucoup plus longtemps.');
+  if(ncb) notes.push('Les pieds qui dépassent de plus de 25 cm sous un bac sont reliés par une ceinture basse de planches, à 10 cm du sol : c’est elle qui empêche l’ensemble de se déformer.');
+  if(nb>1) notes.push('Mettez la jardinière à étagères de préférence contre un mur ou une clôture, le bac le plus haut derrière, et vérifiez qu’elle est bien de niveau avant de remplir.');
+  // Étapes de montage
+  const st=[];
+  st.push({t:'Premier rang de planches',x:`Couchez les pieds sur une table et vissez le premier rang de planches tout autour, les côtés entre les façades : 2 vis ${visDe(e)} à chaque bout de planche, dans le pied.`,add:[...B.pi,...B.pl.filter(id=>/r0/.test(id))],vis:B.vis.filter((q,i)=>i%4<2)});
+  if(nr>1) st.push({t:'Rangées suivantes',x:'Vissez les autres rangées de la même façon, bien jointives. Vérifiez l’équerrage : les deux diagonales du bac doivent être égales.',add:B.pl.filter(id=>!/r0/.test(id)),vis:[]});
+  if(B.cb.length) st.push({t:'Ceinture basse',x:'Vissez un rang de planches à 10 cm du sol sur les pieds qui dépassent : la structure devient rigide.',add:B.cb,vis:[]});
+  st.push({t:'Tasseaux et fond',x:`Vissez les 2 tasseaux à l’intérieur, en bas des façades, entre les pieds. Posez les lattes du fond dessus avec ${cm(r0.gap)} cm d’écart (les deux des bouts entaillées autour des pieds) et vissez-les : 1 vis à chaque bout. (Sur le dessin, la façade avant est retirée pour montrer l’intérieur.)`,add:[...B.ta,...B.fd],vis:[],cache:[...B.pl,...B.cb].filter(id=>/av_|av$/.test(id)||/av(_\d+)?$/.test(id))});
+  if(nb>1) st.push({t:'Assemblage des bacs',x:'Placez les bacs du plus bas (devant) au plus haut (derrière), bien serrés. Vissez-les entre eux à travers les planches qui se touchent, tous les 50 cm.',add:[],vis:[]});
+  st.push({t:'Film, drainage et terreau',x:'Agrafez le film à l’intérieur des côtés, posez le géotextile sur le fond, 3 à 5 cm de billes d’argile, puis le terreau.',add:[],vis:[]});
+  // Dessin 2D
+  const R=[];
+  if(nb===1){ for(let r=0;r<nr;r++) R.push({cl:'mv-p',x:0,y:pied+r*bl,w:L,h:bl});
+    if(pied){ R.push({cl:'mv-m',x:e,y:0,w:45,h:pied},{cl:'mv-m',x:L-e-45,y:0,w:45,h:pied}); if(r0.ceint) R.push({cl:'mv-p',x:0,y:100,w:L,h:bl}); }
+    R.push({cl:'mv-d',x:e,y:pied+40,w:L-2*e,h:e}); }
+  else res.forEach((r,t)=>{ const z0=(nb-1-t)*Pd, zv=D-z0-Pd; // vue de côté : devant à gauche
+    if(r.y0>0) R.push({cl:'mv-m',x:zv+e,y:0,w:45,h:r.y0},{cl:'mv-m',x:zv+Pd-e-45,y:0,w:45,h:r.y0});
+    if(r.ceint) R.push({cl:'mv-p',x:zv,y:100,w:Pd,h:bl});
+    for(let k=0;k<nr;k++) R.push({cl:'mv-p',x:zv,y:r.y0+k*bl,w:Pd,h:bl});
+    R.push({cl:'mv-d',x:zv+e,y:r.y0+40,w:Pd-2*e,h:e}); });
+  const titre=nb>1?'Jardinière à étagères':'Jardinière';
+  const out=meuble({...v,mat:'ext'},{m3d:{pc:B.pc,st,cotes:{W:Wt,H:Ht,D}},titre,pieces:P,q:Q,notes,warns,info,ep:-1,
+    vue:nb>1?vue(D,Ht,R,{titre:titre+' vue de côté',lw:cm(D)+' cm',txt:[[D*0.12,-Ht*0.02,'devant',0.6]]}):vue(L,Ht,R,{titre:'Jardinière vue de face'})});
+  return {...out,big:`${titre} · ${fr(lit,0)} L de terreau`};
+}
+
+const OIS={noire:['Mésange noire',26,100,170,110,'2 à 4 m'],bleue:['Mésange bleue',28,130,200,150,'2 à 5 m'],
+  charbo:['Mésange charbonnière ou moineau friquet',32,140,210,150,'2 à 6 m'],moineau:['Moineau domestique',35,140,210,150,'3 à 8 m'],
+  etourneau:['Étourneau sansonnet',48,180,260,180,'au moins 4 m'],semi:['Rouge-gorge, rougequeue noir, bergeronnette (semi-ouvert)',0,120,170,0,'1,5 à 3 m, caché dans la végétation ou sous un avant-toit']};
+const NON_SEMI=Object.keys(OIS).filter(k=>k!=='semi');
+
+const JARDIN={
+  'j-nichoir':{nom:'Nichoir à oiseaux', aide:'Une boîte à toit en pente, avec un trou d’envol adapté à l’oiseau que vous voulez accueillir (mesures conseillées par la LPO).',
+    pic:'<path d="M7 21L24 7l17 14"/><path d="M12 18v24h24V18"/><circle cx="24" cy="26" r="4.5"/>',
+    champs:[S('oi','Oiseau à accueillir',Object.entries(OIS).map(([k,o])=>[k,o[0]]),'charbo'),N('e','Épaisseur des planches','mm',18),
+      S('bois','Bois',[['sapin','Sapin ou pin brut, non traité'],['douglas','Douglas ou mélèze brut'],['cp','Contreplaqué extérieur (CTBX)']],'sapin'),
+      C('plq','Plaque de protection du trou (contre les pics et les écureuils)',false,{k:'oi',v:NON_SEMI})],
+    calc(v){ const o=OIS[v.oi]||OIS.charbo, semi=v.oi==='semi', e=Math.max(10,v.e), tr=o[1], int=o[2], hin=o[3], hb=o[4];
+      const W=int+2*e, ta=Math.tan(15*Math.PI/180), t=e/Math.cos(15*Math.PI/180), ov=50, so=60;
+      const Hb=e+hin+int*ta, yR=z=>Hb-(z-e)*ta, zf=e+int+e, zend=zf+ov, Hf=semi?e+Math.round(hin*0.45):Math.round(yR(zf)), Lt=Math.round((zend-e)/Math.cos(15*Math.PI/180)), Hd=so+Hb+t+40;
+      const P=[], Q={}, warns=[];
+      P.push({nom:'Dos',q:1,L:Hd,l:W,e,t:'p',note:'dépasse de 6 cm en bas et de 4 cm en haut pour le fixer'});
+      P.push({nom:'Côté',q:2,L:Hb,l:int,e,t:'p',note:`haut coupé en pente : ${cm(Hb)} cm derrière, ${cm(yR(e+int))} cm devant`});
+      P.push({nom:'Fond (plancher)',q:1,L:int,l:int,e,t:'p',note:'4 trous Ø 5 mm pour l’eau et l’air'});
+      P.push({nom:'Façade',q:1,L:Hf,l:W,e,t:'p',note:semi?`ouverture de ${cm(yR(zf)-Hf)} cm au-dessus`:`trou d’envol Ø ${tr} mm, bas du trou à ${cm(e+hb)} cm du bas de la façade`});
+      P.push({nom:'Toit',q:1,L:Lt,l:W+30,e,t:'p',note:'déborde de 5 cm devant et de 1,5 cm sur les côtés'});
+      addQ(Q,`Vis inox ${visDe(e)}`,18); addQ(Q,'Charnière laiton 40 mm et ses vis (pour ouvrir le toit)',1); addQ(Q,'Crochet de fermeture',1);
+      Q['Pour le fixer']='2 vis inox 5 × 60 et chevilles (mur), ou fil de fer gainé et une cale de bois (arbre)';
+      if(v.plq&&!semi) addQ(Q,`Plaque métallique de 8 × 8 cm percée à Ø ${tr} mm et 4 petites vis`,1);
+      Q['Huile de lin, à l’extérieur seulement (facultatif)']='1 petit flacon';
+      if(e<15) warns.push('Avec moins de 15 mm, les parois isolent mal du froid et de la chaleur : la LPO conseille 2 cm (1 cm au strict minimum).');
+      if(v.bois==='cp') warns.push('Choisissez un contreplaqué « extérieur » (CTBX), sinon il se délite à la pluie.');
+      const lgt=Hd+2*Hb+int+Hf+Lt+25;
+      const info=[semi?'Nichoir semi-ouvert (pas de trou d’envol)':`Trou d’envol : Ø ${tr} mm`,`Intérieur : ${cm(int)} × ${cm(int)} cm, hauteur ${cm(hin)} à ${cm(hin+int*ta)} cm`,
+        `Hauteur de pose conseillée : ${o[5]}`,`Tout se découpe dans une planche de ${e} mm, ${cm(W+30)} cm de large et ${fr(lgt/1000,2)} m de long`];
+      const pol=[[e,so],[e+int,so],[e+int,so+yR(e+int)],[e,so+Hb]], hy=so+e+hb+tr/2, pc={};
+      pc.dos=B3('dos',0,0,0,W,Hd,e,'p'); pc.cg=PX3('cg',pol,0,e,'p'); pc.cd=PX3('cd',pol,W-e,e,'p');
+      pc.fo=B3('fo',e,so,e,int,e,int,'p'); pc.fa=B3('fa',0,so,e+int,W,Hf,e,'p');
+      if(!semi){ if(v.plq) pc.pq=PZ3('pq',[[W/2-40,hy-40],[W/2+40,hy-40],[W/2+40,hy+40],[W/2-40,hy+40]],zf,1.5,'m'); pc.tr=PZ3('tr',rond(W/2,hy,tr/2,tr/2),zf+(v.plq?1.5:0),1,'o'); }
+      pc.toit=PX3('toit',[[e,so+Hb],[zend,so+yR(zend)],[zend,so+yR(zend)+t],[e,so+Hb+t]],-15,W+30,'p');
+      const st=[{t:'Côtés sur le dos',x:'Posez les deux côtés sur le dos, à 6 cm du bas, la pente vers l’avant. Vissez par l’arrière du dos : 3 vis par côté.',add:['dos','cg','cd'],vis:[]},
+        {t:'Fond',x:'Percez 4 trous de Ø 5 mm dans le fond. Glissez-le entre les côtés, contre le dos, et vissez à travers les côtés : 2 vis de chaque côté.',add:['fo'],vis:[[W,so+e/2,e+int*0.3],[W,so+e/2,e+int*0.7]]},
+        {t:'Façade',x:semi?'Vissez la façade basse sur les côtés et le fond : 2 vis de chaque côté, 2 dans le fond. Le haut reste ouvert.'
+          :`Percez le trou d’envol à la scie cloche Ø ${tr} mm, le bas du trou à ${cm(e+hb)} cm du bas. Griffez l’intérieur sous le trou (rainures à la scie) : les petits pourront grimper. Pas de perchoir ! Vissez la façade : 3 vis de chaque côté.${v.plq?' Vissez la plaque de métal autour du trou.':''}`,
+          add:['fa','tr','pq'],vis:[e/2,W-e/2].flatMap(x=>(semi?[0.3,0.7]:[0.2,0.5,0.8]).map(k=>[x,so+Hf*k,zf]))},
+        {t:'Toit',x:'Posez le toit contre le dos. Fixez-le avec la charnière, posée sur le dessus contre le dos : il se soulève pour le nettoyage. Fermez-le devant avec le crochet. Un léger jour sous le toit, à l’avant, aère le nichoir.',add:['toit'],vis:[]},
+        {t:'Pose',x:`Fixez le nichoir par les dépassants du dos, à ${o[5]} de haut, le trou tourné vers l’est ou le sud-est, à l’abri des vents dominants, légèrement penché vers l’avant.`,add:[],vis:[]}];
+      const R=[{cl:'mv-p',x:0,y:0,w:W,h:Hd},{cl:'mv-m',x:-15,y:so+yR(zend),w:W+30,h:Hb+t-yR(zend)},{cl:'mv-p',x:0,y:so,w:W,h:Hf}];
+      if(!semi){ if(v.plq) R.push({cl:'mv-m',x:W/2-40,y:hy-40,w:80,h:80}); R.push({cl:'mv-b',path:`M${W/2+tr/2} ${-hy}a${tr/2} ${tr/2} 0 1 0 0 0.01z`}); }
+      const out=meuble({...v,e,mat:'ext'},{m3d:{pc,st,cotes:{W,H:Hd,D:zend}},titre:'Nichoir',pieces:P,q:Q,warns,info,ep:-1,
+        notes:['Bois brut, sans traitement à l’intérieur : les oiseaux y sont sensibles. Une huile de lin à l’extérieur suffit.',
+          'Pas de perchoir sous le trou : il aide surtout les prédateurs.','Ne mettez rien dedans, les oiseaux s’en chargent.',
+          'Posez-le dès l’automne ou au début de l’hiver, ni en plein soleil ni à l’ombre complète, hors de portée des chats.',
+          'Sur un arbre : une cale de bois entre le tronc et le fil gainé, jamais de clou dans l’arbre.',
+          'Nettoyez-le chaque année en septembre-octobre (videz, brossez). Ne l’ouvrez jamais pendant la nichée.',
+          'S’il reste vide 2 ou 3 ans, changez-le de place.'],
+        vue:vue(W,Hd,R,{titre:'Nichoir vu de face',sol:false})});
+      return {...out,big:semi?'Nichoir semi-ouvert':`Nichoir · trou Ø ${tr} mm`};
+    }},
+  'j-mangeoire':{nom:'Mangeoire pour oiseaux', aide:'Un plateau à rebords sous un petit toit à deux pentes, à poser sur un poteau ou à suspendre.',
+    pic:'<path d="M5 20L24 8l19 12"/><path d="M11 18v18M37 18v18M7 36h34v4H7z"/><path d="M24 40v6"/>',
+    champs:[N('L','Longueur du plateau','cm',40),N('l','Largeur du plateau','cm',30),N('h','Hauteur sous le toit','cm',20),N('e','Épaisseur des planches','mm',18),
+      S('pose','Installation',[['poteau','Sur un poteau'],['susp','Suspendue à une branche']],'poteau'),N('hpo','Hauteur du poteau hors sol','cm',150,{k:'pose',v:['poteau']})],
+    calc(v){ const L=v.L*10, l=v.l*10, h=v.h*10, e=v.e, ov=40, a=30*Math.PI/180, ta=Math.tan(a), hp=l/2*ta, t=e/Math.cos(a), s=Math.round((l/2+ov)/Math.cos(a)), mt=30, gj=15;
+      const yT=e+h, P=[], Q={}, warns=[], pot=v.pose==='poteau';
+      P.push({nom:'Plateau',q:1,L,l,e,t:'p',note:'4 trous Ø 6 mm près des coins pour l’eau'});
+      P.push({nom:'Pignon',q:2,L:l,l:Math.round(hp+40),e,t:'p',note:`forme de maison : base ${cm(l)} cm, côtés droits 4 cm, pointe à ${cm(hp+40)} cm, au milieu`});
+      P.push({nom:'Pan de toit',q:2,L:L+2*e+2*ov,l:s,e,t:'p',note:'déborde de 4 cm tout autour'});
+      P.push({nom:'Montant',q:4,L:h,l:mt,t:'m',sec:'30 × 30'});
+      P.push({nom:'Rebord long',q:2,L:L-2*mt-2*gj,l:30,t:'m',sec:'20 × 30'},{nom:'Rebord court',q:2,L:l-2*mt-2*gj,l:30,t:'m',sec:'20 × 30',note:'1,5 cm libre à chaque coin : l’eau s’écoule'});
+      if(pot){ P.push({nom:'Poteau',q:1,L:v.hpo*10,l:70,t:'m',sec:'70 × 70'}); addQ(Q,'Support de poteau à enfoncer 70 × 70',1); addQ(Q,'Équerres 50 mm (plateau sur le poteau) et leurs vis',4); }
+      else addQ(Q,'Pitons à visser et chaîne ou fil inox (1 m)',2);
+      addQ(Q,`Vis inox ${visDe(e)}`,8+4+4+12); Q['Bande de feutre bitumé ou de zinc pour le faîtage (facultatif)']='1 m';
+      if(L>600||l>450) warns.push('Une grande mangeoire attire beaucoup d’oiseaux au même endroit : les maladies se transmettent plus vite. Mieux vaut plusieurs petites mangeoires.');
+      const pc={}, vF=[];
+      pc.pl=B3('pl',0,0,0,L,e,l,'p');
+      const rb=[['r1',mt+gj,0,L-2*mt-2*gj,20],['r2',mt+gj,l-20,L-2*mt-2*gj,20]].map(([id,x,z,w,d])=>(pc[id]=B3(id,x,e,z,w,30,d,'m'),id));
+      [['r3',0],['r4',L-20]].forEach(([id,x])=>{ pc[id]=B3(id,x,e,mt+gj,20,30,l-2*mt-2*gj,'m'); rb.push(id); });
+      const mo=[[0,0],[L-mt,0],[0,l-mt],[L-mt,l-mt]].map(([x,z],i)=>{ const id='m'+i; pc[id]=B3(id,x,e,z,mt,h,mt,'m'); return id; });
+      const pg=[[0,yT-40],[l,yT-40],[l,yT],[l/2,yT+hp],[0,yT]].map(([z,y])=>[z,y]);
+      pc.g1=PX3('g1',pg,-e,e,'p'); pc.g2=PX3('g2',pg,L,e,'p');
+      const yb=yT-ov*ta;
+      pc.t1=PX3('t1',[[l/2,yT+hp],[-ov,yb],[-ov,yb+t],[l/2,yT+hp+t]],-e-ov,L+2*e+2*ov,'p');
+      pc.t2=PX3('t2',[[l/2,yT+hp],[l/2,yT+hp+t],[l+ov,yb+t],[l+ov,yb]],-e-ov,L+2*e+2*ov,'p');
+      pc.t1.sur=['g1','g2',...mo]; pc.t2.sur=['g1','g2','t1',...mo];
+      if(pot) pc.po=B3('po',L/2-35,-400,l/2-35,70,400,70,'m');
+      const yTop=z=>yT+hp+t-Math.abs(z-l/2)*ta;
+      const st=[{t:'Plateau et rebords',x:'Percez 4 trous de Ø 6 mm dans le plateau, près des coins. Vissez les rebords par-dessous (2 vis chacun) en laissant 1,5 cm libre à chaque coin : l’eau s’écoule et on balaie facilement les restes.',add:['pl',...rb],vis:[]},
+        {t:'Montants',x:'Vissez les 4 montants aux coins du plateau, par-dessous : 1 vis par montant, avec de la colle extérieure.',add:mo,vis:[]},
+        {t:'Pignons',x:'Vissez un pignon de chaque côté, contre le haut des montants : 2 vis par pignon, une dans chaque montant.',add:['g1','g2'],vis:[[L+e,yT-20,mt/2],[L+e,yT-20,l-mt/2]]},
+        {t:'Toit',x:'Posez les deux pans sur les pignons, en recouvrant le haut de l’un par l’autre. Vissez-les dans les pignons : 3 vis par pignon et par pan. Collez une bande de feutre bitumé sur le faîtage si vous voulez.',add:['t1','t2'],vis:[0.25,0.55,0.85].map(k=>[L+e/2,yTop(l/2+k*l/2),l/2+k*l/2])},
+        {t:pot?'Poteau':'Suspension',x:pot?`Enfoncez le support de poteau bien d’aplomb, emboîtez le poteau (${fr(v.hpo,0)} cm hors sol) et fixez la mangeoire dessus avec les 4 équerres.`:'Vissez 2 pitons dans le haut des pans, près des pignons, et suspendez la mangeoire à une branche avec la chaîne, à 1,5 m au moins du sol.',add:pot?['po']:[],vis:[]}];
+      const X=z=>z+ov, R=[{cl:'mv-p',x:X(0),y:0,w:l,h:e},{cl:'mv-m',x:X(0),y:e,w:mt,h:h},{cl:'mv-m',x:X(l-mt),y:e,w:mt,h:h},
+        {cl:'mv-m',x:X(0),y:e,w:20,h:30},{cl:'mv-m',x:X(l-20),y:e,w:20,h:30},
+        {cl:'mv-p',poly:pg.map(([z,y])=>[X(z),y])},
+        {cl:'mv-p',poly:[[l/2,yT+hp],[-ov,yb],[-ov,yb+t],[l/2,yT+hp+t]].map(([z,y])=>[X(z),y])},
+        {cl:'mv-p',poly:[[l/2,yT+hp],[l/2,yT+hp+t],[l+ov,yb+t],[l+ov,yb]].map(([z,y])=>[X(z),y])}];
+      const Ht=yT+hp+t;
+      const out=meuble({...v,mat:'ext'},{m3d:{pc,st,cotes:{W:L,H:Ht,D:l}},titre:'Mangeoire',pieces:P,q:Q,warns,ep:-1,
+        info:[`Pente du toit : 30°`,`Hauteur de la mangeoire : ${cm(Ht)} cm${pot?` (sur un poteau de ${fr(v.hpo,0)} cm)`:''}`,...barres(P)],
+        notes:['Nourrissez en hiver, de novembre à mars, et arrêtez au printemps, quand les oiseaux élèvent leurs petits.',
+          'Graines de tournesol noir, cacahuètes non salées et non grillées, maïs concassé, graisses, morceaux de pommes. Jamais de pain : il est nocif pour les oiseaux.',
+          'Nettoyez le plateau chaque semaine (brosse, gants, eau claire) et jetez les graines moisies. Si vous voyez des oiseaux malades, arrêtez de nourrir pendant quelques semaines.',
+          'Placez-la dans un endroit dégagé, avec un arbre ou une haie pas trop loin pour qu’ils s’y réfugient, mais sans cachette où un chat pourrait guetter. Évitez la proximité des baies vitrées.',
+          'Ajoutez un point d’eau, renouvelé souvent.'],
+        vue:vue(l+2*ov,Ht,R,{titre:'Mangeoire vue de côté',sol:false,lw:cm(l)+' cm'})});
+      return {...out,big:`Mangeoire ${fr(v.L,0)} × ${fr(v.l,0)} cm`};
+    }},
+  'j-jardiniere':{nom:'Jardinière simple', aide:'Un bac en planches sur 4 pieds d’angle, avec un fond à claire-voie pour que l’eau s’écoule. Au sol ou surélevé.',
+    pic:'<path d="M6 22h36v16H6zM6 30h36"/><path d="M12 38v6M36 38v6"/><path d="M18 22c0-6 3-9 6-10M24 22v-12c4 0 7 3 7 7"/>',
+    champs:[N('L','Longueur','cm',100),N('P','Largeur','cm',40),N('H','Hauteur du bac','cm',40),
+      S('pose','Pose',[['sol','Posée au sol'],['pieds','Surélevée, sur pieds']],'sol'),N('hp','Hauteur sous le bac','cm',50,{k:'pose',v:['pieds']}),
+      N('bl','Largeur des planches','cm',14.5),N('e','Épaisseur des planches','mm',21),BOIS_J],
+    calc(v){ return jardiniereCalc(v,false); }},
+  'j-gradins':{nom:'Jardinière à étagères', aide:'Plusieurs bacs en escalier, du plus bas devant au plus haut derrière : beaucoup de plantes sur peu de place.',
+    pic:'<path d="M4 40h13v-8H4zM17 40h13V24H17zM30 40h14V16H30z"/><path d="M9 32c0-3 2-5 4-5M22 24c0-3 2-5 4-5M36 16c0-3 2-5 4-5"/>',
+    champs:[N('L','Longueur','cm',100),N('P','Profondeur de chaque bac','cm',30),N('n','Nombre de bacs (étages)','',3),
+      N('H','Hauteur de chaque bac','cm',25),N('dh','Décalage en hauteur d’un bac à l’autre','cm',25),N('hp','Hauteur sous le premier bac','cm',0),
+      N('bl','Largeur des planches','cm',14.5),N('e','Épaisseur des planches','mm',21),BOIS_J],
+    calc(v){ return jardiniereCalc(v,true); }},
+};
+
+JARDIN['j-echelle']={nom:'Jardinière en A', aide:'Deux côtés en forme de A, comme une échelle de peintre, qui portent des bacs en auge à devant incliné. Le bac du bas avance, celui du haut recule : chaque étage a sa lumière.',
+  pic:'<path d="M30 6L12 44M30 6v38"/><path d="M8 18h26l-3 6H11zM6 29h28l-3 6H9z" /><path d="M16 40h18"/>',
+  champs:[N('L','Longueur des bacs','cm',80),N('H','Hauteur totale','cm',110),N('D','Profondeur au sol','cm',75),N('n','Nombre de bacs','',3),
+    N('hb','Hauteur du premier bac','cm',25),N('bl','Largeur des planches','cm',14.5),N('e','Épaisseur des planches','mm',21),BOIS_J],
+  calc(v){
+    const e=v.e, bl=v.bl*10, n=Math.max(2,Math.min(4,Math.round(v.n))), H=v.H*10, D=v.D*10, Lb=v.L*10, W=Lb+90, rw=70, mt=45;
+    const ta=H/(D-rw), a=Math.atan(ta), deg=Math.round(a*180/Math.PI), wz=rw/Math.sin(a), zf=y=>D-y/ta;
+    const c30=Math.cos(Math.PI/6), t30=Math.tan(Math.PI/6), hf=bl*c30, tw=e/c30, s=hf*t30, emp=e+bl+tw;
+    const hb=Math.max(200,v.hb*10), ytop=H-bl-30, dy=n>1?(ytop-hb)/(n-1):0, ys=Array.from({length:n},(_,k)=>Math.round(hb+k*dy));
+    const pc={}, P=[], Q={}, warns=[], info=[], notes=[];
+    // côtés en A
+    const fl=[[D-wz,0],[D,0],[rw,H],[rw,(D-wz-rw)*ta]];
+    [['g',0],['d',W-mt]].forEach(([c,x])=>{ pc['ar'+c]=B3('ar'+c,x,0,0,mt,H,rw,'m'); pc['av'+c]=PX3('av'+c,fl,x,mt,'m'); });
+    pc.ent=B3('ent',mt,40,0,W-2*mt,70,rw,'m');
+    let lit=0; const tq=[], bacs=[], visT=[];
+    ys.forEach((yk,k)=>{ const zfr=zf(yk)-10, u0=zfr-tw-bl, zA=u0+bl, zc0=Math.min(0,u0-e);
+      const cl=[[zc0,yk-45],[zf(yk-45),yk-45],[zf(yk),yk],[zc0,yk]];
+      pc['tg'+k]=PX3('tg'+k,cl,mt,27,'m'); pc['td'+k]=PX3('td'+k,cl,W-mt-27,27,'m'); tq.push('tg'+k,'td'+k);
+      visT.push([mt+27,yk-22,rw/2],[mt+27,yk-22,zf(yk)-35]);
+      const jo=[[u0-e,yk],[zA+tw,yk],[zA+tw+s,yk+hf],[u0-e,yk+bl]], fb=[[zA,yk],[zA+tw,yk],[zA+tw+s,yk+hf],[zA+s,yk+hf]];
+      const x1=mt, x2=W-mt, id=s=>s+k;
+      pc[id('jg')]=PX3(id('jg'),jo,x1,e,'p'); pc[id('jd')]=PX3(id('jd'),jo,x2-e,e,'p');
+      pc[id('bd')]=B3(id('bd'),x1+e,yk,u0-e,Lb-2*e,bl,e,'p'); pc[id('bf')]=B3(id('bf'),x1+e,yk,u0,Lb-2*e,e,bl,'p');
+      pc[id('bv')]=PX3(id('bv'),fb,x1+e,Lb-2*e,'p');
+      bacs.push(id('jg'),id('jd'),id('bd'),id('bf'),id('bv'));
+      const hi=hf-e; lit+=hi*(bl+hi*t30/2)*(Lb-2*e)/1e6;
+      P.push({nom:`Taquet support du bac ${k+1}${k===0?' (bas)':k===n-1?' (haut)':''}`,q:2,L:Math.round(zf(yk-45)-zc0),l:45,t:'m',sec:'27 × 45',note:`bout avant coupé en biais à ${deg}°`});
+      if(u0-e<0&&k===n-1) info.push(`Le bac du haut dépasse de ${cm(e-u0)} cm derrière les montants : c’est normal, il repose sur ses taquets.`);
+    });
+    const Lav=Math.round(Math.hypot(D-rw,H));
+    P.unshift({nom:'Montant arrière (droit)',q:2,L:H,l:rw,t:'m',sec:'45 × 70'},
+      {nom:'Montant avant (incliné)',q:2,L:Lav,l:rw,t:'m',sec:'45 × 70',note:`coupé en biais aux deux bouts : ${deg}° en bas (à plat sur le sol), ${90-deg}° en haut (contre le montant arrière)`},
+      {nom:'Entretoise arrière',q:1,L:W-2*mt,l:rw,t:'m',sec:'45 × 70',note:'entre les deux montants arrière, à 4 cm du sol'});
+    P.push({nom:'Dos de bac',q:n,L:Lb-2*e,l:bl,t:'m',sec:`${e} × ${mm(bl)}`},
+      {nom:'Fond de bac',q:n,L:Lb-2*e,l:bl,t:'m',sec:`${e} × ${mm(bl)}`,note:'trous Ø 8 mm tous les 15 cm'},
+      {nom:'Devant de bac (incliné)',q:n,L:Lb-2*e,l:bl,t:'m',sec:`${e} × ${mm(bl)}`,note:'chant du bas coupé à 30° pour bien poser'},
+      {nom:'Joue de bac',q:2*n,L:Math.round(emp+s),l:bl,t:'m',sec:`${e} × ${mm(bl)}`,note:`trapèze : ${cm(emp)} cm en bas, ${cm(emp+s)} cm en haut ; ${cm(bl)} cm de haut derrière, ${cm(hf)} cm devant`});
+    addQ(Q,`Vis inox ou zinguées ${visDe(e)} (bacs)`,n*(12+4));
+    addQ(Q,'Vis inox ou zinguées 5 × 50 mm (taquets sur les montants)',8*n);
+    addQ(Q,'Vis 6 × 120 mm (entretoise, haut des montants)',8);
+    addQ(Q,'Équerres plates 80 mm (jonction des montants en haut) et leurs vis',2);
+    Q['Géotextile (feutre) pour les fonds']=`${fr(n*(Lb*(bl+2*s))/1e6*1.1,2)} m²`;
+    Q['Film pour l’intérieur des bacs (polyane)']=`${fr(n*Lb*(2*bl+2*emp)/1e6*1.1,2)} m²`;
+    Q['Agrafes inox pour agrafeuse']='1 boîte';
+    Q['Terreau']=`${fr(lit,0)} L`;
+    addQ(Q,'Cales sous les pieds (dalles ou briques)',4);
+    info.unshift(`Encombrement : ${cm(W)} cm de large, ${cm(Math.max(D,zf(ys[0]+hf)+tw+s))} cm de profondeur, ${cm(H)} cm de haut`,
+      `Montant avant incliné à ${deg}° par rapport au sol`,`Bacs : ${ys.map(y=>cm(y)+' cm').join(', ')} du sol`,`Terre : ${fr(lit,0)} litres, soit environ ${fr(lit,0)} kg une fois arrosée`);
+    info.push(...barres(P));
+    if(D<0.55*H) warns.push(`La base est étroite (${fr(v.D,0)} cm de profondeur pour ${fr(v.H,0)} cm de haut) : la jardinière risque de basculer en avant une fois remplie. Augmentez la profondeur au sol ou fixez le haut à un mur.`);
+    if(dy&&dy<bl+60) warns.push('Les bacs sont trop rapprochés en hauteur : les plantes n’auront pas de place. Diminuez le nombre de bacs ou augmentez la hauteur totale.');
+    if(Lb>1200) warns.push('Au-delà de 1,20 m, les fonds de bacs fléchissent sous le poids de la terre : vissez un taquet supplémentaire sous le milieu de chaque bac.');
+    notes.push(BOIS_NOTE[v.bois]||BOIS_NOTE.pin,
+      'Les deux côtés sont symétriques : assemblez-les l’un sur l’autre, à plat, pour qu’ils soient identiques (taquets à l’intérieur !).',
+      'Agrafez un film sur les parois intérieures des bacs, et du géotextile au fond, sans boucher les trous : l’eau doit s’écouler.',
+      'Une fois remplie, la jardinière est lourde : posez-la de niveau, sur des dalles, et ne la déplacez plus. Contre un mur, vous pouvez attacher le haut avec 2 équerres.');
+    const st=[{t:'Les deux côtés en A',x:`À plat sur le sol, posez le montant arrière et le montant avant (coupé à ${deg}° en bas et ${90-deg}° en haut). Vissez les ${n} taquets à l’intérieur, bien horizontaux (vérifiez au niveau) : 2 vis à chaque bout. Joignez le haut des montants avec une équerre plate. Faites le second côté en miroir.`,add:['arg','avg','ard','avd',...tq],vis:visT},
+      {t:'Entretoise',x:'Mettez les deux côtés debout et vissez l’entretoise entre les montants arrière, à 4 cm du sol : 2 vis 6 × 120 par côté, à travers le montant.',add:['ent'],vis:[[W,75,rw*0.3],[W,75,rw*0.7]]},
+      {t:'Les bacs',x:`Pour chaque bac : vissez le dos, le fond et le devant incliné entre les deux joues (2 vis par bout de planche). Percez des trous de Ø 8 mm dans le fond tous les 15 cm. Posez les bacs sur leurs taquets et vissez chaque joue dans son taquet : 2 vis.`,add:bacs,vis:[]},
+      {t:'Film et terreau',x:'Agrafez le film sur les parois, posez le géotextile au fond, quelques billes d’argile, puis le terreau. Arrosez doucement la première fois.',add:[],vis:[]}];
+    const R=[{cl:'mv-m',x:0,y:0,w:rw,h:H},{cl:'mv-m',poly:fl},{cl:'mv-m',x:0,y:40,w:rw,h:70}];
+    ys.forEach(yk=>{ const u0=zf(yk)-10-tw-bl, zc0=Math.min(0,u0-e);
+      R.push({cl:'mv-m',poly:[[zc0,yk-45],[zf(yk-45),yk-45],[zf(yk),yk],[zc0,yk]]},{cl:'mv-p',poly:[[u0-e,yk],[u0+bl+tw,yk],[u0+bl+tw+s,yk+hf],[u0-e,yk+bl]]}); });
+    const Dt=Math.max(D,...ys.map(yk=>zf(yk)-10+s));
+    const out=meuble({...v,mat:'ext'},{m3d:{pc,st,cotes:{W,H,D}},titre:'Jardinière en A',pieces:P,q:Q,notes,warns,info,ep:-1,
+      vue:vue(Dt,H,R,{titre:'Jardinière en A vue de côté',lw:cm(Dt)+' cm'})});
+    return {...out,big:`Jardinière en A · ${n} bacs · ${fr(lit,0)} L de terreau`};
+  }};
+
 const TOOLS = {
   /* ---------- BOIS ---------- */
   panneaux:{nom:'Découpe de panneaux', aide:'Indiquez la taille du panneau et la liste des pièces. Les découpes se font en lignes droites, comme à la scie circulaire.',
@@ -882,7 +1178,7 @@ const TOOLS = {
       if(v.mont && v.mont<v.H) det.push({warn:'Les montants sont plus courts que la hauteur : il faudra les rallonger.'});
       return {big:`${pl} plaques`, detail:det, item:[`Placo : ${pl} plaques ${fr(v.pl)}×${fr(v.ph)} m`,`Rails : ${rails} · Montants : ${mont}`]};
     }},
-  isolation:{nom:'Isolation', aide:'La résistance thermique R indique la performance : plus elle est élevée, mieux c’est isolé.',
+  'isol-qte':{nom:'Quantité d’isolant', aide:'Le nombre de rouleaux ou de paquets d’isolant pour un mur, et la résistance thermique R obtenue (plus elle est élevée, mieux c’est isolé).',
     champs:[N('L','Longueur du mur','m',5),N('H','Hauteur','m',2.5),N('ouv','Ouvertures à déduire','m²',2),
       N('sr','Surface d’un rouleau ou d’un paquet','m²',5),N('p','Pertes','%',5),
       N('ep','Épaisseur de l’isolant','cm',10),N('lam','Lambda (λ) indiqué sur l’emballage','W/m.K',0.032)],
@@ -1282,7 +1578,7 @@ const TOOLS = {
   symboles:{nom:'Symboles et couleurs', aide:'Les symboles des plans électriques, les couleurs des fils et les sections courantes.', special:'symboles'},
   liste:{nom:'Liste de courses', aide:'Les matériaux que vous avez ajoutés depuis les calculateurs.', special:'liste'},
 };
-Object.assign(TOOLS, MENU);
+Object.assign(TOOLS, MENU, JARDIN);
 
 /* ============ FAMILLES (ajouter un bouton = ajouter une ligne ici) ============ */
 const ICONES = {
@@ -1293,16 +1589,22 @@ const ICONES = {
   electricite:'<path d="M27 4L10 27h12l-3 17 19-25H25z"/>',
   menuiserie:'<path d="M5 36L29 12h9v8L14 44H5z"/><path d="M10 36l3 3M15 31l3 3M20 26l3 3M25 21l3 3"/><rect x="35" y="3" width="10" height="15" rx="3"/>',
   construction:'<path d="M5 42h9v-8h9v-8h9v-8h9V10h3"/><path d="M5 42V36"/>',
+  isolation:'<path d="M6 40h36M6 8h36"/><path d="M6 14c4 0 4 6 8 6s4-6 8-6 4 6 8 6 4-6 8-6 4 6 6 6M6 24c4 0 4 6 8 6s4-6 8-6 4 6 8 6 4-6 8-6 4 6 6 6"/>',
+  plomberie:'<path d="M6 16h20v9H6z"/><path d="M26 18h8a6 6 0 0 1 6 6v5"/><path d="M16 16v-6M10 10h12"/><path d="M40 35c-2.5 3.5-2.5 6 0 7 2.5-1 2.5-3.5 0-7z"/>',
+  jardin:'<path d="M10 26h28l-4 16H14z"/><path d="M24 26V12"/><path d="M24 19c-7 0-10-4-10-10 7 0 10 4 10 10zM24 15c6 0 9-3 9-9-6 0-9 3-9 9z"/>',
   conversions:'<path d="M7 6v36h36z"/><path d="M14 23v12h12z"/><path d="M7 14h5M7 22h3M7 30h5"/>',
   divers:'<rect x="5" y="16" width="38" height="24" rx="2"/><path d="M17 16v-5h14v5M5 26h38M21 26v4h6v-4"/>',
 };
 const FAMILLES = [
   {id:'bois',       nom:'Bois',       desc:'Découpes, planches',          outils:[{g:'Découpe',outils:['panneaux','tasseaux']},'planches']},
-  {id:'murs',       nom:'Murs',       desc:'Peinture, papier peint, placo', outils:['papier-peint','peinture','placo','isolation','enduit']},
+  {id:'murs',       nom:'Murs',       desc:'Peinture, papier peint, placo', outils:['papier-peint','peinture','placo','enduit']},
   {id:'sols',       nom:'Sols',       desc:'Carrelage, parquet, terrasse', outils:['carrelage','parquet','plinthes','terrasse']},
   {id:'maconnerie', nom:'Maçonnerie', desc:'Béton, fondations, parpaings', outils:['beton','fondations','mortier','crepi','parpaings','pente']},
   {id:'construction',nom:'Construction',desc:'Escalier',                 outils:['escalier']},
   {id:'menuiserie', nom:'Menuiserie', desc:'Étagères, meubles, établi',  outils:[{g:'Étagères',outils:['m-etagere','m-murale','m-echelle','m-angle']},{g:'Meubles',outils:['m-biblio','m-bas','m-placard']},{g:'Casiers',outils:['m-casier','m-bouteilles']},'m-etabli']},
+  {id:'jardin',     nom:'Jardin',     desc:'Nichoir, mangeoire, jardinières', outils:[{g:'Oiseaux',outils:['j-nichoir','j-mangeoire']},{g:'Jardinières',outils:['j-jardiniere','j-echelle','j-gradins']}]},
+  {id:'isolation',  nom:'Isolation',  desc:'Isolants, épaisseurs', outils:['isolants','epaisseurs','isol-qte']},
+  {id:'plomberie',  nom:'Plomberie',  desc:'Tuyaux, assemblages, évacuations', outils:[{g:'Alimentation',outils:['tuyaux','assemblages']},'evacuations']},
   {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:['cables','tableau','schemas','symboles']},
   {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, volumes',    outils:['unites','surfaces','volumes']},
 ];
@@ -1341,7 +1643,7 @@ golist.addEventListener('click', ()=>go('liste'));
 
 /* Couleurs pastel des rubriques : [fond, fond au survol] */
 const PASTELS={bois:['#F3E3C3','#E9CE98'],murs:['#DCEBF7','#BBD6EE'],sols:['#E1F0DA','#C3E2B6'],maconnerie:['#F2DDD3','#E6BFAD'],
-  construction:['#E7E1F4','#CFC3EC'],menuiserie:['#F7E5D3','#EFCBA7'],electricite:['#FFF2BD','#FFE48A'],conversions:['#D9F0EC','#B4E2DA']};
+  construction:['#E7E1F4','#CFC3EC'],menuiserie:['#F7E5D3','#EFCBA7'],electricite:['#FFF2BD','#FFE48A'],conversions:['#D9F0EC','#B4E2DA'],jardin:['#EAF3CF','#D3E7A0'],plomberie:['#D2EAF6','#A8D3EC'],isolation:['#F7DDE4','#EFBDCB']};
 function showHome(){
   sub.textContent='Choisissez une rubrique, puis un sujet.';
   view.innerHTML=`<ul class="rubs">${FAMILLES.map(f=>{ const c=PASTELS[f.id]||['#ECEDEA','#DADCD7'];
@@ -1437,6 +1739,7 @@ function showTool(t){
     drawList(); return; }
   if(T.special==='schemas'){ view.innerHTML=back+schemasHTML(); let last1=null; try{ last1=localStorage.getItem('atelier-schema'); }catch(e){} schOpen(last1||SCHEMAS[0].id); return; }
   if(T.special==='symboles'){ view.innerHTML=back+symbolesHTML(); return; }
+  if(T.special==='fiches'){ view.innerHTML=back+fichesHTML(T.fiches); let l=null; try{ l=localStorage.getItem('atelier-fi-'+T.fiches); }catch(e){} fiOpen(T.fiches,l); return; }
   view.innerHTML=back+`<section class="card" id="calc"><h2>${T.nom}</h2><p class="hint">${T.aide}</p>
     <div class="fields">${T.champs.map(c=>fieldHTML(t,c)).join('')}</div>
     <div class="result"><div class="big" id="big"></div><div class="detail" id="detail"></div></div>
@@ -1743,6 +2046,325 @@ const SYMB=[
  ['Prise de terre','Liaison avec la terre, pour la sécurité.','<path d="M45 6V28M31 28H59M36 36H54M41 44H49"/>'],
  ['Boîte de connexion','Point où les fils se raccordent.','<circle cx="45" cy="28" r="10"/><circle cx="45" cy="28" r="2.5" fill="currentColor"/>'],
 ];
+
+/* ============ PLOMBERIE ============ */
+const PLY=85;
+const plSym=(x,w,r1,r2,cl)=>`<rect class="${cl}" x="${x}" y="${PLY-r2}" width="${w}" height="${r2-r1}"/><rect class="${cl}" x="${x}" y="${PLY+r1}" width="${w}" height="${r2-r1}"/>`;
+const plPoly=(pts,cl)=>`<polygon class="${cl}" points="${pts.map(([x,r])=>x+','+(PLY-r)).join(' ')}"/><polygon class="${cl}" points="${pts.map(([x,r])=>x+','+(PLY+r)).join(' ')}"/>`;
+const plLab=(x,y,tx,ty,t,anc='start')=>{ if(anc==='start'&&tx>=260) anc='end'; return `<path class="pl-ld" d="M${x} ${y}L${tx} ${ty}"/><text class="pl-tx" x="${tx+(anc==='end'?-3:anc==='middle'?0:3)}" y="${ty+(ty<y?-3:12)}" text-anchor="${anc}">${t}</text>`; };
+const plAxe=(x1,x2)=>`<path class="pl-axe" d="M${x1} ${PLY}H${x2}"/>`;
+const plEau=(x,w,r)=>`<rect class="pl-eau" x="${x}" y="${PLY-r}" width="${w}" height="${2*r}"/>`;
+/* Tuyau vu en perspective, avec sa coupe au bout */
+function plTube(couches,o={}){ // couches : de l’extérieur vers l’intérieur [classe, rayon]
+  const R=couches[0][1], x1=50, x2=290; let s='';
+  s+=`<rect class="${couches[0][0]}" x="${x1}" y="${PLY-R}" width="${x2-x1}" height="${2*R}"/>`;
+  s+=`<rect class="pl-reflet" x="${x1}" y="${PLY-R*0.7}" width="${x2-x1}" height="${R*0.25}"/>`;
+  if(o.raies) s+=o.raies.map(y=>`<rect class="${o.raieCl}" x="${x1}" y="${PLY+y}" width="${x2-x1}" height="3"/>`).join('');
+  if(o.annele){ for(let x=x1+6;x<x2;x+=12) s+=`<path class="pl-ann" d="M${x} ${PLY-R}V${PLY+R}"/>`; }
+  if(o.filet){ for(let x=x1;x<x1+44;x+=5) s+=`<path class="pl-ld" d="M${x} ${PLY-R}l3 ${2*R}"/>`; }
+  couches.forEach(([cl,r])=>{ s+=`<ellipse class="${cl}" cx="${x2}" cy="${PLY}" rx="${r*0.38}" ry="${r}"/>`; });
+  const ri=couches[couches.length-1][1]*o.trou;
+  s+=`<ellipse class="pl-vide" cx="${x2}" cy="${PLY}" rx="${ri*0.38}" ry="${ri}"/>`;
+  (o.labels||[]).forEach(l=>s+=l);
+  return s;
+}
+const PL_TUYAUX=[
+ {id:'cuivre',nom:'Cuivre',court:'Le classique, rigide et durable, pour l’eau froide, l’eau chaude, le chauffage et le gaz.',
+  svg:plTube([['pl-cu',36]],{trou:0.86,labels:[plLab(300,PLY-36,330,24,'paroi 1 mm'),plLab(200,PLY+36,330,140,'Ø 12 × 14 : 12 mm dedans, 14 mm dehors')]}),
+  usage:['Alimentation en eau froide et en eau chaude, apparente ou encastrée.','Chauffage central (radiateurs).','Gaz (avec brasure forte obligatoire).'],
+  diam:[['10 × 12','Lavabo, WC, lave-linge, lave-vaisselle'],['12 × 14','Évier, douche'],['14 × 16','Baignoire, petite distribution'],['16 × 18','Distribution d’un étage, chauffage'],['20 × 22','Arrivée générale, chauffage'],['26 × 28 et plus','Gros débits, chaufferie']],
+  dnote:'Le cuivre se désigne « intérieur × extérieur » : 12 × 14 = 12 mm dedans, 14 mm dehors. Il existe en barres de 2 à 5 m (dur) ou en couronnes (recuit, cintrable à la main).',
+  plus:['Très durable (plus de 50 ans).','Supporte la chaleur, la pression et les UV.','Ne laisse pas se développer les bactéries.','Joli en apparent, se cintre.'],
+  moins:['Cher.','La brasure demande de l’habitude et un chalumeau (risque d’incendie).','Conduit la chaleur : à isoler (calorifuger).','S’entartre en eau dure. Ne jamais mettre d’acier galvanisé après du cuivre : le galvanisé rouille.'],
+  assemb:['brasure','sertissage','compression','instantane']},
+ {id:'per',nom:'PER',court:'Le tube souple en plastique (polyéthylène réticulé), bleu pour l’eau froide, rouge pour l’eau chaude.',
+  svg:plTube([['pl-gaine',40],['pl-per',27]],{trou:0.8,annele:true,labels:[plLab(300,PLY-40,328,22,'gaine annelée (fourreau)'),plLab(300,PLY-27,330,140,'tube PER bleu ou rouge')]}),
+  usage:['Alimentation encastrée dans les murs et les dalles, toujours dans sa gaine.','Installation « en pieuvre » : un tube par appareil depuis une nourrice (collecteur).','Plancher chauffant (PER avec barrière à oxygène).'],
+  diam:[['12 × 1,1','Lavabo, WC, lave-linge, lave-vaisselle'],['16 × 1,5','Évier, douche, baignoire'],['20 × 1,9','Alimentation de la nourrice'],['25 × 2,3','Arrivée générale']],
+  dnote:'Le PER se désigne par son diamètre extérieur × épaisseur. Vendu en couronnes, nu ou déjà gainé.',
+  plus:['Bon marché.','Souple : un seul tube sans raccord du collecteur à l’appareil.','Pas de tartre, pas de corrosion, silencieux.','Pas de flamme : les raccords se serrent ou se sertissent.'],
+  moins:['S’allonge beaucoup à la chaleur (10 fois plus que le cuivre).','Craint le soleil (UV) : jamais à l’extérieur sans protection.','Mou en apparent : il faut beaucoup de colliers.','Ne se cintre pas serré, risque de plier.'],
+  assemb:['glissement','sertissage','compression','instantane']},
+ {id:'multi',nom:'Multicouche',court:'Un tube plastique avec une âme en aluminium : il garde la forme qu’on lui donne.',
+  svg:plTube([['pl-pe',36],['pl-alu',30],['pl-pe2',27]],{trou:0.78,labels:[plLab(300,PLY-36,326,20,'PE-RT extérieur'),plLab(306,PLY-26,385,62,'aluminium'),plLab(300,PLY+22,330,140,'PE-RT intérieur')]}),
+  usage:['Alimentation eau froide et eau chaude, en apparent ou encastré.','Chauffage (radiateurs).','Rénovation : se pose vite et proprement.'],
+  diam:[['16 × 2','Tous les appareils sauf la baignoire'],['20 × 2','Baignoire, distribution'],['26 × 3','Arrivée générale'],['32 × 3','Gros débits']],
+  dnote:'Diamètre extérieur × épaisseur. Un 16 × 2 fait 12 mm dedans.',
+  plus:['Se cintre à la main et garde sa forme (grâce à l’alu).','S’allonge peu à la chaleur.','Pas de flamme, montage rapide.','Bon en apparent comme en encastré.'],
+  moins:['Raccords en laiton chers.','Les raccords rétrécissent le passage de l’eau.','Il faut la pince et les mâchoires du bon profil (TH, U…).','Craint les UV.'],
+  assemb:['sertissage','compression','instantane']},
+ {id:'pvcp',nom:'PVC pression',court:'Le PVC gris épais, collé, pour l’eau froide sous pression.',
+  svg:plTube([['pl-pvc',36]],{trou:0.78,labels:[plLab(300,PLY-36,330,24,'paroi épaisse'),plLab(200,PLY+36,220,140,'marqué PN 16 (16 bars)')]}),
+  usage:['Arrivée d’eau froide, arrosage, piscine.','Uniquement l’eau froide (il existe du PVC-C pour l’eau chaude).'],
+  diam:[['16 et 20','Appareils'],['25 et 32','Arrivée, arrosage'],['40 à 63','Piscine, gros débits']],
+  dnote:'Diamètre extérieur. Choisissez des tubes marqués « eau potable » et PN 16.',
+  plus:['Très bon marché, léger.','Collage simple, sans outil cher.','Ne rouille pas, ne s’entartre pas.'],
+  moins:['Eau froide seulement.','Cassant au gel et aux chocs.','Craint les UV.','Un collage raté ne se rattrape pas : il faut couper.'],
+  assemb:['collage']},
+ {id:'pehd',nom:'PEHD (polyéthylène)',court:'Le tube noir à bandes bleues pour amener l’eau enterrée du compteur à la maison.',
+  svg:plTube([['pl-noir',36]],{trou:0.8,raies:[-20,14],raieCl:'pl-bleu',labels:[plLab(220,PLY-20,240,20,'bandes bleues = eau potable'),plLab(300,PLY+36,320,140,'PN 16')]}),
+  usage:['Branchement enterré du compteur à la maison.','Arrosage, alimentation d’un abri de jardin.'],
+  diam:[['20 et 25','Arrosage, petit branchement'],['25 et 32','Branchement d’une maison'],['40 à 63','Gros débits']],
+  dnote:'Diamètre extérieur. Enterrez-le hors gel (environ 80 cm) avec un grillage avertisseur bleu au-dessus.',
+  plus:['Souple, en grandes couronnes : peu de raccords.','Résiste au gel et à la terre.','Bon marché.'],
+  moins:['Pas pour l’eau chaude ni l’intérieur.','Craint les UV s’il reste au soleil.','Raccords à serrage encombrants.'],
+  assemb:['compression']},
+ {id:'galva',nom:'Acier galvanisé',court:'L’ancien tube fileté en acier qu’on trouve encore dans les vieilles maisons.',
+  svg:plTube([['pl-acier',36]],{trou:0.8,filet:true,labels:[plLab(70,PLY-36,60,20,'filetage'),plLab(300,PLY+36,320,140,'15 × 21 = ½ pouce')]}),
+  usage:['Anciennes installations : on le rencontre surtout en rénovation.','Encore utilisé en industrie et pour certains réseaux incendie.'],
+  diam:[['15 × 21 (½")','Distribution'],['20 × 27 (¾")','Arrivée, colonne'],['26 × 34 (1")','Arrivée générale']],
+  dnote:'Désigné « intérieur × extérieur » approximatifs, ou en pouces. Ces noms servent aussi pour les filetages des raccords et robinets.',
+  plus:['Très solide aux chocs.'],
+  moins:['Rouille de l’intérieur et s’entartre : le débit baisse avec les années.','Lourd, se travaille mal (filetage).','À remplacer en rénovation, par du cuivre, du PER ou du multicouche.'],
+  assemb:['filetage']},
+];
+/* Dessins en coupe des assemblages */
+const PL_ASSEMB=[
+ {id:'brasure',nom:'Brasure (« soudure »)',pour:'Cuivre',
+  svg:plAxe(20,380)+plEau(40,320,14)+plSym(40,158,14,18,'pl-cu')+plSym(202,158,14,18,'pl-cu')+plSym(150,100,18.8,25,'pl-cu2')+plSym(150,100,18,18.8,'pl-sold')
+   +`<path class="pl-flam" d="M200 54c-10-8-6-18 0-26 2 8 8 9 8 16 0 6-4 10-8 10z"/>`
+   +plLab(70,PLY+18,40,150,'tube cuivre')+plLab(240,PLY+25,330,150,'raccord (manchon)')+plLab(175,PLY+19,165,150,'étain fondu dans le jeu','middle')+plLab(194,40,60,26,'chalumeau : on chauffe le raccord, pas l’étain'),
+  principe:'On chauffe le raccord au chalumeau, puis on approche le fil d’étain : il fond et il est aspiré dans le petit jeu entre le tube et le raccord. C’est la « brasure tendre » (environ 250 °C), pour l’eau. La brasure forte (plus de 450 °C, baguette à l’argent) sert pour le gaz.',
+  outils:['Coupe-tube et ébavureur','Laine d’acier ou toile émeri','Décapant (pâte) et fil d’étain','Chalumeau (gaz) et plaque de protection','Chiffon humide, extincteur à portée de main'],
+  etapes:['Coupez l’eau et vidangez : l’eau dans le tube empêche de chauffer.','Coupez d’équerre au coupe-tube, ébavurez.','Poncez le bout du tube et l’intérieur du raccord jusqu’à ce qu’ils brillent.','Mettez un peu de décapant et emboîtez.','Chauffez le raccord tout autour (pas l’étain).','Approchez le fil : quand il fond tout seul et fait le tour, c’est bon.','Laissez refroidir sans bouger, essuyez au chiffon humide.'],
+  plus:['Solide, définitif, peu coûteux.','Encastrable.'],moins:['Demande de l’entraînement.','Risque d’incendie : protégez les murs, attention aux poutres.'],encastre:true},
+ {id:'compression',nom:'Raccord à compression (olive)',pour:'Cuivre, PER, multicouche, PEHD',
+  svg:plAxe(20,380)+plEau(40,320,14)+plSym(40,250,14,18,'pl-cu')+plSym(250,110,14,26,'pl-lai')+plSym(240,22,26,30,'pl-lai')
+   +plPoly([[205,18],[217,24],[229,24],[241,18]],'pl-olive')+plSym(190,60,24,36,'pl-lai2')
+   +plLab(100,PLY-18,80,30,'tube')+plLab(215,PLY-36,190,22,'écrou')+plLab(223,PLY+24,215,150,'olive (bague)','middle')+plLab(320,PLY-26,320,30,'corps du raccord'),
+  principe:'En vissant l’écrou, il écrase une petite bague en laiton (l’olive, ou bicône) sur le tube : c’est elle qui fait l’étanchéité. Pour le PER et le multicouche, on glisse en plus une douille (insert) dans le tube pour qu’il ne s’écrase pas.',
+  outils:['Coupe-tube','Deux clés plates (une pour tenir, une pour serrer)','Douille d’insert pour PER ou multicouche'],
+  etapes:['Coupez le tube d’équerre et ébavurez.','Enfilez l’écrou puis l’olive sur le tube (dans ce sens !).','Mettez la douille dans le tube si c’est du PER ou du multicouche.','Enfoncez le tube à fond dans le raccord.','Serrez à la main, puis un tour à la clé en tenant le corps avec l’autre clé.','Ouvrez l’eau : si ça suinte, resserrez d’un quart de tour.'],
+  plus:['Aucun outil spécial, aucune flamme.','Démontable.'],moins:['Doit rester visible et accessible : jamais encastré.','Encombrant.'],encastre:false},
+ {id:'glissement',nom:'Raccord à glissement (bague glissante)',pour:'PER',
+  svg:plAxe(20,380)+plEau(40,320,13)+plSym(40,110,14,20,'pl-per')+plPoly([[150,14],[160,17],[230,17],[240,14]].map(([x,r])=>[x,r]),'pl-per')
+   +plSym(150,90,11,14,'pl-lai')+[160,180,200,220].map(x=>plPoly([[x,14],[x+8,17],[x+8,14]],'pl-lai')).join('')+plSym(240,120,11,24,'pl-lai')
+   +plSym(160,72,17,25,'pl-lai2')+`<path class="pl-fl" d="M120 ${PLY-38}h40m-8-5l8 5-8 5"/>`
+   +plLab(80,PLY-20,70,30,'tube PER')+plLab(175,PLY-25,150,22,'bague glissée sur le tube')+plLab(200,PLY+14,200,150,'tube évasé sur l’embout cranté','middle')+plLab(320,PLY-24,350,30,'raccord'),
+  principe:'On évase d’abord le bout du tube PER avec une pince à expansion, on l’enfile sur l’embout cranté du raccord, puis on fait glisser une bague par-dessus avec la pince à glissement. Le PER, qui a de la « mémoire », se resserre et ne peut plus sortir.',
+  outils:['Coupe-tube PER (sécateur)','Pince à expansion avec la tête du bon diamètre','Pince à glissement'],
+  etapes:['Coupez le tube bien d’équerre.','Enfilez la bague sur le tube.','Évasez le bout du tube avec la pince à expansion (en tournant un peu entre chaque coup).','Enfoncez aussitôt le tube sur l’embout du raccord, jusqu’à la butée.','Faites glisser la bague jusqu’au raccord avec la pince à glissement.'],
+  plus:['Très fiable, le passage d’eau n’est pas réduit.','Encastrable.'],moins:['Pinces assez chères (on peut les louer).','Non démontable : en cas d’erreur, on recoupe.'],encastre:true},
+ {id:'sertissage',nom:'Sertissage',pour:'Multicouche, PER, cuivre',
+  svg:plAxe(20,380)+plEau(40,320,11)+plSym(40,200,15,21,'pl-pe')+plSym(40,200,16.5,17.5,'pl-alu')+plSym(140,100,11,15,'pl-lai')
+   +[160,200].map(x=>plSym(x,6,13,15,'pl-joint')).join('')+plSym(240,110,11,24,'pl-lai')+plPoly([[140,21],[150,25],[160,23],[175,25],[190,23],[205,25],[220,25],[230,21]],'pl-inox')
+   +`<rect class="pl-fen" x="222" y="${PLY-28}" width="10" height="5"/>`+`<path class="pl-mach" d="M135 ${PLY-48}h100v14h-100zM135 ${PLY+34}h100v14h-100z"/>`
+   +plLab(70,PLY+21,30,150,'tube multicouche')+plLab(200,PLY-25,330,22,'douille inox écrasée')+plLab(163,PLY+14,180,150,'joints toriques','middle')+plLab(140,PLY-48,90,22,'mâchoires de la pince')+plLab(300,PLY+24,330,150,'raccord'),
+  principe:'Le tube s’enfile sur l’embout du raccord, qui porte des joints. Une douille en inox entoure le tube : la pince à sertir l’écrase tout autour, et le tube est serré pour toujours.',
+  outils:['Coupe-tube','Calibreur-ébavureur (il remet le tube bien rond)','Pince à sertir avec les mâchoires du profil du raccord (TH, U, B…)'],
+  etapes:['Coupez d’équerre au coupe-tube.','Passez le calibreur : le tube redevient rond et les bords sont chanfreinés (sinon le joint se coupe).','Enfoncez le tube à fond : il doit apparaître dans la fenêtre de contrôle.','Placez la mâchoire bien d’équerre sur la douille et sertissez jusqu’au bout de la course.'],
+  plus:['Rapide, propre, sans flamme.','Encastrable (raccords sous Avis Technique).'],moins:['Pince chère (location possible).','Mâchoire du mauvais profil = fuite assurée.','Non démontable.'],encastre:true},
+ {id:'instantane',nom:'Raccord instantané (à enfoncer)',pour:'Cuivre, PER, multicouche',
+  svg:plAxe(20,380)+plEau(40,320,13)+plSym(40,200,14,19,'pl-cu')+plSym(140,140,19,32,'pl-gris')+plSym(240,40,13,32,'pl-gris')+plSym(280,80,13,19,'pl-gris')
+   +plSym(160,10,19,24,'pl-bleu')+plPoly([[185,26],[195,19],[198,19],[192,26]],'pl-inox')+plSym(205,10,19,23,'pl-joint')+plSym(150,12,19,30,'pl-blanc')
+   +plLab(80,PLY-19,70,30,'tube')+plLab(156,PLY-30,130,22,'bague de déverrouillage')+plLab(192,PLY+22,180,150,'griffe en inox','middle')+plLab(210,PLY+23,330,150,'joint torique'),
+  principe:'On enfonce simplement le tube : une griffe en inox le retient et un joint torique fait l’étanchéité. On le démonte en appuyant sur la bague.',
+  outils:['Coupe-tube','Ébavureur','Crayon pour marquer la profondeur'],
+  etapes:['Coupez d’équerre et ébavurez (une bavure abîme le joint).','Mettez un insert dans le tube s’il s’agit de PER ou de multicouche.','Marquez au crayon la profondeur d’emboîtement.','Enfoncez d’un coup jusqu’au trait.','Tirez sur le tube pour vérifier qu’il est bien pris.'],
+  plus:['Le plus simple : aucun outil.','Démontable, réutilisable selon les marques.','Idéal pour un dépannage.'],moins:['Le plus cher à l’unité.','Doit rester accessible : pas d’encastrement.'],encastre:false},
+ {id:'collage',nom:'Collage PVC',pour:'PVC pression et PVC d’évacuation',
+  svg:plAxe(20,380)+plEau(40,320,17)+plSym(40,200,17,23,'pl-pvc')+plSym(150,90,23,30,'pl-pvc2')+plSym(240,90,17,30,'pl-pvc2')+plSym(150,90,23,24.5,'pl-colle')+plPoly([[240,17],[240,23],[246,17]],'pl-pvc')
+   +plLab(80,PLY-23,70,30,'tube')+plLab(200,PLY-30,200,22,'manchon','middle')+plLab(190,PLY+24,170,150,'colle sur les deux pièces','middle')+plLab(243,PLY-20,340,30,'bout chanfreiné'),
+  principe:'La colle PVC fait fondre légèrement le plastique des deux pièces : en séchant, elles ne font plus qu’une.',
+  outils:['Scie à métaux ou coupe-tube PVC','Lime ou outil à chanfreiner','Décapant-dégraissant PVC et chiffon','Colle PVC (gel) et pinceau'],
+  etapes:['Coupez d’équerre, chanfreinez le bout du tube.','Emboîtez à blanc et tracez un repère.','Dégraissez le tube et l’intérieur du raccord.','Encollez les deux pièces, dans le sens de la longueur.','Emboîtez d’un coup, sans tourner, et tenez quelques secondes.','Laissez sécher avant de mettre en eau (voir le pot ; 24 h pour la pression).'],
+  plus:['Très bon marché, simple.'],moins:['Définitif : une erreur oblige à couper.','Colle et décapant : aérez la pièce.'],encastre:true},
+ {id:'joint',nom:'Emboîtement à joint (évacuation)',pour:'PVC et PP d’évacuation',
+  svg:plAxe(20,380)+plSym(40,210,24,29,'pl-pvc')+plSym(170,90,29,37,'pl-pvc2')+plSym(260,100,24,29,'pl-pvc2')+plPoly([[185,29],[192,33],[198,29]],'pl-joint')+plSym(250,10,24,29,'pl-vide2')
+   +plLab(80,PLY-29,70,30,'tube')+plLab(192,PLY-33,175,20,'joint à lèvre','middle')+plLab(255,PLY+29,280,150,'1 cm de jeu pour la dilatation'),
+  principe:'Le tube s’enfonce dans une tulipe munie d’un joint en caoutchouc. Pas de colle : le tube peut s’allonger et se raccourcir avec la chaleur de l’eau.',
+  outils:['Scie, lime à chanfreiner','Lubrifiant pour joints (ou eau savonneuse)'],
+  etapes:['Coupez d’équerre et chanfreinez le bout du tube.','Lubrifiez le bout du tube.','Enfoncez jusqu’au fond, faites un repère, puis retirez d’1 cm.'],
+  plus:['Démontable, encaisse la dilatation, très rapide.'],moins:['Le tube doit être bien tenu par des colliers.'],encastre:true},
+ {id:'filetage',nom:'Filetage',pour:'Acier galvanisé, raccords et robinets',
+  svg:plAxe(20,380)+plEau(40,320,14)+plSym(40,200,14,22,'pl-acier')+plSym(160,170,22,30,'pl-lai')+[...Array(9)].map((_,i)=>plPoly([[164+i*8,22],[168+i*8,25],[172+i*8,22]],'pl-fil')).join('')
+   +plLab(80,PLY-22,70,30,'tube fileté')+plLab(190,PLY-25,200,20,'filasse (ou ruban PTFE) dans les filets')+plLab(300,PLY+30,300,150,'raccord taraudé','middle'),
+  principe:'Le tube porte un pas de vis (filetage) qui se visse dans le raccord. Pour l’étanchéité, on garnit les filets de filasse et de pâte, ou de ruban PTFE.',
+  outils:['Clé à griffe (serre-tube)','Filasse et pâte à joint, ou ruban PTFE'],
+  etapes:['Enroulez la filasse dans le sens du vissage (sens des aiguilles d’une montre en regardant le bout du tube).','Enduisez de pâte.','Vissez à la main puis serrez à la clé, sans forcer jusqu’à fendre le raccord.'],
+  plus:['Démontable, très solide.'],moins:['Long et physique sur de l’acier.','Les raccords avec écrou (union, robinet) doivent rester accessibles.'],encastre:false},
+];
+const PL_ALIM=[['Évier','12','12 × 14','16 × 1,5','16 × 2'],['Lavabo','10','10 × 12','12 × 1,1','16 × 2'],['Baignoire','13','14 × 16','16 × 1,5','20 × 2'],['Douche','12','12 × 14','16 × 1,5','16 × 2'],
+  ['WC à réservoir','10','10 × 12','12 × 1,1','16 × 2'],['Lave-linge','10','10 × 12','12 × 1,1','16 × 2'],['Lave-vaisselle','10','10 × 12','12 × 1,1','16 × 2']];
+function plListe(t,arr){ return `<div><b>${t}</b><ul>${arr.map(x=>`<li>${x}</li>`).join('')}</ul></div>`; }
+function plFig(svg,lab){ return `<div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 170" role="img" aria-label="${lab}">${svg}</svg></div>`; }
+function fichesHTML(kind){
+  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:PL_ASSEMB, T=TOOLS[cur];
+  let s=`<section class="card"><h2>${T.nom}</h2><p class="hint">${T.aide}</p>
+    <div class="chips" id="fi-list">${L.map(x=>`<button class="chipb" type="button" data-fi="${x.id}" aria-pressed="false">${x.nom}</button>`).join('')}</div><div id="fi-view"></div></section>`;
+  if(kind==='tuyaux') s+=`<section class="card"><h2>Quel diamètre pour chaque appareil ?</h2><p class="hint">Diamètre minimal du tube d’alimentation (eau froide et eau chaude), d’après les règles du DTU 60.11.</p>
+    <div class="tbl"><table><thead><tr><th>Appareil</th><th>Ø intérieur mini</th><th>Cuivre</th><th>PER</th><th>Multicouche</th></tr></thead><tbody>
+    ${PL_ALIM.map(r=>`<tr><td>${r[0]}</td><td>${r[1]} mm</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')}</tbody></table></div>
+    <p class="hint">Arrivée générale d’une maison : Ø 25 mm en général, plus gros si la pression est faible. Au-dessus de 3 bars, un réducteur de pression protège la robinetterie.</p></section>`;
+  else if(kind==='isolants') s+=`<section class="card"><h2>Quel isolant, à quel endroit ?</h2><div class="tbl"><table><thead><tr><th>Où</th><th>Isolants qui conviennent</th></tr></thead><tbody>
+    ${ISO_OU.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table></div></section>
+    <section class="card"><h2>Les bons réflexes</h2><div class="sch-txt">
+    ${plListe('Humidité',['Côté pièce chauffée, un pare-vapeur (ou frein-vapeur) continu, bandes adhésives aux jonctions : la vapeur ne doit pas mouiller l’isolant.','Côté froid, l’isolant doit pouvoir sécher : écran respirant sous la toiture.','Ne jamais isoler un mur qui a des remontées d’humidité sans traiter la cause.'])}
+    ${plListe('Bien poser',['Pas de trou ni de vide : un isolant mal jointif perd beaucoup de son efficacité.','Deux couches croisées valent mieux qu’une seule épaisse.','Ne pas écraser l’isolant : écrasé, il isole moins.','Dégagez les spots, conduits de cheminée et boîtiers électriques (capots de protection).'])}
+    ${plListe('Confort d’été',['Sous un toit, préférez un isolant dense (fibre de bois, ouate) : la chaleur met plusieurs heures à traverser.','Les isolants légers (laine de verre, polystyrène) protègent mal des fortes chaleurs.'])}
+    ${plListe('Protection',['Laines minérales : gants, manches longues, masque FFP2, lunettes.','Les isolants en plastique doivent toujours être recouverts (plâtre, enduit) à cause du feu.','Aérez pendant et après les travaux.'])}</div></section>`;
+  else s+=`<section class="card"><h2>Quel assemblage pour quel tuyau ?</h2><div class="tbl"><table><thead><tr><th>Tuyau</th><th>Assemblages possibles</th></tr></thead><tbody>
+    ${PL_TUYAUX.map(t=>`<tr><td>${t.nom}</td><td>${t.assemb.map(a=>PL_ASSEMB.find(x=>x.id===a).nom).join(', ')}</td></tr>`).join('')}</tbody></table></div>
+    <p class="hint">Règle d’or : un raccord qu’on peut dévisser (compression, instantané, écrou) doit toujours rester visible et accessible. Dans un mur ou une dalle, seulement de la brasure, du sertissage ou du glissement, sous Avis Technique.</p></section>`;
+  return s;
+}
+function fiOpen(kind,id){
+  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:PL_ASSEMB, x=L.find(f=>f.id===id)||L[0];
+  try{ localStorage.setItem('atelier-fi-'+kind,x.id); }catch(e){}
+  document.querySelectorAll('#fi-list .chipb').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.fi===x.id)));
+  const v=document.getElementById('fi-view');
+  if(kind==='isolants'){ v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">Forme : ${x.forme}${x.lt?` · λ ${x.lam} W/m.K`:' · isole très peu seul'}</p>${plFig(isoBloc(x),'Isolant '+x.nom)}
+    <div class="sch-txt">${plListe('Où l’utiliser',x.usage)}${plListe('Avantages',x.plus)}${plListe('Inconvénients',x.moins)}</div>
+    ${x.lt?`<p><b>Épaisseur pour des combles perdus (R 7) :</b> ${isoEp(7,x.lt)} cm · <b>pour un mur (R 3,7) :</b> ${isoEp(3.7,x.lt)} cm. <button class="lien" type="button" data-go="epaisseurs">Toutes les épaisseurs</button></p>`:''}`; return; }
+  if(kind==='tuyaux') v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">${x.court}</p>${plFig(x.svg,'Tuyau '+x.nom)}
+    <div class="sch-txt">${plListe('À quoi il sert',x.usage)}${plListe('Avantages',x.plus)}${plListe('Inconvénients',x.moins)}</div>
+    <h3>Diamètres courants</h3><div class="tbl"><table><thead><tr><th>Diamètre (mm)</th><th>Pour quoi</th></tr></thead><tbody>${x.diam.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table></div>
+    <p class="hint">${x.dnote}</p><p><b>Assemblages :</b> ${x.assemb.map(a=>`<button class="lien" type="button" data-goa="${a}">${PL_ASSEMB.find(y=>y.id===a).nom}</button>`).join(' · ')}</p>`;
+  else v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">Pour : ${x.pour} · ${x.encastre?'peut être encastré':'doit rester accessible'}</p>${plFig(x.svg,'Coupe : '+x.nom)}
+    <p>${x.principe}</p><div class="sch-txt"><div><b>Les étapes</b><ol>${x.etapes.map(t=>`<li>${t}</li>`).join('')}</ol></div>${plListe('Outils',x.outils)}${plListe('Avantages',x.plus)}${plListe('Inconvénients',x.moins)}</div>`;
+}
+view.addEventListener('click',e=>{
+  const T=TOOLS[cur]; if(!T||T.special!=='fiches') return;
+  const b=e.target.closest('[data-fi]'); if(b){ fiOpen(T.fiches,b.dataset.fi); return; }
+  const a=e.target.closest('[data-goa]'); if(a){ try{ localStorage.setItem('atelier-fi-assemb',a.dataset.goa); }catch(err){} go('assemblages'); }
+});
+/* Évacuations */
+const PL_EVAC=[['lavabo','Lavabo, lave-mains',32,30,'Siphon sous la vasque.'],['bidet','Bidet',32,30,''],['douche','Douche',40,33,'Receveur extra-plat : bonde spéciale et pente d’au moins 1 cm/m.'],
+  ['baignoire','Baignoire',40,33,'Bonde avec trop-plein.'],['evier','Évier',40,33,'Prévoyez un té de visite : c’est l’évacuation qui se bouche le plus.'],
+  ['lavelinge','Lave-linge',40,30,'Le tuyau de vidange entre dans un siphon placé en hauteur (voir la notice de la machine).'],['lavevaisselle','Lave-vaisselle',40,30,'Souvent raccordé sur le siphon de l’évier.'],
+  ['wc','WC',100,80,'Raccordé par une pipe souple ou rigide, le plus droit et le plus court possible.'],['broyeur','WC avec broyeur',32,30,'Le broyeur peut refouler vers le haut : suivez la notice (Ø 32 ou 40).']];
+const PL_RESEAU=`<rect class="pl-mur" x="0" y="196" width="400" height="34"/><path class="pl-toit" d="M0 26L200 4 400 26"/><path class="pl-sol" d="M0 196H400"/>
+  <path class="pl-p100" d="M330 2V214H398"/><text class="pl-tx" x="324" y="40" text-anchor="end">ventilation primaire, même Ø, au-dessus du toit</text><text class="pl-tx" x="336" y="96">chute Ø 100</text><text class="pl-tx" x="300" y="226" text-anchor="end">collecteur Ø 100 → regard / tout-à-l’égout</text>
+  <rect class="pl-app" x="30" y="104" width="60" height="16" rx="4"/><path class="pl-p32" d="M60 120v14a8 8 0 0 0 16 0v-4h4l250 14"/><text class="pl-tx" x="34" y="98">lavabo</text><text class="pl-tx" x="120" y="124">Ø 32</text>
+  <rect class="pl-app" x="130" y="182" width="70" height="8" rx="2"/><path class="pl-p40" d="M165 190v4a6 6 0 0 0 12 0l153 2"/><text class="pl-tx" x="132" y="176">douche</text><text class="pl-tx" x="215" y="190">Ø 40</text>
+  <path class="pl-app" d="M245 150h40l-6 34h-28z"/><path class="pl-p100" d="M265 184v6l65 2"/><text class="pl-tx" x="257" y="168">WC</text>
+  <text class="pl-tx" x="150" y="152">pente 1 à 3 cm/m</text><path class="pl-ld" d="M62 146L40 154"/><text class="pl-tx" x="8" y="166">siphon : 5 cm de garde d’eau</text>`;
+const plTable=()=>`<div class="tbl"><table><thead><tr><th>Appareil</th><th>Tube PVC</th><th>Ø intérieur mini</th><th>À savoir</th></tr></thead><tbody>
+  ${PL_EVAC.map(r=>`<tr><td>${r[1]}</td><td>Ø ${r[2]}</td><td>${r[3]} mm</td><td>${r[4]}</td></tr>`).join('')}</tbody></table></div>`;
+Object.assign(TOOLS,{
+  tuyaux:{nom:'Les tuyaux',aide:'Les différents tuyaux d’alimentation en eau : à quoi ils servent, leurs diamètres, leurs avantages et leurs défauts. Choisissez un tuyau.',special:'fiches',fiches:'tuyaux'},
+  assemblages:{nom:'Les assemblages',aide:'Comment raccorder les tuyaux : brasure, compression, glissement, sertissage… Chaque dessin montre le raccord coupé en deux.',special:'fiches',fiches:'assemb'},
+  evacuations:{nom:'Les évacuations',aide:'Le bon diamètre et la bonne pente pour évacuer l’eau de chaque appareil jusqu’à la chute.',
+    champs:[S('app','Appareil',PL_EVAC.map(r=>[r[0],r[1]]),'lavabo'),N('lg','Longueur jusqu’à la chute','m',3),
+      S('pente','Pente',[['1','1 cm par mètre (minimum)'],['2','2 cm par mètre (conseillé)'],['3','3 cm par mètre (maximum conseillé)']],'2')],
+    calc(v){ const r=PL_EVAC.find(x=>x[0]===v.app)||PL_EVAC[0], d=r[2], p=Number(v.pente)||2, dn=v.lg*p, esp=d<=32?1:d<=50?1.5:2, nc=Math.ceil(v.lg/esp)+1;
+      const det=[`Pente ${p} cm par mètre : le départ est ${fr(dn,1)} cm plus haut que l’arrivée dans la chute`,`${nc} colliers (un tous les ${fr(esp,2)} m)`];
+      if(r[4]) det.push(r[4]);
+      if(v.lg>10) det.push({warn:'Au-delà de 10 m, le raccordement est trop long : rapprochez-vous d’une chute ou passez au diamètre au-dessus, avec un té de visite.'});
+      if(d===100&&p<2) det.push({warn:'Pour un WC, visez au moins 2 cm par mètre.'});
+      const extra=`<h3>Le réseau d’évacuation</h3>${plFig(PL_RESEAU,'Schéma d’un réseau d’évacuation').replace('0 0 400 170','0 0 400 232')}
+        <h3>Diamètres par appareil</h3>${plTable()}
+        <h3>Les règles à respecter</h3><div class="sch-txt">
+        ${plListe('Pentes et tracé',['Pente de 1 à 3 cm par mètre : trop faible, ça se bouche ; trop forte, l’eau part seule et laisse les déchets.','Raccordement de moins de 10 m, avec 3 coudes à 90° au plus. Préférez deux coudes à 45°.','Le diamètre ne diminue jamais en allant vers l’égout.','Un té de visite (bouchon) à chaque changement de direction important.'])}
+        ${plListe('Siphons et ventilation',['Chaque appareil a son siphon : l’eau qui y reste (5 cm) bloque les odeurs.','La chute monte jusqu’au-dessus du toit, au même diamètre : c’est la ventilation primaire. Sinon, un clapet aérateur sous Avis Technique.','Sans ventilation, les siphons se vident en glougloutant et les odeurs remontent.'])}
+        ${plListe('Chutes et collecteurs',['Eaux usées (lavabo, douche, évier…) : chute Ø 75 à 100.','Eaux vannes (WC) : chute Ø 100. Les deux chutes sont séparées, sauf système de chute unique sous Avis Technique.','Collecteur général Ø 100 ou plus jusqu’au regard. Les eaux de pluie ne vont jamais dans les eaux usées.'])}
+        ${plListe('Pose',['Colliers : tous les 1 m pour le Ø 32, 1,50 m pour le Ø 40-50, 2 m au-delà.','Le PVC s’allonge à la chaleur : manchon de dilatation sur les chutes, joints coulissants.','Assemblage collé ou à joint (voir « Les assemblages »).'])}</div>
+        <h3>Les tuyaux d’évacuation</h3><div class="tbl"><table><thead><tr><th>Matière</th><th>Pour quoi</th><th>Bon à savoir</th></tr></thead><tbody>
+        <tr><td>PVC (gris ou blanc)</td><td>Presque tout : Ø 32, 40, 50, 63, 75, 80, 100, 110, 125…</td><td>Bon marché, collé ou à joint. Bruyant dans une chute.</td></tr>
+        <tr><td>PP (polypropylène)</td><td>Eaux très chaudes, chutes insonorisées</td><td>Toujours à joint (il ne se colle pas).</td></tr>
+        <tr><td>Fonte</td><td>Anciennes chutes, chutes silencieuses</td><td>Très silencieuse mais lourde et chère.</td></tr></tbody></table></div>`;
+      return {big:`Tube PVC Ø ${d} mm`,detail:det,extra,item:`Évacuation ${r[1].toLowerCase()} : tube PVC Ø ${d}, ${fr(v.lg,1)} m, ${nc} colliers, colle ou joints`};
+    }},
+});
+
+
+/* ============ ISOLATION ============ */
+function isoRnd(seed){ let s=seed; return ()=>{ s=(s*16807)%2147483647; return (s-1)/2147483646; }; }
+function isoMotif(id,type,c1,c2){
+  const r=isoRnd(id.length*977+id.charCodeAt(0)), W=48; let g='';
+  if(type==='fibres') for(let i=0;i<14;i++){ const x=r()*W,y=r()*W,a=r()*6.28,l=10+r()*14; g+=`<path d="M${x} ${y}q${Math.cos(a+1)*l/2} ${Math.sin(a+1)*l/2} ${Math.cos(a)*l} ${Math.sin(a)*l}" stroke="${c2}" stroke-width="1" fill="none"/>`; }
+  if(type==='bois') for(let i=0;i<9;i++){ const y=i*5.3+r()*2; g+=`<path d="M0 ${y}q12 ${r()*4-2} 24 0t24 0" stroke="${c2}" stroke-width="${0.8+r()}" fill="none"/>`; }
+  if(type==='flocons') for(let i=0;i<22;i++){ const x=r()*W,y=r()*W,s=1.5+r()*3; g+=`<path d="M${x} ${y}l${s} ${-s/2}l${s/2} ${s}l${-s} ${s/2}z" fill="${c2}"/>`; }
+  if(type==='billes') for(let i=0;i<4;i++) for(let j=0;j<4;j++) g+=`<circle cx="${i*12+6+(j%2)*3}" cy="${j*12+6}" r="5.6" fill="none" stroke="${c2}" stroke-width=".8"/>`;
+  if(type==='lisse') for(let j=0;j<4;j++) g+=`<path d="M0 ${j*12+3}H48" stroke="${c2}" stroke-width=".6"/>`;
+  if(type==='mousse') for(let i=0;i<40;i++) g+=`<circle cx="${r()*W}" cy="${r()*W}" r="${0.5+r()}" fill="${c2}"/>`;
+  if(type==='liege') for(let i=0;i<26;i++) g+=`<circle cx="${r()*W}" cy="${r()*W}" r="${1+r()*3}" fill="${c2}"/>`;
+  if(type==='mince') for(let j=0;j<8;j++) g+=`<rect x="0" y="${j*6}" width="48" height="3" fill="${j%2?c2:'#e9eef2'}" style="stroke:none"/>`;
+  return `<pattern id="pt-${id}" width="${W}" height="${W}" patternUnits="userSpaceOnUse"><rect width="${W}" height="${W}" fill="${c1}" style="stroke:none"/>${g}</pattern>`;
+}
+function isoBloc(I){
+  const x0=70,y0=58,w=200,h=78,dx=46,dy=-34, f=`url(#pt-${I.id})`, top=I.dessus||f;
+  return `<defs>${isoMotif(I.id,I.motif,I.c1,I.c2)}</defs>
+    <path d="M${x0} ${y0}h${w}l${dx} ${dy}h${-w}z" fill="${top}" stroke="#3a3f44" stroke-width=".8"/>
+    <path d="M${x0+w} ${y0}l${dx} ${dy}v${h}l${-dx} ${-dy}z" fill="${f}" stroke="#3a3f44" stroke-width=".8"/><path d="M${x0+w} ${y0}l${dx} ${dy}v${h}l${-dx} ${-dy}z" fill="#000" opacity=".18"/>
+    <rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${f}" stroke="#3a3f44" stroke-width=".8"/>
+    <path class="pl-ld" d="M${x0} ${y0+h+8}h${w}M${x0} ${y0+h+4}v8M${x0+w} ${y0+h+4}v8"/>
+    <text class="pl-tx" x="${x0+w/2}" y="${y0+h+22}" text-anchor="middle">${I.forme}</text>
+    ${I.lt?`<text class="pl-tx" x="${x0+w+dx+8}" y="${y0+dy+40}">λ</text>`:''}${I.lt?`<text class="pl-tx" x="${x0+w+dx+8}" y="${y0+dy+54}">${I.lam}</text>`:''}`;
+}
+const ISOLANTS=[
+ {id:'verre',nom:'Laine de verre',lam:'0,030 à 0,040',lt:0.035,motif:'fibres',c1:'#f3d877',c2:'#c99d2a',forme:'rouleaux, panneaux, flocons à souffler',
+  usage:['Combles perdus : en rouleaux ou soufflée.','Rampants et murs par l’intérieur, entre les rails, sous plaque de plâtre.','Cloisons, pour le bruit.'],
+  plus:['Le moins cher.','Facile à trouver et à poser.','Ne brûle pas, bon isolant contre le bruit.'],
+  moins:['Gratte : gants, manches longues, masque et lunettes.','Perd son efficacité si elle prend l’humidité, peut se tasser.','Protège peu de la chaleur l’été.','Pare-vapeur indispensable côté pièce chauffée.']},
+ {id:'roche',nom:'Laine de roche',lam:'0,034 à 0,040',lt:0.036,motif:'fibres',c1:'#b9c2a8',c2:'#6f7a5c',forme:'rouleaux, panneaux rigides, flocons',
+  usage:['Comme la laine de verre : combles, rampants, murs, cloisons.','Panneaux rigides pour l’isolation par l’extérieur sous enduit.','Près des conduits de cheminée et partout où le feu est à craindre.'],
+  plus:['Excellente tenue au feu.','Très bon isolant contre le bruit.','Les panneaux rigides ne se tassent pas.'],
+  moins:['Un peu plus chère et plus lourde que la laine de verre.','Irritante à la pose.','Craint l’humidité.']},
+ {id:'ouate',nom:'Ouate de cellulose',lam:'0,038 à 0,042',lt:0.040,motif:'flocons',c1:'#d7d9dc',c2:'#8a9096',forme:'vrac à souffler, panneaux',
+  usage:['Combles perdus en soufflage : son point fort.','Caissons et murs à ossature bois, insufflée.','Panneaux pour les murs et rampants.'],
+  plus:['Faite de papier recyclé.','Très bonne protection contre la chaleur l’été.','Soufflée, elle remplit tous les recoins.','Bon prix en soufflage.'],
+  moins:['En vrac, elle se tasse : respectez l’épaisseur « après tassement » de la fiche.','Craint l’humidité et les fuites de toit.','Le soufflage demande une machine (location possible) et fait de la poussière.']},
+ {id:'bois',nom:'Fibre de bois',lam:'0,036 à 0,046',lt:0.038,motif:'bois',c1:'#c8a06a',c2:'#8c6334',forme:'panneaux souples ou rigides, vrac',
+  usage:['Rampants et murs par l’intérieur (panneaux souples).','Isolation par l’extérieur sous enduit (panneaux rigides).','Sur la charpente, sous les tuiles (sarking).'],
+  plus:['Le meilleur confort d’été : la chaleur met des heures à traverser.','Naturelle, laisse respirer les murs anciens.','Bon isolant contre le bruit.'],
+  moins:['Plus chère.','Un peu plus épaisse pour la même performance.','Lourde ; se coupe avec une scie spéciale.']},
+ {id:'chanvre',nom:'Chanvre, lin, laine de mouton',lam:'0,039 à 0,045',lt:0.040,motif:'fibres',c1:'#e6d8b5',c2:'#a68f5a',forme:'rouleaux, panneaux souples',
+  usage:['Murs et rampants par l’intérieur.','Combles perdus en rouleaux.','Rénovation de maisons anciennes en pierre ou en pisé.'],
+  plus:['Naturels et renouvelables.','Régulent l’humidité.','Agréables à poser : ils ne grattent pas.'],
+  moins:['Plus chers, moins faciles à trouver.','Traités contre les insectes et le feu (laine de mouton contre les mites).','Un peu plus épais pour la même performance.']},
+ {id:'liege',nom:'Liège expansé',lam:'0,037 à 0,042',lt:0.040,motif:'liege',c1:'#8a5a33',c2:'#4f2f17',forme:'panneaux rigides',
+  usage:['Sols, murs humides, soubassements.','Isolation par l’extérieur, toiture-terrasse.','Contre le bruit sous un parquet.'],
+  plus:['Ne pourrit pas et ne craint pas l’eau.','Très durable, naturel.','Bon confort d’été et bon isolant phonique.'],
+  moins:['Cher.','Peu de choix d’épaisseurs dans les magasins.']},
+ {id:'pse',nom:'Polystyrène expansé (PSE)',lam:'0,030 à 0,038',lt:0.032,motif:'billes',c1:'#fbfbfb',c2:'#c9cfd4',forme:'panneaux, plaques de doublage',
+  usage:['Isolation par l’extérieur sous enduit (le PSE gris « graphité » isole mieux).','Sols, sous une chape.','Murs par l’intérieur, en plaques de doublage collées (PSE + plâtre).'],
+  plus:['Bon marché et léger.','Ne craint pas l’eau.','Se coupe au cutter ou au fil chaud.'],
+  moins:['Brûle et dégage des fumées toxiques : il doit toujours être recouvert.','Ne protège pas de la chaleur l’été, nul contre le bruit.','Fait à partir du pétrole.']},
+ {id:'xps',nom:'Polystyrène extrudé (XPS)',lam:'0,029 à 0,035',lt:0.033,motif:'lisse',c1:'#f2b6c4',c2:'#d98aa0',forme:'panneaux rainurés',
+  usage:['Sols et dalles sur terre-plein.','Murs enterrés, soubassements.','Toiture-terrasse « inversée » (isolant au-dessus de l’étanchéité).'],
+  plus:['Supporte l’écrasement et l’eau.','Panneaux rainurés qui s’emboîtent.'],
+  moins:['Plus cher que le PSE.','Inflammable, fait à partir du pétrole.']},
+ {id:'pu',nom:'Polyuréthane (PUR / PIR)',lam:'0,022 à 0,028',lt:0.023,motif:'mousse',c1:'#f0dc8c',c2:'#c7ad4e',dessus:'#c9cfd4',forme:'panneaux avec faces en aluminium',
+  usage:['Quand on manque de place : le plus mince à performance égale.','Sols sous chape, plancher chauffant.','Toiture-terrasse, sur la charpente (sarking).'],
+  plus:['Le plus performant pour une épaisseur donnée.','Résiste à l’écrasement.','Faces aluminium : bloquent aussi la vapeur.'],
+  moins:['Cher.','Médiocre l’été, nul contre le bruit.','Brûle (le PIR un peu moins que le PUR), fait à partir du pétrole.']},
+ {id:'mince',nom:'Isolant mince réfléchissant',lam:'—',lt:0,motif:'mince',c1:'#c9cfd4',c2:'#8f989f',forme:'rouleaux de quelques millimètres',
+  usage:['En complément d’un vrai isolant.','Comme pare-vapeur, côté pièce chauffée.','Abris, garages, appentis non chauffés.'],
+  plus:['Mince, léger, facile à agrafer.'],
+  moins:['Isole très peu tout seul : il ne remplace pas 20 cm de laine, malgré les publicités.','Ne donne pas droit aux aides.','Doit avoir une lame d’air de chaque côté pour servir à quelque chose.']},
+];
+const ISO_PARTS=[['combles','Combles perdus (plancher du grenier)',7,8,10],['rampants','Rampants (combles aménagés)',6,7,8],['murs','Murs donnant sur l’extérieur',3.7,4,5],
+  ['plancher','Plancher bas (sur cave, garage, vide sanitaire)',3,3.5,4.5],['terrasse','Toiture-terrasse',4.5,6,7]];
+const ISO_OU=[['Combles perdus','Laine de verre ou de roche soufflée, ouate de cellulose soufflée, rouleaux croisés en deux couches'],
+  ['Rampants','Laines minérales, fibre de bois, chanvre, entre et sous les chevrons, avec pare-vapeur'],
+  ['Murs par l’intérieur','Laines entre rails sous plaque de plâtre, fibre de bois, plaques de doublage PSE + plâtre'],
+  ['Murs par l’extérieur','PSE graphité, laine de roche rigide, fibre de bois rigide, sous enduit ou bardage'],
+  ['Plancher bas (par-dessous)','Panneaux de laine de roche, PSE ou PU fixés au plafond de la cave ou du garage'],
+  ['Sol sous chape','XPS, PSE haute densité, polyuréthane'],['Toiture-terrasse','Polyuréthane, XPS, liège, laine de roche haute densité']];
+const isoEp=(R,l)=>Math.ceil(R*l*100);
+const ISO_SEL=[...ISOLANTS.filter(i=>i.lt).map(i=>[i.id,`${i.nom} (λ ${fr(i.lt,3)})`]),['autre','Autre : je saisis le λ de l’emballage']];
+Object.assign(TOOLS,{
+  isolants:{nom:'Les isolants',aide:'Les principaux isolants : à quoi ils servent, leurs avantages et leurs défauts. Choisissez un isolant.',special:'fiches',fiches:'isolants'},
+  epaisseurs:{nom:'Épaisseurs d’isolant',aide:'Plus la résistance thermique R est grande, mieux on est isolé. L’épaisseur à poser = R × λ : elle dépend donc de l’isolant choisi.',
+    champs:[S('part','Partie de la maison',ISO_PARTS.map(p=>[p[0],p[1]]),'combles'),S('iso','Isolant',ISO_SEL,'verre'),
+      N('lam','λ indiqué sur l’emballage','W/m.K',0.035,{k:'iso',v:['autre']})],
+    calc(v){ const P=ISO_PARTS.find(p=>p[0]===v.part)||ISO_PARTS[0], I=ISOLANTS.find(i=>i.id===v.iso), l=I?I.lt:Math.max(0.015,v.lam), nom=I?I.nom.toLowerCase():'isolant';
+      const e=isoEp(P[2],l), e1=isoEp(P[3],l), e2=isoEp(P[4],l);
+      const det=[`Minimum : R = ${fr(P[2],1)} m².K/W, soit ${e} cm`,`Pour bien faire : R = ${fr(P[3],1)} à ${fr(P[4],1)}, soit ${e1} à ${e2} cm`,`Calcul : ${fr(P[2],1)} × ${fr(l,3)} = ${fr(P[2]*l,3)} m`];
+      if(v.part==='combles') det.push('En soufflage, commandez l’épaisseur « après tassement » indiquée par le fabricant.');
+      if(v.part==='murs'&&e>16) det.push({warn:`${e} cm à l’intérieur, c’est autant de surface habitable perdue : pensez à un isolant plus performant ou à l’isolation par l’extérieur.`});
+      const iso=ISOLANTS.filter(i=>i.lt);
+      const extra=`<h3>Épaisseurs minimales, partie par partie</h3><p class="hint">Épaisseur pour atteindre la résistance R minimale, arrondie au centimètre au-dessus. Ces minimums sont ceux exigés pour l’éco-prêt à taux zéro.</p>
+        <div class="tbl"><table><thead><tr><th>Isolant</th>${ISO_PARTS.map(p=>`<th>${p[1].split(' (')[0]}<br><span class="u">R ≥ ${fr(p[2],1)}</span></th>`).join('')}</tr></thead><tbody>
+        ${iso.map(i=>`<tr${I&&I.id===i.id?' class="hl"':''}><td>${i.nom}<br><span class="u">λ ${fr(i.lt,3)}</span></td>${ISO_PARTS.map(p=>`<td>${isoEp(p[2],i.lt)} cm</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+        <h3>Pour bien isoler</h3><div class="tbl"><table><thead><tr><th>Partie</th><th>R minimum</th><th>R conseillé</th></tr></thead><tbody>
+        ${ISO_PARTS.map(p=>`<tr><td>${p[1]}</td><td>${fr(p[2],1)}</td><td>${fr(p[3],1)} à ${fr(p[4],1)}</td></tr>`).join('')}</tbody></table></div>
+        <p class="hint">Le λ (lambda) est écrit sur l’emballage : plus il est petit, plus l’isolant est performant, donc plus il peut être mince. Le R est souvent écrit aussi : c’est lui qui compte. Pour les aides, les règles changent souvent : renseignez-vous auprès de France Rénov’ avant les travaux.</p>`;
+      return {big:`${e} cm de ${nom}`,detail:det,extra,item:`Isolation ${P[1].toLowerCase()} : ${e} cm de ${nom} (R ${fr(P[2],1)})`};
+    }},
+});
+
 function symbolesHTML(){
   return `<section class="card"><h2>Symboles électriques</h2><p class="hint">Les symboles qu’on trouve sur les plans et les schémas.</p>
     <div class="symb">${SYMB.map(([n,d,s])=>`<div class="sy"><svg viewBox="0 0 90 56" aria-hidden="true">${s}</svg><div><b>${n}</b><span>${d}</span></div></div>`).join('')}</div></section>
