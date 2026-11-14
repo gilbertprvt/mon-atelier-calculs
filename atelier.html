@@ -1551,7 +1551,7 @@ const FAMILLES = [
   {id:'jardin',     nom:'Jardin',     desc:'Nichoir, mangeoire, jardinières', outils:[{g:'Oiseaux',outils:['j-nichoir','j-mangeoire']},{g:'Jardinières',outils:['j-jardiniere','j-echelle','j-gradins']}]},
   {id:'isolation',  nom:'Isolation',  desc:'Isolants, épaisseurs', outils:['isolants','epaisseurs','isol-qte']},
   {id:'plomberie',  nom:'Plomberie',  desc:'Tuyaux, assemblages, évacuations', outils:[{g:'Alimentation',outils:['tuyaux','assemblages']},'evacuations']},
-  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:[{g:'Tableau électrique',outils:['tableau','tab-elements']},'cables','schemas','symboles']},
+  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:[{g:'Tableau électrique',outils:['tableau','tab-elements']},'cables','multimetre','schemas','symboles']},
   {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, volumes',    outils:['unites','surfaces','volumes']},
 ];
 
@@ -2135,7 +2135,7 @@ const PL_ALIM=[['Évier','12','12 × 14','16 × 1,5','16 × 2'],['Lavabo','10','
 function plListe(t,arr){ return `<div><b>${t}</b><ul>${arr.map(x=>`<li>${x}</li>`).join('')}</ul></div>`; }
 function plFig(svg,lab){ return `<div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 170" role="img" aria-label="${lab}">${svg}</svg></div>`; }
 function fichesHTML(kind){
-  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:PL_ASSEMB, T=TOOLS[cur];
+  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:PL_ASSEMB, T=TOOLS[cur];
   let s=kind==='tableau'?`<section class="card"><h2>Le tableau, de l’arrivée aux circuits</h2><p class="hint">Touchez un module pour voir sa fiche plus bas.</p><div class="sch-fig"><svg class="pl-svg el-svg" viewBox="0 0 400 340" role="img" aria-label="Schéma d’un tableau électrique">${elSchema()}</svg></div></section>`:'';
   s+=`<section class="card"><h2>${T.nom}</h2><p class="hint">${T.aide}</p>
     <div class="chips" id="fi-list">${L.map(x=>`<button class="chipb" type="button" data-fi="${x.id}" aria-pressed="false">${x.nom}</button>`).join('')}</div><div id="fi-view"></div></section>`;
@@ -2143,6 +2143,13 @@ function fichesHTML(kind){
     <div class="tbl"><table><thead><tr><th>Appareil</th><th>Ø intérieur mini</th><th>Cuivre</th><th>PER</th><th>Multicouche</th></tr></thead><tbody>
     ${PL_ALIM.map(r=>`<tr><td>${r[0]}</td><td>${r[1]} mm</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')}</tbody></table></div>
     <p class="hint">Arrivée générale d’une maison : Ø 25 mm en général, plus gros si la pression est faible. Au-dessus de 3 bars, un réducteur de pression protège la robinetterie.</p></section>`;
+  else if(kind==='multi') s+=`<section class="card"><h2>Quel réglage pour quelle mesure ?</h2><div class="tbl"><table><thead><tr><th>Je veux…</th><th>Sélecteur</th><th>Cordon rouge</th><th>Courant</th></tr></thead><tbody>
+    <tr><td>Vérifier une prise, un circuit 230 V</td><td>V~</td><td>VΩ</td><td>présent</td></tr><tr><td>Tester une pile, une batterie</td><td>V⎓</td><td>VΩ</td><td>—</td></tr>
+    <tr><td>Savoir si un fil ou un fusible est coupé</td><td>•))) bip</td><td>VΩ</td><td>coupé</td></tr><tr><td>Contrôler une résistance chauffante</td><td>Ω</td><td>VΩ</td><td>coupé</td></tr>
+    <tr><td>Tester une diode, une LED</td><td>▶|</td><td>VΩ</td><td>coupé</td></tr><tr><td>Mesurer un courant</td><td>A ou mA</td><td>10A ou mA</td><td>dans le circuit</td></tr></tbody></table></div>
+    <h3>Valeurs normales</h3><div class="tbl"><table><tbody><tr><td>Prise de courant</td><td>207 à 253 V (230 V ± 10 %)</td></tr><tr><td>Pile 1,5 V</td><td>neuve 1,5 à 1,6 V · usée sous 1,2 V</td></tr>
+    <tr><td>Pile 9 V</td><td>neuve plus de 9 V · usée sous 7 V</td></tr><tr><td>Batterie de voiture (moteur arrêté)</td><td>12,6 V chargée · sous 12 V déchargée</td></tr>
+    <tr><td>Résistance chauffante</td><td>R = 230 × 230 ÷ puissance (2 000 W ≈ 26 Ω)</td></tr><tr><td>Fil, fusible, interrupteur fermé</td><td>bip, presque 0 Ω</td></tr></tbody></table></div></section>`;
   else if(kind==='tableau') s+=`<section class="card"><h2>Dans quel ordre tout se branche</h2><ol>${EL_ORDRE.map(t=>`<li>${t}</li>`).join('')}</ol>
     <h3>Les couleurs des fils</h3><div class="tbl"><table><tbody><tr><td><span class="el-pastille" style="background:#8b4a2b"></span>Phase</td><td>Marron, rouge ou noir (jamais bleu ni vert et jaune)</td></tr>
     <tr><td><span class="el-pastille" style="background:#2f6fd6"></span>Neutre</td><td>Bleu, toujours</td></tr><tr><td><span class="el-pastille el-pvj"></span>Terre</td><td>Vert et jaune, toujours</td></tr>
@@ -2162,10 +2169,13 @@ function fichesHTML(kind){
   return s;
 }
 function fiOpen(kind,id){
-  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:PL_ASSEMB, x=L.find(f=>f.id===id)||L[0];
+  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:PL_ASSEMB, x=L.find(f=>f.id===id)||L[0];
   try{ localStorage.setItem('atelier-fi-'+kind,x.id); }catch(e){}
   document.querySelectorAll('#fi-list .chipb').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.fi===x.id)));
   const v=document.getElementById('fi-view');
+  if(kind==='multi'){ v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">${x.court}</p><div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 190" role="img" aria-label="${x.nom}">${x.svg}</svg></div>
+    <p><b>Réglage :</b> ${x.regl}</p><div class="sch-txt">${plListe('Les cordons',x.bornes)}<div><b>${x.id==='appareil'||x.id==='securite'?'À savoir':'La mesure'}</b><ol>${x.etapes.map(t=>`<li>${t}</li>`).join('')}</ol></div>${plListe(x.id==='securite'?'Avant de toucher un fil':'Lire le résultat',x.resultat)}</div>
+    <p class="hint">⚠️ ${x.attention}</p>`; return; }
   if(kind==='tableau'){ const fig=x.peigne?elPeigne():x.terre?elTerre():elDessin(x);
     v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">${x.court}</p><div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 180" role="img" aria-label="${x.nom}">${fig}</svg></div>
     <div class="sch-txt">${plListe('À quoi il sert',x.fonction)}${plListe('Ce qu’il faut savoir',x.carac)}<div><b>Comment il se branche</b><ol>${x.branch.map(t=>`<li>${t}</li>`).join('')}</ol></div></div>
@@ -2492,6 +2502,86 @@ const EL_ORDRE=['Le compteur, puis le disjoncteur de branchement (partie du dist
   'Sur chaque rangée : l’interrupteur différentiel 30 mA en premier, puis ses disjoncteurs (8 au plus), reliés par le peigne horizontal.','Les modules de commande (contacteur, télérupteur, programmateur) sont alimentés par le disjoncteur du circuit qu’ils commandent.',
   'Toutes les terres vont au bornier de terre, puis au piquet de terre.'];
 TOOLS['tab-elements']={nom:'Les éléments du tableau',aide:'Tout ce qui peut prendre place dans un tableau électrique : à quoi ça sert et comment ça se branche. Touchez un module sur le schéma ou un nom dans la liste.',special:'fiches',fiches:'tableau'};
+
+
+/* ============ MULTIMÈTRE ============ */
+const MM_POS=[['OFF',-90],['V~',-45],['V⎓',-5],['Ω',35],['bip',75],['A',125],['mA',165],['Hz',-135]];
+const MM_JACK={a:40,ma:66,com:96,v:124};
+function mmAppareil(sel,disp,unite){
+  const cx=85,cy=96; let g=`<rect x="22" y="8" width="128" height="176" rx="14" fill="#f2c94c" stroke="#5a4a12"/><rect x="30" y="16" width="112" height="160" rx="9" fill="#3a3f45"/>`;
+  g+=`<rect x="40" y="24" width="92" height="34" rx="4" fill="#c7d9b8"/><text x="126" y="50" text-anchor="end" font-size="20" font-family="ui-monospace,monospace" fill="#1d2a1d">${disp}</text><text x="44" y="34" font-size="8" fill="#1d2a1d">${unite||''}</text>`;
+  MM_POS.forEach(([t,a])=>{ const r=a*Math.PI/180, x=cx+Math.cos(r)*40, y=cy+Math.sin(r)*36+3; g+=`<text x="${x}" y="${y}" text-anchor="middle" font-size="${t===sel?10:8.5}" font-weight="${t===sel?700:400}" fill="${t===sel?'#ffd54a':'#e9ecef'}">${t==='bip'?'•)))':t}</text>`; });
+  const a=(MM_POS.find(p=>p[0]===sel)||MM_POS[0])[1]*Math.PI/180;
+  g+=`<circle cx="${cx}" cy="${cy}" r="22" fill="#20252a" stroke="#888"/><path d="M${cx-Math.cos(a)*8} ${cy-Math.sin(a)*8}L${cx+Math.cos(a)*19} ${cy+Math.sin(a)*19}" stroke="#ffd54a" stroke-width="5" stroke-linecap="round"/>`;
+  [['a','10A'],['ma','mA'],['com','COM'],['v','VΩ']].forEach(([k,t])=>{ const x=MM_JACK[k]; g+=`<circle cx="${x}" cy="150" r="7" fill="${k==='com'?'#111':'#7a1b1b'}" stroke="#aaa"/><text x="${x}" y="170" text-anchor="middle" font-size="8" fill="#e9ecef">${t}</text>`; });
+  return g;
+}
+/* pointe de touche : câble depuis la borne jusqu’au point (x,y) */
+function mmPointe(jack,x,y,coul,dir=1){ const x0=MM_JACK[jack], c=coul==='r'?'#d32f2f':'#222';
+  return `<path d="M${x0} 150C${x0} 200 ${x-60*dir} ${y+70} ${x-14*dir} ${y+14}" stroke="${c}" stroke-width="3" fill="none"/>
+    <path d="M${x-14*dir} ${y+14}l${-4*dir} ${4}l${8*dir} ${8}l4 -4z" fill="${c}"/><path d="M${x-14*dir} ${y+14}L${x} ${y}" stroke="#bbb" stroke-width="2.4" stroke-linecap="round"/>`; }
+const mmPrise=(cx=300,cy=92)=>`<circle cx="${cx}" cy="${cy}" r="46" fill="#f4f4f1" stroke="#777"/><circle cx="${cx}" cy="${cy}" r="34" fill="#e6e6e1" stroke="#999"/>
+  <circle cx="${cx-14}" cy="${cy}" r="4.5" fill="#333"/><circle cx="${cx+14}" cy="${cy}" r="4.5" fill="#333"/><rect x="${cx-3}" y="${cy-30}" width="6" height="12" rx="2" fill="#bbb" stroke="#777"/>`;
+const MM_FICHES=[
+ {id:'appareil',nom:'Le multimètre',court:'Un seul appareil pour mesurer une tension, une résistance, une intensité et vérifier qu’un fil n’est pas coupé.',
+  svg:mmAppareil('OFF','----','')+plLab(132,40,200,30,'l’écran')+plLab(110,96,200,80,'le sélecteur : on choisit la mesure')+plLab(124,150,200,130,'les bornes : où brancher les cordons')+plLab(96,158,200,170,'COM (noir) : toujours la même'),
+  regl:'Sélecteur sur OFF quand on ne s’en sert pas : la pile dure plus longtemps.',
+  bornes:['Cordon noir : toujours dans COM.','Cordon rouge : dans VΩ pour presque toutes les mesures.','Cordon rouge dans 10A ou mA seulement pour mesurer une intensité.'],
+  etapes:['Choisissez un multimètre de catégorie CAT III 300 V au moins (écrit près des bornes) pour travailler sur une installation de maison.','Vérifiez l’état des cordons : pas de fil dénudé, pas de pointe tordue.','Avec un appareil « automatique », il choisit seul le calibre. Sinon, commencez par le calibre le plus grand puis descendez.'],
+  resultat:['« OL » ou « 1 » à gauche de l’écran : la valeur dépasse le calibre, ou le circuit est ouvert.','Un « - » devant le chiffre en continu : les pointes sont inversées, ce n’est pas grave.'],
+  attention:'Gardez les doigts derrière les collerettes des pointes.'},
+ {id:'vac',nom:'Tension alternative (prise)',court:'Vérifier qu’une prise ou un circuit reçoit bien du 230 V.',sel:'V~',
+  svg:mmAppareil('V~','231','V~')+mmPrise()+mmPointe('v',286,92,'r')+mmPointe('com',314,92,'n')+`<text class="pl-tx" x="300" y="160" text-anchor="middle">une pointe dans chaque trou</text>`,
+  regl:'Sélecteur sur V~ (V avec une vague), calibre 600 V ou automatique.',
+  bornes:['Noir dans COM, rouge dans VΩ.'],
+  etapes:['Tenez les deux pointes d’une seule main si possible, l’autre main loin de tout.','Enfoncez une pointe dans chaque trou de la prise, bien au fond.','Lisez la tension.'],
+  resultat:['Entre 207 et 253 V : normal (230 V plus ou moins 10 %).','0 V : pas de courant (disjoncteur abaissé, fil coupé).','Une valeur faible, quelques volts ou dizaines de volts : un fil mal serré ou une tension « fantôme » induite par un câble voisin.'],
+  attention:'Le multimètre ne remplace pas un vérificateur d’absence de tension (VAT) pour la sécurité avant travaux.'},
+ {id:'prise',nom:'Contrôler une prise et sa terre',court:'Trois mesures pour savoir si la prise est bien branchée.',sel:'V~',
+  svg:mmAppareil('V~','229','V~')+mmPrise()+mmPointe('v',286,92,'r')+mmPointe('com',300,66,'n')+`<text class="pl-tx" x="300" y="160" text-anchor="middle">phase → broche de terre</text>`,
+  regl:'Sélecteur sur V~.',bornes:['Noir dans COM, rouge dans VΩ.'],
+  etapes:['Mesurez entre les deux trous (phase et neutre) : environ 230 V.','Mesurez entre chaque trou et la broche de terre : un trou donne environ 230 V (c’est la phase), l’autre presque 0 V (le neutre).','Mesurez entre le neutre et la terre : quelques volts au plus.'],
+  resultat:['Phase–terre ≈ 230 V : la terre est bien reliée.','Phase–terre ≈ 0 V ou flottante : la terre est absente ou coupée, à faire réparer.','En France, la phase est conseillée dans le trou de droite (prise vue de face, terre en haut).'],
+  attention:'Ne touchez jamais la broche de terre avec les doigts pendant la mesure.'},
+ {id:'vdc',nom:'Tension continue (pile, batterie)',court:'Savoir si une pile ou une batterie est chargée.',sel:'V⎓',
+  svg:mmAppareil('V⎓','1.58','V⎓')+`<rect x="230" y="78" width="120" height="34" rx="6" fill="#2d6cdf" stroke="#173a7a"/><rect x="350" y="86" width="8" height="18" rx="2" fill="#bbb"/><text x="290" y="100" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">1,5 V</text><text x="364" y="80" font-size="12" fill="#d32f2f">+</text><text x="222" y="80" font-size="12" class="pl-tx">−</text>`+mmPointe('v',358,95,'r')+mmPointe('com',232,95,'n'),
+  regl:'Sélecteur sur V⎓ (V avec un trait plein et des pointillés), calibre 20 V ou automatique.',bornes:['Noir dans COM, rouge dans VΩ.'],
+  etapes:['Pointe rouge sur le +, pointe noire sur le −.','Lisez la tension.'],
+  resultat:['Pile 1,5 V neuve : 1,5 à 1,6 V. Sous 1,2 V elle est usée.','Batterie de voiture moteur arrêté : 12,6 V chargée, 12,4 V à recharger bientôt, sous 12 V déchargée.','Moteur tournant : 13,8 à 14,5 V, l’alternateur charge bien.'],
+  attention:'Un « − » devant le chiffre veut seulement dire que les pointes sont inversées.'},
+ {id:'cont',nom:'Continuité (le bip)',court:'Vérifier qu’un fil, un fusible ou un interrupteur laisse passer le courant.',sel:'bip',
+  svg:mmAppareil('bip','0.3','Ω  •)))')+`<path d="M220 95H360" stroke="#8b4a2b" stroke-width="10" stroke-linecap="round"/><path d="M228 95H352" stroke="#2f6fd6" stroke-width="0"/><rect x="214" y="91" width="14" height="8" fill="#c88a4a"/><rect x="352" y="91" width="14" height="8" fill="#c88a4a"/>`+mmPointe('v',366,95,'r')+mmPointe('com',214,95,'n')+`<path d="M340 34q8 8 0 16M348 28q14 14 0 28" stroke="var(--ink)" fill="none" stroke-width="2"/><text class="pl-tx" x="290" y="70" text-anchor="middle">bip = le courant passe</text>`,
+  regl:'Sélecteur sur la position avec le symbole de son •))).',bornes:['Noir dans COM, rouge dans VΩ.'],
+  etapes:['COUPEZ LE COURANT et débranchez l’appareil : cette mesure se fait toujours hors tension.','Touchez les deux pointes ensemble : l’appareil doit biper (test).','Posez une pointe à chaque bout du fil ou du fusible.'],
+  resultat:['Bip et presque 0 Ω : le fil est bon.','Pas de bip, « OL » : le fil est coupé ou le fusible a grillé.','Pratique aussi pour repérer les fils d’un câble : on relie deux fils d’un côté et on cherche la paire qui bipe de l’autre.'],
+  attention:'Jamais sur un circuit sous tension : on peut abîmer l’appareil.'},
+ {id:'ohm',nom:'Résistance (Ω)',court:'Contrôler la résistance d’un chauffe-eau, d’un radiateur, d’une plaque ou d’un four.',sel:'Ω',
+  svg:mmAppareil('Ω','26.4','Ω')+`<rect x="230" y="60" width="130" height="70" rx="8" fill="#e9ecef" stroke="#777"/><path d="M250 95l8-14 8 28 8-28 8 28 8-28 8 28 8-28 8 28 8-14" stroke="#c0392b" stroke-width="3" fill="none"/><circle cx="240" cy="95" r="5" fill="#bbb" stroke="#555"/><circle cx="350" cy="95" r="5" fill="#bbb" stroke="#555"/><text class="pl-tx" x="295" y="50" text-anchor="middle">résistance de chauffe-eau 2 000 W</text>`+mmPointe('v',350,95,'r')+mmPointe('com',240,95,'n'),
+  regl:'Sélecteur sur Ω, calibre 200 Ω ou automatique.',bornes:['Noir dans COM, rouge dans VΩ.'],
+  etapes:['Coupez le courant et débranchez au moins un fil de la résistance.','Une pointe sur chaque borne de la résistance.','Comparez avec la valeur attendue : R = 230 × 230 ÷ puissance.'],
+  resultat:['Chauffe-eau 2 000 W : environ 26 Ω. 1 500 W : 35 Ω. 3 000 W : 18 Ω.','« OL » : la résistance est coupée, il faut la changer.','Entre une borne et la carcasse métallique : il doit afficher « OL ». Sinon la résistance est en défaut (c’est souvent elle qui fait sauter le différentiel).'],
+  attention:'Hors tension uniquement. Ne touchez pas les pointes avec les doigts : votre corps fausse la mesure.'},
+ {id:'diode',nom:'Test de diode',court:'Savoir si une diode ou une LED fonctionne, et dans quel sens.',sel:'bip',
+  svg:mmAppareil('bip','0.62','▶|')+`<path d="M230 95H270M310 95H360" stroke="#888" stroke-width="3"/><path d="M270 75v40l40-20z" fill="#444"/><path d="M310 75v40" stroke="#444" stroke-width="4"/><text class="pl-tx" x="268" y="62" text-anchor="middle">anode</text><text class="pl-tx" x="318" y="62">cathode (trait)</text>`+mmPointe('v',232,95,'r')+mmPointe('com',358,95,'n'),
+  regl:'Sélecteur sur le symbole de diode ▶| (souvent partagé avec le bip).',bornes:['Noir dans COM, rouge dans VΩ.'],
+  etapes:['Pointe rouge côté anode, noire côté cathode (le côté marqué d’un trait).','Puis inversez les pointes.'],
+  resultat:['Dans le bon sens : 0,5 à 0,7 V pour une diode ordinaire ; une LED s’allume faiblement (1,6 à 3 V).','Dans l’autre sens : « OL ».','OL dans les deux sens : diode coupée. Presque 0 dans les deux sens : diode en court-circuit.'],
+  attention:'Hors tension uniquement.'},
+ {id:'amp',nom:'Intensité (ampères)',court:'Mesurer le courant consommé par un appareil. Le multimètre se place dans le circuit, comme un bout de fil.',sel:'A',
+  svg:mmAppareil('A','0.45','A')+`<path d="M232 60H360V140H232V112M232 78V60" stroke="#8b4a2b" stroke-width="3" fill="none"/><rect x="340" y="80" width="40" height="40" rx="4" fill="#2d6cdf"/><text x="360" y="105" text-anchor="middle" fill="#fff" font-size="10">pile</text><circle cx="296" cy="140" r="12" fill="#fff6c2" stroke="#777"/><path d="M288 132l16 16M304 132l-16 16" stroke="#777"/><text class="pl-tx" x="300" y="170" text-anchor="middle">le multimètre referme le circuit</text>`+mmPointe('a',232,112,'r')+mmPointe('com',232,78,'n'),
+  regl:'Sélecteur sur A (ou mA pour les petits courants).',bornes:['Noir dans COM.','Rouge dans 10A (ou mA si vous êtes sûr que le courant est faible).'],
+  etapes:['Coupez le courant.','Ouvrez le circuit (débranchez un fil) et reliez les deux bouts par les pointes du multimètre : le courant doit passer par lui.','Remettez le courant, lisez, puis recoupez avant de retirer les pointes.'],
+  resultat:['Courant en ampères. Puissance ≈ tension × intensité (en 230 V : 1 A ≈ 230 W).'],
+  attention:'Cordon rouge dans 10A puis mesure de tension = court-circuit ! Remettez toujours le cordon rouge dans VΩ après. Pour le 230 V, préférez une pince ampèremétrique : on serre un seul fil, sans rien débrancher.'},
+ {id:'securite',nom:'Les règles de sécurité',court:'Un multimètre mal utilisé peut provoquer un court-circuit ou une électrocution.',sel:'OFF',
+  svg:mmAppareil('OFF','OFF','')+`<text class="pl-tx" x="190" y="40">CAT III 300 V minimum</text><text class="pl-tx" x="190" y="62">pour le tableau et les prises</text><text class="pl-tx" x="190" y="96">Ω, bip, diode : hors tension</text><text class="pl-tx" x="190" y="130">rouge dans VΩ</text><text class="pl-tx" x="190" y="146">sauf pour mesurer des ampères</text>`,
+  regl:'Avant chaque mesure : bon réglage, bonnes bornes, puis seulement les pointes sur le circuit.',
+  bornes:['Vérifiez les bornes avant de toucher le circuit : c’est l’erreur la plus fréquente.'],
+  etapes:['Vérifiez la catégorie : CAT III 300 V ou plus pour une installation de maison.','Contrôlez les cordons : isolant intact, pointes protégées.','Mesures de résistance, de continuité et de diode : toujours hors tension.','Ne changez pas la position du sélecteur pendant que les pointes touchent le circuit.','Ne travaillez pas les mains mouillées ni sur un sol humide.'],
+  resultat:['Avant de toucher des fils, utilisez un vérificateur d’absence de tension (VAT) : on le teste sur une prise sous tension, on vérifie le circuit coupé, puis on le reteste sur la prise.'],
+  attention:'En cas de doute, faites appel à un électricien.'},
+];
+TOOLS.multimetre={nom:'Utiliser un multimètre',aide:'Le guide du multimètre : le réglage, où brancher les cordons, comment mesurer et comment lire le résultat. Choisissez une mesure.',special:'fiches',fiches:'multi'};
 
 function symbolesHTML(){
   return `<section class="card"><h2>Symboles électriques</h2><p class="hint">Les symboles qu’on trouve sur les plans et les schémas.</p>
