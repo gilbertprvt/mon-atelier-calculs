@@ -1,5 +1,5 @@
 // Fonctionnement hors connexion. Changer le numéro de VERSION à chaque mise à jour de l'application.
-const VERSION='atelier-v27';
+const VERSION='atelier-v28';
 const FICHIERS = [
   './', 'index.html', 'atelier.html', 'accueil.jpg', 'accueil-flou.jpg', 'papy.webp', 'porte-fermee.webp', 'manifest.webmanifest',
   'icone-192.png', 'icone-512.png', 'icone-masque-512.png', 'apple-touch-icon.png'

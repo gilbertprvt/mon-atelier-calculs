@@ -1534,6 +1534,7 @@ const ICONES = {
   murs:'<rect x="7" y="6" width="28" height="12" rx="3"/><path d="M35 12h5v10H22v6"/><rect x="19" y="28" width="6" height="14" rx="2"/>',
   sols:'<rect x="6" y="6" width="16" height="16"/><rect x="26" y="6" width="16" height="16"/><rect x="6" y="26" width="16" height="16"/><rect x="26" y="26" width="16" height="16"/>',
   maconnerie:'<rect x="4" y="8" width="40" height="32"/><path d="M4 18.7h40M4 29.3h40M16 8v10.7M32 8v10.7M24 18.7v10.6M10 29.3V40M38 29.3V40"/>',
+  metal:'<path d="M8 30l14-14 6 6-14 14z"/><path d="M22 16l8-8 10 10-8 8M30 8l4-4M36 14l4-4"/><path d="M10 40h28"/><path d="M33 30c-1 3 1 5 3 6"/>',
   electricite:'<path d="M27 4L10 27h12l-3 17 19-25H25z"/>',
   menuiserie:'<path d="M5 36L29 12h9v8L14 44H5z"/><path d="M10 36l3 3M15 31l3 3M20 26l3 3M25 21l3 3"/><rect x="35" y="3" width="10" height="15" rx="3"/>',
   isolation:'<path d="M6 40h36M6 8h36"/><path d="M6 14c4 0 4 6 8 6s4-6 8-6 4 6 8 6 4-6 8-6 4 6 6 6M6 24c4 0 4 6 8 6s4-6 8-6 4 6 8 6 4-6 8-6 4 6 6 6"/>',
@@ -1551,6 +1552,7 @@ const FAMILLES = [
   {id:'jardin',     nom:'Jardin',     desc:'Nichoir, mangeoire, jardinières', outils:[{g:'Oiseaux',outils:['j-nichoir','j-mangeoire']},{g:'Jardinières',outils:['j-jardiniere','j-echelle','j-gradins']}]},
   {id:'isolation',  nom:'Isolation',  desc:'Isolants, épaisseurs', outils:['isolants','epaisseurs','isol-qte']},
   {id:'plomberie',  nom:'Plomberie',  desc:'Tuyaux, assemblages, évacuations', outils:[{g:'Alimentation',outils:['tuyaux','assemblages']},'evacuations']},
+  {id:'metal',      nom:'Métallurgie', desc:'Perçage, taraudage, soudure', outils:[{g:'Perçage',outils:['forets','taraudage']},'soudure']},
   {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:[{g:'Tableau électrique',outils:['tableau','tab-elements']},'cables','multimetre','schemas','symboles']},
   {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, volumes',    outils:['unites','surfaces','volumes']},
 ];
@@ -1588,7 +1590,7 @@ window.addEventListener('hashchange', route);
 golist.addEventListener('click', ()=>go('liste'));
 
 /* Couleurs pastel des rubriques : [fond, fond au survol] */
-const PASTELS={bois:['#F3E3C3','#E9CE98'],murs:['#DCEBF7','#BBD6EE'],sols:['#E1F0DA','#C3E2B6'],maconnerie:['#F2DDD3','#E6BFAD'],
+const PASTELS={metal:['#E3E6EA','#C6CDD4'],bois:['#F3E3C3','#E9CE98'],murs:['#DCEBF7','#BBD6EE'],sols:['#E1F0DA','#C3E2B6'],maconnerie:['#F2DDD3','#E6BFAD'],
   menuiserie:['#F7E5D3','#EFCBA7'],electricite:['#FFF2BD','#FFE48A'],conversions:['#D9F0EC','#B4E2DA'],jardin:['#EAF3CF','#D3E7A0'],plomberie:['#D2EAF6','#A8D3EC'],isolation:['#F7DDE4','#EFBDCB']};
 function showHome(){
   sub.textContent='Choisissez une rubrique, puis un sujet.';
@@ -2135,7 +2137,7 @@ const PL_ALIM=[['Évier','12','12 × 14','16 × 1,5','16 × 2'],['Lavabo','10','
 function plListe(t,arr){ return `<div><b>${t}</b><ul>${arr.map(x=>`<li>${x}</li>`).join('')}</ul></div>`; }
 function plFig(svg,lab){ return `<div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 170" role="img" aria-label="${lab}">${svg}</svg></div>`; }
 function fichesHTML(kind){
-  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:PL_ASSEMB, T=TOOLS[cur];
+  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:kind==='soud'?SOUD:PL_ASSEMB, T=TOOLS[cur];
   let s=kind==='tableau'?`<section class="card"><h2>Le tableau, de l’arrivée aux circuits</h2><p class="hint">Touchez un module pour voir sa fiche plus bas.</p><div class="sch-fig"><svg class="pl-svg el-svg" viewBox="0 0 400 340" role="img" aria-label="Schéma d’un tableau électrique">${elSchema()}</svg></div></section>`:'';
   s+=`<section class="card"><h2>${T.nom}</h2><p class="hint">${T.aide}</p>
     <div class="chips" id="fi-list">${L.map(x=>`<button class="chipb" type="button" data-fi="${x.id}" aria-pressed="false">${x.nom}</button>`).join('')}</div><div id="fi-view"></div></section>`;
@@ -2143,6 +2145,15 @@ function fichesHTML(kind){
     <div class="tbl"><table><thead><tr><th>Appareil</th><th>Ø intérieur mini</th><th>Cuivre</th><th>PER</th><th>Multicouche</th></tr></thead><tbody>
     ${PL_ALIM.map(r=>`<tr><td>${r[0]}</td><td>${r[1]} mm</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')}</tbody></table></div>
     <p class="hint">Arrivée générale d’une maison : Ø 25 mm en général, plus gros si la pression est faible. Au-dessus de 3 bars, un réducteur de pression protège la robinetterie.</p></section>`;
+  else if(kind==='soud') s+=`<section class="card"><h2>Quel procédé choisir ?</h2><div class="tbl"><table><thead><tr><th>Procédé</th><th>Épaisseurs</th><th>Métaux</th><th>Difficulté</th><th>Dehors</th></tr></thead><tbody>
+    <tr><td>Électrode enrobée (MMA)</td><td>2 mm et plus</td><td>Acier (inox et fonte avec électrodes spéciales)</td><td>Moyenne</td><td>Oui</td></tr>
+    <tr><td>MIG / MAG</td><td>0,8 à 10 mm</td><td>Acier, inox, alu</td><td>Facile</td><td>Non (vent)</td></tr>
+    <tr><td>Fil fourré sans gaz</td><td>1 à 6 mm</td><td>Acier</td><td>Facile</td><td>Oui</td></tr>
+    <tr><td>TIG</td><td>0,5 à 5 mm</td><td>Tous</td><td>Difficile</td><td>Non</td></tr>
+    <tr><td>Chalumeau</td><td>0,5 à 4 mm</td><td>Acier, brasage de tous métaux</td><td>Moyenne</td><td>Oui</td></tr></tbody></table></div>
+    <h3>Électrode enrobée : quel diamètre, quelle intensité ?</h3><div class="tbl"><table><thead><tr><th>Épaisseur de l’acier</th><th>Électrode</th><th>Intensité (rutile)</th></tr></thead><tbody>
+    ${SD_ELEC.map(r=>`<tr><td>${r[0]}</td><td>Ø ${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></div>
+    <p class="hint">Commencez au milieu de la plage et ajustez : trop faible, l’électrode colle et le cordon est bombé ; trop fort, ça projette et ça perce. Les électrodes basiques demandent un peu plus d’intensité.</p></section>`;
   else if(kind==='multi') s+=`<section class="card"><h2>Quel réglage pour quelle mesure ?</h2><div class="tbl"><table><thead><tr><th>Je veux…</th><th>Sélecteur</th><th>Cordon rouge</th><th>Courant</th></tr></thead><tbody>
     <tr><td>Vérifier une prise, un circuit 230 V</td><td>V~</td><td>VΩ</td><td>présent</td></tr><tr><td>Tester une pile, une batterie</td><td>V⎓</td><td>VΩ</td><td>—</td></tr>
     <tr><td>Savoir si un fil ou un fusible est coupé</td><td>•))) bip</td><td>VΩ</td><td>coupé</td></tr><tr><td>Contrôler une résistance chauffante</td><td>Ω</td><td>VΩ</td><td>coupé</td></tr>
@@ -2169,10 +2180,15 @@ function fichesHTML(kind){
   return s;
 }
 function fiOpen(kind,id){
-  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:PL_ASSEMB, x=L.find(f=>f.id===id)||L[0];
+  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:kind==='soud'?SOUD:PL_ASSEMB, x=L.find(f=>f.id===id)||L[0];
   try{ localStorage.setItem('atelier-fi-'+kind,x.id); }catch(e){}
   document.querySelectorAll('#fi-list .chipb').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.fi===x.id)));
   const v=document.getElementById('fi-view');
+  if(kind==='soud'){ const pre=x.id==='prep'||x.id==='secu';
+    v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">${x.court}</p><div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 180" role="img" aria-label="${x.nom}">${x.svg}</svg></div>
+    <div class="sch-txt">${plListe(x.id==='secu'?'Les protections':pre?'Les assemblages':'Pour quoi faire',x.usage)}${plListe(x.id==='secu'?'Autour de vous':'Avantages',x.plus)}${plListe(x.id==='secu'?'Le danger':'Inconvénients',x.moins)}
+    ${plListe(x.id==='secu'?'Les fumées':pre?'Préparer':'Le réglage',x.regl)}<div><b>${x.id==='secu'?'Le feu et l’électricité':'Comment souder'}</b><ol>${x.etapes.map(t=>`<li>${t}</li>`).join('')}</ol></div></div>
+    <p class="hint">⚠️ ${x.att}</p>`; return; }
   if(kind==='multi'){ v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">${x.court}</p><div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 190" role="img" aria-label="${x.nom}">${x.svg}</svg></div>
     <p><b>Réglage :</b> ${x.regl}</p><div class="sch-txt">${plListe('Les cordons',x.bornes)}<div><b>${x.id==='appareil'||x.id==='securite'?'À savoir':'La mesure'}</b><ol>${x.etapes.map(t=>`<li>${t}</li>`).join('')}</ol></div>${plListe(x.id==='securite'?'Avant de toucher un fil':'Lire le résultat',x.resultat)}</div>
     <p class="hint">⚠️ ${x.attention}</p>`; return; }
@@ -2582,6 +2598,149 @@ const MM_FICHES=[
   attention:'En cas de doute, faites appel à un électricien.'},
 ];
 TOOLS.multimetre={nom:'Utiliser un multimètre',aide:'Le guide du multimètre : le réglage, où brancher les cordons, comment mesurer et comment lire le résultat. Choisissez une mesure.',special:'fiches',fiches:'multi'};
+
+
+/* ============ MÉTALLURGIE ============ */
+const MT_MAT=[['doux','Acier doux (fer, S235)',25,30,'Huile de coupe','118°','HSS (acier rapide)'],
+  ['dur','Acier dur ou allié',12,18,'Huile de coupe','130 à 135°','HSS-Co (cobalt)'],
+  ['inox','Inox',8,12,'Huile de coupe épaisse','135°','HSS-Co (cobalt)'],
+  ['fonte','Fonte',15,25,'À sec (soufflez les copeaux)','118°','HSS ou HSS-Co'],
+  ['alu','Aluminium',50,80,'Pétrole, alcool ou lubrifiant spécial alu','118 à 130°','HSS, goujures polies'],
+  ['laiton','Laiton, bronze',35,50,'À sec','118°','HSS'],
+  ['cuivre','Cuivre',25,35,'Huile soluble ou pétrole','118°','HSS']];
+const MT_FILET=[['M2',0.4,1.6,2.2,2.4,2.6],['M2,5',0.45,2.05,2.7,2.9,3.1],['M3',0.5,2.5,3.2,3.4,3.6],['M4',0.7,3.3,4.3,4.5,4.8],['M5',0.8,4.2,5.3,5.5,5.8],['M6',1,5,6.4,6.6,7],
+  ['M8',1.25,6.8,8.4,9,10],['M10',1.5,8.5,10.5,11,12],['M12',1.75,10.2,13,13.5,14.5],['M14',2,12,15,15.5,16.5],['M16',2,14,17,17.5,18.5],['M18',2.5,15.5,19,20,21],
+  ['M20',2.5,17.5,21,22,24],['M22',2.5,19.5,23,24,26],['M24',3,21,25,26,28]];
+const MT_FIN=[['M8 × 1',7],['M10 × 1',9],['M10 × 1,25',8.8],['M12 × 1,25',10.8],['M12 × 1,5',10.5],['M14 × 1,5',12.5],['M16 × 1,5',14.5],['M18 × 1,5',16.5],['M20 × 1,5',18.5],['M24 × 2',22]];
+const MT_ALES=[[0,5,0.1,0.2],[5,10,0.2,0.3],[10,20,0.3,0.4],[20,30,0.4,0.5],[30,99,0.5,0.6]];
+const demi=x=>Math.round(x*2)/2;
+TOOLS.forets={nom:'Perçage du métal',aide:'La vitesse de rotation, les avant-trous, le lubrifiant et le foret qui conviennent, selon le métal et le diamètre du trou.',
+  champs:[N('d','Diamètre du trou','mm',10),S('mat','Métal percé',MT_MAT.map(m=>[m[0],m[1]]),'doux'),S('mach','Machine',[['col','Perceuse à colonne'],['main','Perceuse à main']],'col')],
+  calc(v){ const m=MT_MAT.find(x=>x[0]===v.mat)||MT_MAT[0], d=Math.max(0.5,v.d), k=v.mach==='main'?0.7:1;
+    const n=vc=>Math.round(vc*1000/(Math.PI*d)*k/50)*50, n1=n(m[2]), n2=n(m[3]);
+    const det=[`Vitesse : ${n1} à ${n2} tours par minute${v.mach==='main'?' (un peu moins qu’à la colonne, pour garder le contrôle)':''}`,`Lubrifiant : ${m[4]}`,`Foret : ${m[6]}, angle de pointe ${m[5]}`];
+    const dur=['doux','dur','inox','fonte'].includes(v.mat);
+    if(d>(dur?6:10)){ const p=Math.max(3,demi(d*0.35)), etapes=[p]; if(d>14) etapes.push(demi(d*0.65)); etapes.push(d);
+      det.push(`Avant-trous : ${etapes.map(x=>fr(x,1)+' mm').join(' → ')}`); det.push('L’avant-trou guide le gros foret, dont la pointe (l’âme) ne coupe pas : il force moins et ne dérape pas.'); }
+    else det.push('Pas besoin d’avant-trou pour ce diamètre : un bon coup de pointeau suffit.');
+    if(v.mat==='inox') det.push({warn:'Inox : vitesse lente et pression forte et régulière. Si le foret frotte sans couper, l’inox durcit et devient impossible à percer.'});
+    if(v.mat==='laiton') det.push({warn:'Laiton : le foret a tendance à « se visser » en débouchant. Tenez fermement la pièce et réduisez la pression à la fin.'});
+    if(v.mach==='main'&&d>13) det.push({warn:'Au-delà de 13 mm à la main, le foret peut bloquer et faire tourner la perceuse : poignée latérale obligatoire, pièce bridée.'});
+    const extra=`<h3>Vitesses de coupe (forets HSS)</h3><p class="hint">Tours par minute = vitesse de coupe × 1 000 ÷ (3,14 × diamètre). Les vitesses ci-dessous sont des valeurs habituelles pour un foret en acier rapide ; un foret au cobalt supporte un peu plus.</p>
+      <div class="tbl"><table><thead><tr><th>Métal</th><th>Vitesse de coupe</th><th>Ø 5 mm</th><th>Ø 10 mm</th><th>Lubrifiant</th></tr></thead><tbody>
+      ${MT_MAT.map(x=>`<tr${x[0]===v.mat?' class="hl"':''}><td>${x[1]}</td><td>${x[2]} à ${x[3]} m/min</td><td>${Math.round(x[2]*1000/(Math.PI*5)/50)*50} à ${Math.round(x[3]*1000/(Math.PI*5)/50)*50}</td><td>${Math.round(x[2]*1000/(Math.PI*10)/50)*50} à ${Math.round(x[3]*1000/(Math.PI*10)/50)*50}</td><td>${x[4]}</td></tr>`).join('')}</tbody></table></div>
+      <h3>Les forets à métaux</h3><div class="tbl"><table><tbody>
+      <tr><td>HSS (acier rapide)</td><td>Le foret courant pour l’acier doux, l’alu, le laiton.</td></tr>
+      <tr><td>HSS-TiN (doré)</td><td>Revêtement qui dure plus longtemps, mêmes usages.</td></tr>
+      <tr><td>HSS-Co (cobalt)</td><td>Pour l’inox et les aciers durs. Ne pas laisser chauffer.</td></tr>
+      <tr><td>Carbure</td><td>Très dur mais cassant : uniquement à la perceuse à colonne.</td></tr>
+      <tr><td>Foret étagé (conique)</td><td>Pour la tôle mince : trous ronds et nets, sans arracher.</td></tr>
+      <tr><td>Scie cloche bimétal</td><td>Grands trous dans la tôle, à vitesse lente.</td></tr></tbody></table></div>
+      <h3>Les bons gestes</h3><div class="sch-txt">${plListe('Avant',['Pointez le centre au pointeau : le foret ne glissera pas.','Bridez la pièce (étau, serre-joint) : jamais tenue à la main.','Lunettes de protection ; pas de gants près d’un foret qui tourne, cheveux attachés.'])}
+      ${plListe('Pendant',['Pression régulière : il doit sortir de vrais copeaux, pas de la poussière.','Lubrifiez souvent et ressortez le foret pour dégager les copeaux.','Fumée ou foret bleu : trop vite ou pas assez lubrifié.'])}
+      ${plListe('Après',['Ébavurez le trou avec un foret plus gros tourné à la main ou une fraise à chanfreiner.','Attention : les copeaux de métal coupent et sont brûlants.'])}</div>`;
+    return {big:`${n1} à ${n2} tr/min`,detail:det,extra,item:`Perçage Ø ${fr(d,1)} mm dans ${m[1].toLowerCase()} : foret ${m[6]}, ${m[4].toLowerCase()}`};
+  }};
+TOOLS.taraudage={nom:'Taraudage et alésage',aide:'Quel foret pour préparer un filetage (taraudage), un trou précis (alésage) ou le passage d’une vis.',
+  champs:[S('op','Je veux…',[['tarau','Tarauder (faire un pas de vis)'],['passage','Faire passer une vis'],['ales','Aléser (trou précis, H7)']],'tarau'),
+    S('m','Vis',MT_FILET.map(f=>[f[0],f[0]]),'M8',{k:'op',v:['tarau','passage']}),S('pas','Pas',[['gros','Pas normal (gros)'],['fin','Pas fin']],'gros',{k:'op',v:['tarau']}),
+    S('jeu','Jeu',[['fin','Serré (pièces précises)'],['moyen','Moyen (le plus courant)'],['large','Large (pièces à ajuster)']],'moyen',{k:'op',v:['passage']}),
+    N('da','Diamètre final de l’alésage','mm',10,{k:'op',v:['ales']})],
+  calc(v){ const f=MT_FILET.find(x=>x[0]===v.m)||MT_FILET[6]; let big, det=[];
+    if(v.op==='tarau'){ const fins=MT_FIN.filter(x=>x[0].startsWith(f[0]+' '));
+      if(v.pas==='fin'&&fins.length){ big=`Foret Ø ${fr(fins[0][1],2)} mm`; det.push(...fins.map(x=>`${x[0]} : foret Ø ${fr(x[1],2)} mm`)); }
+      else { big=`Foret Ø ${fr(f[2],2)} mm`; det.push(`${f[0]} au pas de ${fr(f[1],2)} mm : avant-trou = diamètre − pas = ${fr(f[2],2)} mm`); if(v.pas==='fin') det.push({warn:`Pas de pas fin courant pour ${f[0]} : on utilise le pas normal.`}); }
+      det.push('Fraisez l’entrée du trou (chanfrein à 90°) : le taraud s’engage droit et le premier filet ne se relève pas.','Trou borgne : percez au moins 3 pas plus profond que la longueur du filetage.'); }
+    else if(v.op==='passage'){ const i={fin:3,moyen:4,large:5}[v.jeu]||4; big=`Foret Ø ${fr(f[i],1)} mm`; det.push(`Trou de passage pour ${f[0]} (jeu ${v.jeu}) : ${fr(f[i],1)} mm`,`Serré ${fr(f[3],1)} · moyen ${fr(f[4],1)} · large ${fr(f[5],1)} mm`); }
+    else { const d=Math.max(1,v.da), a=MT_ALES.find(x=>d>x[0]&&d<=x[1])||MT_ALES[4], p1=d-a[3], p2=d-a[2];
+      big=`Foret Ø ${fr(p1,1)} à ${fr(p2,1)} mm`; det.push(`Laissez ${fr(a[2],1)} à ${fr(a[3],1)} mm à enlever à l’alésoir`,'Alésoir à main : laissez plutôt le plus petit écart (0,1 à 0,2 mm).','Percez d’abord à un diamètre plus petit puis au diamètre d’avant-trou : le trou sera plus rond et mieux centré.'); }
+    const extra=`<h3>Taraudage : pas normal (ISO)</h3><div class="tbl"><table><thead><tr><th>Vis</th><th>Pas</th><th>Foret avant taraudage</th><th>Passage serré</th><th>moyen</th><th>large</th></tr></thead><tbody>
+      ${MT_FILET.map(x=>`<tr${x[0]===f[0]&&v.op!=='ales'?' class="hl"':''}><td>${x[0]}</td><td>${fr(x[1],2)}</td><td><b>${fr(x[2],2)}</b></td><td>${fr(x[3],1)}</td><td>${fr(x[4],1)}</td><td>${fr(x[5],1)}</td></tr>`).join('')}</tbody></table></div>
+      <p class="hint">Règle à retenir : foret = diamètre de la vis − pas. M8 (pas 1,25) → 8 − 1,25 = 6,8 mm.</p>
+      <h3>Taraudage : pas fin</h3><div class="tbl"><table><thead><tr><th>Vis</th><th>Foret</th></tr></thead><tbody>${MT_FIN.map(x=>`<tr><td>${x[0]}</td><td>${fr(x[1],2)}</td></tr>`).join('')}</tbody></table></div>
+      <h3>Comment tarauder à la main</h3><ol><li>Percez au bon diamètre et fraisez l’entrée.</li><li>Montez le taraud n° 1 (ébaucheur, le plus pointu) sur le tourne-à-gauche.</li>
+      <li>Mettez de l’huile de coupe (pétrole pour l’alu, à sec pour la fonte).</li><li>Engagez le taraud bien d’équerre ; vérifiez avec une équerre sur deux côtés après les premiers tours.</li>
+      <li>Tournez d’un tour, revenez d’un demi-tour pour casser le copeau, et ainsi de suite.</li><li>Passez le n° 2 puis le n° 3 (finisseur). Ne forcez jamais : un taraud cassé dans un trou est très difficile à retirer.</li></ol>
+      <h3>Alésage : ce qu’il faut laisser</h3><div class="tbl"><table><thead><tr><th>Diamètre final</th><th>À enlever à l’alésoir</th></tr></thead><tbody>
+      ${MT_ALES.map(x=>`<tr><td>${x[1]===99?'plus de 30':`${x[0]} à ${x[1]}`} mm</td><td>${fr(x[2],1)} à ${fr(x[3],1)} mm</td></tr>`).join('')}</tbody></table></div>
+      <ol><li>Alésoir à main : avec un tourne-à-gauche, en tournant toujours dans le même sens, même pour le ressortir (sinon les arêtes s’abîment).</li><li>Alésoir machine : vitesse 2 à 3 fois plus lente que pour percer, avance régulière, huile de coupe.</li><li>Le résultat : un trou juste au diamètre (tolérance H7), lisse, pour un axe ou une goupille.</li></ol>`;
+    return {big,detail:det,extra,item:`${v.op==='tarau'?'Taraudage '+f[0]:v.op==='passage'?'Passage '+f[0]:'Alésage Ø '+fr(v.da,1)} : ${big.toLowerCase()}`};
+  }};
+/* ---- Soudure : dessins ---- */
+const SD_PLAQ=`<rect x="40" y="128" width="148" height="16" fill="#9aa3aa" stroke="#555"/><rect x="194" y="128" width="166" height="16" fill="#9aa3aa" stroke="#555"/>
+  <path d="M120 128q4-8 8-8 4 0 8 8M136 128q4-8 8-8 4 0 8 8M152 128q4-8 8-8 4 0 8 8M168 128q4-8 8-8 4 0 8 8M184 128q4-8 8-8 4 0 8 8" fill="#7d858c" stroke="#555"/>`;
+const sdArc=(x,y)=>`<circle cx="${x}" cy="${y}" r="14" fill="#fff6b0" opacity=".85"/><circle cx="${x}" cy="${y}" r="6" fill="#fff"/><path d="M${x-22} ${y-6}l-8-6M${x+20} ${y-10}l7-8M${x+24} ${y+2}l9 0" stroke="#ffb300" stroke-width="2"/>`;
+const sdMasse=`<path d="M320 128l10-20h20l6 20" fill="#c0392b" stroke="#555"/><path d="M340 108C350 80 380 70 392 60" stroke="#222" stroke-width="4" fill="none"/>`;
+const SOUD=[
+ {id:'mma',nom:'À l’arc, électrode enrobée (MMA)',court:'Le poste le plus simple : une baguette enrobée fond et forme la soudure.',
+  svg:SD_PLAQ+sdMasse+sdArc(200,124)+`<path d="M200 118L262 30" stroke="#6d4c41" stroke-width="7"/><path d="M200 118L262 30" stroke="#bdbdbd" stroke-width="2.4"/><rect x="255" y="8" width="26" height="40" rx="5" transform="rotate(35 268 28)" fill="#222"/>
+   <path d="M150 126h44" stroke="#4e4e4e" stroke-width="6"/><path d="M190 108q-10-20 4-40M206 104q14-24 0-44" stroke="#bbb" stroke-width="3" fill="none" opacity=".7"/>`
+   +plLab(240,60,110,24,'électrode enrobée')+plLab(170,124,90,160,'laitier (à piquer)','middle')+plLab(338,116,350,160,'pince de masse')+plLab(190,90,60,70,'fumées'),
+  usage:['Réparer, assembler des fers, des cornières, des portails, en atelier comme dehors.','Acier de 2 mm et plus (en dessous, on perce facilement).','Fonctionne même avec un peu de vent.'],
+  plus:['Poste bon marché et léger (onduleur).','Pas de bouteille de gaz.','Pardonne un acier un peu rouillé.'],
+  moins:['Difficile sur la tôle fine.','Il faut piquer le laitier après chaque passe.','Fumées, projections ; on change souvent d’électrode.'],
+  regl:['Électrode rutile : la plus facile pour débuter. Basique : plus solide, pour les gros travaux (souvent en courant continu).','Choisissez l’électrode selon l’épaisseur (tableau en bas), puis réglez l’intensité.','Branchement : suivez l’emballage des électrodes ; la plupart se branchent au + (pince porte-électrode).'],
+  etapes:['Nettoyez à la brosse métallique ou au disque : ni peinture, ni rouille épaisse, ni graisse.','Fixez la pince de masse sur la pièce, près de la soudure.','Amorcez en frottant l’électrode comme une allumette, sans tapoter.','Gardez un arc court, à peu près égal au diamètre de l’électrode.','Penchez l’électrode de 20 à 30° et avancez régulièrement : le bain doit rester de la même largeur.','Laissez refroidir, cassez le laitier au marteau à piquer, brossez.'],
+  att:'Si l’électrode colle, secouez-la de gauche à droite ou coupez le poste avant de la décrocher.'},
+ {id:'mig',nom:'Semi-automatique au gaz (MIG / MAG)',court:'Un fil se déroule tout seul dans la torche, protégé par un gaz : rapide et régulier.',
+  svg:SD_PLAQ+sdMasse+`<ellipse cx="200" cy="118" rx="34" ry="14" fill="#bfe0f7" opacity=".7"/>`+sdArc(200,124)+`<path d="M200 118L208 104" stroke="#c88a4a" stroke-width="2"/><path d="M204 108l40-60" stroke="#555" stroke-width="16" stroke-linecap="round"/><path d="M240 52l40-40" stroke="#222" stroke-width="12" stroke-linecap="round"/><path d="M150 126h44" stroke="#7d858c" stroke-width="6"/>`
+   +plLab(206,106,40,60,'fil (bobine dans le poste)')+plLab(178,112,90,160,'gaz de protection','middle')+plLab(222,96,300,160,'buse de la torche'),
+  usage:['Carrosserie, tôle fine, serrurerie, gros travaux : c’est le plus polyvalent.','MAG (gaz actif, argon + CO₂) pour l’acier ; MIG (argon pur) pour l’alu et l’inox.'],
+  plus:['Le plus facile à apprendre.','Rapide, pas de laitier, cordon propre.','Soude la tôle fine (0,8 mm) comme l’épais.'],
+  moins:['Bouteille de gaz à acheter ou louer.','Ne marche pas dehors s’il y a du vent (le gaz s’envole).','Poste plus cher et plus lourd.'],
+  regl:['Fil de 0,6 ou 0,8 mm pour la plupart des travaux à la maison.','Réglez ensemble la tension (puissance) et la vitesse de fil : le bon réglage fait un grésillement régulier « de friture ».','Débit de gaz : environ 8 à 12 litres par minute.'],
+  etapes:['Nettoyez la pièce jusqu’au métal brillant.','Fil sorti de 10 mm environ, torche penchée de 10 à 20°.','Appuyez sur la gâchette et avancez régulièrement, en poussant ou en tirant selon le cas.','Sur la tôle fine : petits points côte à côte, en laissant refroidir, pour ne pas percer ni déformer.'],
+  att:'Coupez la bouteille de gaz après le travail.'},
+ {id:'fourre',nom:'Fil fourré sans gaz',court:'Un poste semi-automatique dont le fil contient sa propre protection : pas de bouteille.',
+  svg:SD_PLAQ+sdMasse+sdArc(200,124)+`<path d="M200 118L208 104" stroke="#555" stroke-width="2.4"/><path d="M204 108l40-60" stroke="#555" stroke-width="16" stroke-linecap="round"/><path d="M240 52l40-40" stroke="#222" stroke-width="12" stroke-linecap="round"/><path d="M150 126h44" stroke="#4e4e4e" stroke-width="6"/><circle cx="110" cy="50" r="22" fill="#555"/><circle cx="110" cy="50" r="9" fill="#ddd"/><circle cx="110" cy="50" r="15" fill="none" stroke="#aaa" stroke-dasharray="2 3"/>`
+   +plLab(100,70,40,96,'le flux est dans le fil')+plLab(170,124,90,160,'un peu de laitier','middle'),
+  usage:['Bricolage dehors, réparations de clôtures, remorques, portails.','Acier de 1 à 6 mm environ.'],
+  plus:['Pas de gaz : marche dehors, même avec du vent.','Aussi simple à utiliser qu’un MIG.'],
+  moins:['Plus de fumées et de projections.','Un peu de laitier à brosser.','Fil plus cher.'],
+  regl:['Polarité souvent inversée par rapport au gaz (torche au −) : lisez la notice du poste.','Galets d’entraînement crantés pour le fil fourré.'],
+  etapes:['Comme le MIG : métal propre, fil sorti de 10 à 15 mm.','Tirez la torche vers vous (en arrière du bain).','Brossez le cordon après refroidissement.'],
+  att:'Beaucoup de fumées : travaillez dehors ou très bien aéré.'},
+ {id:'tig',nom:'TIG (électrode tungstène)',court:'Le procédé de précision : une électrode qui ne fond pas, une baguette d’apport dans l’autre main.',
+  svg:SD_PLAQ+`<ellipse cx="200" cy="118" rx="30" ry="12" fill="#bfe0f7" opacity=".7"/>`+sdArc(200,124)+`<path d="M200 116L214 92" stroke="#888" stroke-width="2.4"/><path d="M212 96l26-44" stroke="#e9e3d0" stroke-width="16" stroke-linecap="round"/><path d="M236 56l34-40" stroke="#222" stroke-width="10" stroke-linecap="round"/><path d="M190 120L120 84" stroke="#c7a54a" stroke-width="3"/><path d="M150 126h44" stroke="#bfc5ca" stroke-width="5"/>`
+   +plLab(210,104,392,140,'tungstène (ne fond pas)')+plLab(140,94,60,60,'baguette d’apport')+plLab(226,72,392,90,'buse céramique'),
+  usage:['Inox, alu, cuivre, tôles fines, pièces visibles et soignées.','Aussi pour l’acier, avec une très belle finition.'],
+  plus:['Soudure très propre, sans projection ni fumée.','Soude presque tous les métaux.','Excellent contrôle de la chaleur.'],
+  moins:['Le plus difficile à apprendre (deux mains coordonnées).','Lent ; la pièce doit être parfaitement propre.','Gaz argon pur ; l’alu demande un poste alternatif (AC/DC).'],
+  regl:['Acier et inox : courant continu, tungstène affûté en pointe.','Alu : courant alternatif.','Environ 30 à 40 A par millimètre d’épaisseur pour l’acier, à ajuster.'],
+  etapes:['Dégraissez à l’acétone, brossez à la brosse inox (une brosse réservée à chaque métal).','Amorcez l’arc (amorçage HF ou lift), formez un petit bain.','Trempez la baguette au bord du bain, retirez-la, avancez la torche, et recommencez à rythme régulier.','Ne touchez jamais le bain avec le tungstène : il faudrait le réaffûter.'],
+  att:'Les rayons du TIG sont très forts même si l’arc paraît discret : peau couverte.'},
+ {id:'oxy',nom:'Chalumeau (oxyacétylénique)',court:'Une flamme très chaude (plus de 3 000 °C) faite d’oxygène et d’acétylène.',
+  svg:SD_PLAQ+`<path d="M200 120q-3-10 0-22 3 12 0 22z" fill="#5aa9ff"/><path d="M200 120q-10-20 0-48 10 28 0 48z" fill="#9bd0ff" opacity=".6"/><path d="M200 98l30-54" stroke="#c9a227" stroke-width="5"/><path d="M228 48l40-34" stroke="#555" stroke-width="10" stroke-linecap="round"/><path d="M186 120L110 90" stroke="#c7a54a" stroke-width="3"/>
+   <rect x="330" y="20" width="18" height="70" rx="8" fill="#2b2b2b"/><rect x="354" y="30" width="18" height="60" rx="8" fill="#c0392b"/><path d="M150 126h44" stroke="#7d858c" stroke-width="6"/>`
+   +plLab(202,104,392,110,'dard bleu : le plus chaud')+plLab(130,98,60,60,'baguette d’apport')+plLab(363,92,392,160,'oxygène et acétylène'),
+  usage:['Soudure de l’acier mince et des tubes, brasage (fort et tendre), chauffage pour plier, découpage de l’acier.'],
+  plus:['Sans électricité, très polyvalent.','Permet aussi de braser, chauffer, découper.'],
+  moins:['Deux bouteilles sous pression : les plus dangereuses de l’atelier.','Lent, chauffe beaucoup la pièce (déformations).','Matériel cher.'],
+  regl:['Flamme neutre pour souder l’acier : un dard bleu net, sans panache blanc.','Buse choisie selon l’épaisseur (indiquée sur le chalumeau).','Clapets anti-retour obligatoires aux deux sorties de bouteilles.'],
+  etapes:['Ouvrez un peu l’acétylène, allumez à l’allume-gaz, puis ouvrez l’oxygène jusqu’à la flamme neutre.','Chauffez les deux bords jusqu’à former un bain, ajoutez la baguette au bord du bain.','Pour éteindre : fermez d’abord l’acétylène, puis l’oxygène.'],
+  att:'Bouteilles debout, attachées, loin de la chaleur. Jamais de graisse sur les raccords d’oxygène (risque d’explosion).'},
+ {id:'prep',nom:'Préparer les pièces et les joints',court:'Une bonne soudure dépend surtout de la préparation.',
+  svg:`<g transform="translate(10 0)"><rect x="10" y="60" width="50" height="12" fill="#9aa3aa" stroke="#555"/><rect x="64" y="60" width="50" height="12" fill="#9aa3aa" stroke="#555"/><text class="pl-tx" x="62" y="96" text-anchor="middle">bout à bout</text>
+   <path d="M126 72h44v-4l-6-8h-38z" fill="#9aa3aa" stroke="#555"/><path d="M174 72h44v-12h-38l-6 8z" fill="#9aa3aa" stroke="#555"/><text class="pl-tx" x="168" y="96" text-anchor="middle">chanfrein en V</text>
+   <rect x="232" y="64" width="60" height="10" fill="#9aa3aa" stroke="#555"/><rect x="232" y="20" width="10" height="44" fill="#9aa3aa" stroke="#555"/><path d="M242 64l10-10v10z" fill="#5d646a"/><text class="pl-tx" x="262" y="96" text-anchor="middle">en angle</text>
+   <rect x="20" y="130" width="70" height="10" fill="#9aa3aa" stroke="#555"/><rect x="50" y="120" width="70" height="10" fill="#9aa3aa" stroke="#555"/><path d="M50 130l-8 0 8-8z" fill="#5d646a"/><text class="pl-tx" x="70" y="160" text-anchor="middle">à recouvrement</text>
+   <rect x="170" y="134" width="90" height="10" fill="#9aa3aa" stroke="#555"/><rect x="210" y="100" width="10" height="34" fill="#9aa3aa" stroke="#555"/><path d="M210 134l-8 0 8-8zM220 134l8 0-8-8z" fill="#5d646a"/><text class="pl-tx" x="215" y="162" text-anchor="middle">en T</text></g>`,
+  usage:['Bout à bout : tôles fines, en laissant un petit jeu.','Chanfrein en V : au-delà de 4 à 5 mm, pour que la soudure pénètre jusqu’au fond.','En angle, en T, à recouvrement : cadres, équerres, renforts.'],
+  plus:['Pièces propres = soudure solide et sans trous.'],moins:['Une pièce sale ou peinte donne des soufflures (trous dans la soudure).'],
+  regl:['Meulez la peinture, la rouille et la galvanisation sur 2 à 3 cm.','Laissez un jeu de 1 à 2 mm entre les pièces bout à bout.'],
+  etapes:['Pointez d’abord : un petit point à chaque bout, puis tous les 5 à 10 cm.','Vérifiez l’équerrage après pointage : on peut encore corriger.','Soudez par petits tronçons alternés, pour répartir la chaleur et limiter les déformations.','Meulez le cordon si besoin, puis protégez (peinture antirouille).'],
+  att:'Ne soudez jamais une pièce galvanisée sans avoir meulé le zinc : ses fumées rendent malade (fièvre des fondeurs).'},
+ {id:'secu',nom:'Les précautions à prendre',court:'Le soudage brûle, éblouit et dégage des fumées : on se protège à chaque fois.',
+  svg:`<g font-size="11">${[['😷','fumées',40],['🥽','yeux',110],['🧤','gants cuir',180],['🔥','incendie',250],['⚡','électricité',320]].map(([e,t,x])=>`<circle cx="${x+20}" cy="70" r="30" fill="#ffe7a3" stroke="#c99a1e"/><text x="${x+20}" y="80" text-anchor="middle" font-size="28">${e}</text><text class="pl-tx" x="${x+20}" y="122" text-anchor="middle">${t}</text>`).join('')}</g>`,
+  usage:['Masque de soudeur : un masque automatique réglable (teinte 9 à 13) est le plus pratique. Teinte 10 à 11 pour l’arc courant, plus foncée pour les fortes intensités.','Pour le chalumeau : lunettes teinte 4 à 6 seulement, pas le masque d’arc.','Gants de soudeur en cuir à manchettes, veste en coton épais ou ignifugée (jamais de synthétique, il fond sur la peau), chaussures fermées.'],
+  plus:['Les personnes autour doivent être protégées aussi : un écran ou un rideau de soudage.'],
+  moins:['« Coup d’arc » : quelques secondes d’arc sans masque peuvent brûler les yeux ; la douleur arrive la nuit suivante.'],
+  regl:['Fumées : travaillez dehors ou avec une aspiration ; pas la tête dans le panache.','Pas de soudure sur de l’acier galvanisé, peint ou gras sans l’avoir nettoyé.'],
+  etapes:['Éloignez tout ce qui brûle à plusieurs mètres (copeaux, chiffons, essence, bombes).','Gardez un extincteur et un seau d’eau à portée.','Surveillez la zone pendant au moins une heure après le travail : une étincelle peut couver.','Ne soudez jamais un bidon, un réservoir ou une bouteille ayant contenu un produit inflammable.','Sol sec, câbles en bon état, jamais de soudure les mains ou les vêtements mouillés.'],
+  att:'Ne regardez jamais un arc à l’œil nu, même de loin.'},
+];
+TOOLS.soudure={nom:'La soudure',aide:'Les différents procédés de soudure : à quoi ils servent, leurs avantages et leurs défauts, comment souder et les précautions à prendre. Choisissez un procédé.',special:'fiches',fiches:'soud'};
+const SD_ELEC=[['1,5 à 2 mm','1,6 mm','30 à 55 A'],['2 à 3 mm','2 mm','40 à 70 A'],['3 à 4 mm','2,5 mm','50 à 100 A'],['4 à 6 mm','3,2 mm','80 à 130 A'],['6 à 10 mm','4 mm','120 à 170 A']];
 
 function symbolesHTML(){
   return `<section class="card"><h2>Symboles électriques</h2><p class="hint">Les symboles qu’on trouve sur les plans et les schémas.</p>
