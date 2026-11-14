@@ -1534,6 +1534,7 @@ const ICONES = {
   murs:'<rect x="7" y="6" width="28" height="12" rx="3"/><path d="M35 12h5v10H22v6"/><rect x="19" y="28" width="6" height="14" rx="2"/>',
   sols:'<rect x="6" y="6" width="16" height="16"/><rect x="26" y="6" width="16" height="16"/><rect x="6" y="26" width="16" height="16"/><rect x="26" y="26" width="16" height="16"/>',
   maconnerie:'<rect x="4" y="8" width="40" height="32"/><path d="M4 18.7h40M4 29.3h40M16 8v10.7M32 8v10.7M24 18.7v10.6M10 29.3V40M38 29.3V40"/>',
+  fixation:'<path d="M6 24h10l4-4h16l-4 4 4 4H20l-4-4"/><path d="M24 20v8M28 20v8M32 20v8"/><path d="M38 24h4"/>',
   metal:'<path d="M8 30l14-14 6 6-14 14z"/><path d="M22 16l8-8 10 10-8 8M30 8l4-4M36 14l4-4"/><path d="M10 40h28"/><path d="M33 30c-1 3 1 5 3 6"/>',
   electricite:'<path d="M27 4L10 27h12l-3 17 19-25H25z"/>',
   menuiserie:'<path d="M5 36L29 12h9v8L14 44H5z"/><path d="M10 36l3 3M15 31l3 3M20 26l3 3M25 21l3 3"/><rect x="35" y="3" width="10" height="15" rx="3"/>',
@@ -1544,7 +1545,7 @@ const ICONES = {
   divers:'<rect x="5" y="16" width="38" height="24" rx="2"/><path d="M17 16v-5h14v5M5 26h38M21 26v4h6v-4"/>',
 };
 const FAMILLES = [
-  {id:'bois',       nom:'Bois',       desc:'Découpes, planches',          outils:[{g:'Découpe',outils:['panneaux','tasseaux']},'planches']},
+  {id:'bois',       nom:'Bois',       desc:'Découpes, essences, finitions',          outils:[{g:'Découpe',outils:['panneaux','tasseaux']},'planches',{g:'Le bois',outils:['essences','finitions']}]},
   {id:'murs',       nom:'Murs',       desc:'Peinture, papier peint, placo', outils:['papier-peint','peinture','placo','enduit']},
   {id:'sols',       nom:'Sols',       desc:'Carrelage, parquet, terrasse', outils:['carrelage','parquet','plinthes','terrasse']},
   {id:'maconnerie', nom:'Maçonnerie', desc:'Béton, fondations, parpaings', outils:['beton','fondations','mortier','crepi','parpaings','pente']},
@@ -1552,9 +1553,10 @@ const FAMILLES = [
   {id:'jardin',     nom:'Jardin',     desc:'Nichoir, mangeoire, jardinières', outils:[{g:'Oiseaux',outils:['j-nichoir','j-mangeoire']},{g:'Jardinières',outils:['j-jardiniere','j-echelle','j-gradins']}]},
   {id:'isolation',  nom:'Isolation',  desc:'Isolants, épaisseurs', outils:['isolants','epaisseurs','isol-qte']},
   {id:'plomberie',  nom:'Plomberie',  desc:'Tuyaux, assemblages, évacuations', outils:[{g:'Alimentation',outils:['tuyaux','assemblages']},'evacuations']},
+  {id:'fixation',   nom:'Chevilles et vis', desc:'Fixer au mur, assembler', outils:['chevilles','vis']},
   {id:'metal',      nom:'Métallurgie', desc:'Perçage, taraudage, soudure', outils:[{g:'Perçage',outils:['forets','taraudage']},'soudure']},
-  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:[{g:'Tableau électrique',outils:['tableau','tab-elements']},'cables','multimetre','schemas','symboles']},
-  {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, volumes',    outils:['unites','surfaces','volumes']},
+  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:[{g:'Installation',outils:['tableau','tab-elements','pieces']},'cables','multimetre','schemas','symboles']},
+  {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, pentes, pouces',    outils:['unites','surfaces','volumes','pentes','pouces']},
 ];
 
 /* ============ APPARENCE ============ */
@@ -1590,7 +1592,7 @@ window.addEventListener('hashchange', route);
 golist.addEventListener('click', ()=>go('liste'));
 
 /* Couleurs pastel des rubriques : [fond, fond au survol] */
-const PASTELS={metal:['#E3E6EA','#C6CDD4'],bois:['#F3E3C3','#E9CE98'],murs:['#DCEBF7','#BBD6EE'],sols:['#E1F0DA','#C3E2B6'],maconnerie:['#F2DDD3','#E6BFAD'],
+const PASTELS={fixation:['#FBE3CF','#F5C6A0'],metal:['#E3E6EA','#C6CDD4'],bois:['#F3E3C3','#E9CE98'],murs:['#DCEBF7','#BBD6EE'],sols:['#E1F0DA','#C3E2B6'],maconnerie:['#F2DDD3','#E6BFAD'],
   menuiserie:['#F7E5D3','#EFCBA7'],electricite:['#FFF2BD','#FFE48A'],conversions:['#D9F0EC','#B4E2DA'],jardin:['#EAF3CF','#D3E7A0'],plomberie:['#D2EAF6','#A8D3EC'],isolation:['#F7DDE4','#EFBDCB']};
 function showHome(){
   sub.textContent='Choisissez une rubrique, puis un sujet.';
@@ -2137,7 +2139,7 @@ const PL_ALIM=[['Évier','12','12 × 14','16 × 1,5','16 × 2'],['Lavabo','10','
 function plListe(t,arr){ return `<div><b>${t}</b><ul>${arr.map(x=>`<li>${x}</li>`).join('')}</ul></div>`; }
 function plFig(svg,lab){ return `<div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 170" role="img" aria-label="${lab}">${svg}</svg></div>`; }
 function fichesHTML(kind){
-  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:kind==='soud'?SOUD:PL_ASSEMB, T=TOOLS[cur];
+  const L=FICHE_L[kind]||(kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:kind==='soud'?SOUD:PL_ASSEMB), T=TOOLS[cur];
   let s=kind==='tableau'?`<section class="card"><h2>Le tableau, de l’arrivée aux circuits</h2><p class="hint">Touchez un module pour voir sa fiche plus bas.</p><div class="sch-fig"><svg class="pl-svg el-svg" viewBox="0 0 400 340" role="img" aria-label="Schéma d’un tableau électrique">${elSchema()}</svg></div></section>`:'';
   s+=`<section class="card"><h2>${T.nom}</h2><p class="hint">${T.aide}</p>
     <div class="chips" id="fi-list">${L.map(x=>`<button class="chipb" type="button" data-fi="${x.id}" aria-pressed="false">${x.nom}</button>`).join('')}</div><div id="fi-view"></div></section>`;
@@ -2174,16 +2176,18 @@ function fichesHTML(kind){
     ${plListe('Bien poser',['Pas de trou ni de vide : un isolant mal jointif perd beaucoup de son efficacité.','Deux couches croisées valent mieux qu’une seule épaisse.','Ne pas écraser l’isolant : écrasé, il isole moins.','Dégagez les spots, conduits de cheminée et boîtiers électriques (capots de protection).'])}
     ${plListe('Confort d’été',['Sous un toit, préférez un isolant dense (fibre de bois, ouate) : la chaleur met plusieurs heures à traverser.','Les isolants légers (laine de verre, polystyrène) protègent mal des fortes chaleurs.'])}
     ${plListe('Protection',['Laines minérales : gants, manches longues, masque FFP2, lunettes.','Les isolants en plastique doivent toujours être recouverts (plâtre, enduit) à cause du feu.','Aérez pendant et après les travaux.'])}</div></section>`;
-  else s+=`<section class="card"><h2>Quel assemblage pour quel tuyau ?</h2><div class="tbl"><table><thead><tr><th>Tuyau</th><th>Assemblages possibles</th></tr></thead><tbody>
+  else if(kind==='assemb') s+=`<section class="card"><h2>Quel assemblage pour quel tuyau ?</h2><div class="tbl"><table><thead><tr><th>Tuyau</th><th>Assemblages possibles</th></tr></thead><tbody>
     ${PL_TUYAUX.map(t=>`<tr><td>${t.nom}</td><td>${t.assemb.map(a=>PL_ASSEMB.find(x=>x.id===a).nom).join(', ')}</td></tr>`).join('')}</tbody></table></div>
     <p class="hint">Règle d’or : un raccord qu’on peut dévisser (compression, instantané, écrou) doit toujours rester visible et accessible. Dans un mur ou une dalle, seulement de la brasure, du sertissage ou du glissement, sous Avis Technique.</p></section>`;
+  if(FICHE_BAS[kind]) s+=FICHE_BAS[kind]();
   return s;
 }
 function fiOpen(kind,id){
-  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:kind==='soud'?SOUD:PL_ASSEMB, x=L.find(f=>f.id===id)||L[0];
+  const L=FICHE_L[kind]||(kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:kind==='multi'?MM_FICHES:kind==='soud'?SOUD:PL_ASSEMB), x=L.find(f=>f.id===id)||L[0];
   try{ localStorage.setItem('atelier-fi-'+kind,x.id); }catch(e){}
   document.querySelectorAll('#fi-list .chipb').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.fi===x.id)));
   const v=document.getElementById('fi-view');
+  if(x.sec){ v.innerHTML=ficheGen(x); return; }
   if(kind==='soud'){ const pre=x.id==='prep'||x.id==='secu';
     v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">${x.court}</p><div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 180" role="img" aria-label="${x.nom}">${x.svg}</svg></div>
     <div class="sch-txt">${plListe(x.id==='secu'?'Les protections':pre?'Les assemblages':'Pour quoi faire',x.usage)}${plListe(x.id==='secu'?'Autour de vous':'Avantages',x.plus)}${plListe(x.id==='secu'?'Le danger':'Inconvénients',x.moins)}
@@ -2741,6 +2745,230 @@ const SOUD=[
 ];
 TOOLS.soudure={nom:'La soudure',aide:'Les différents procédés de soudure : à quoi ils servent, leurs avantages et leurs défauts, comment souder et les précautions à prendre. Choisissez un procédé.',special:'fiches',fiches:'soud'};
 const SD_ELEC=[['1,5 à 2 mm','1,6 mm','30 à 55 A'],['2 à 3 mm','2 mm','40 à 70 A'],['3 à 4 mm','2,5 mm','50 à 100 A'],['4 à 6 mm','3,2 mm','80 à 130 A'],['6 à 10 mm','4 mm','120 à 170 A']];
+
+
+/* ============ FICHES GÉNÉRIQUES ============ */
+const FICHE_L={}, FICHE_BAS={};
+function ficheGen(x){ return `<h3>${x.nom}</h3><p class="sch-res">${x.court}</p>${x.svg?`<div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 180" role="img" aria-label="${x.nom}">${x.svg}</svg></div>`:''}
+  <div class="sch-txt">${x.sec.map(([t,a])=>t.startsWith('#')?`<div><b>${t.slice(1)}</b><ol>${a.map(i=>`<li>${i}</li>`).join('')}</ol></div>`:plListe(t,a)).join('')}</div>${x.note?`<p class="hint">💡 ${x.note}</p>`:''}`; }
+
+/* ============ CHEVILLES ET VIS ============ */
+const CH_MURS=[['beton','Béton'],['plein','Brique pleine, parpaing plein, pierre'],['creux','Brique creuse, parpaing creux'],['placo','Plaque de plâtre (placo)'],['carreau','Carreau de plâtre, béton cellulaire'],['bois','Bois, panneau, ossature bois']];
+const CH_CHARGES=[['leger','Léger : moins de 5 kg (cadre, horloge)'],['moyen','Moyen : 5 à 20 kg (étagère, miroir)'],['lourd','Lourd : 20 à 50 kg (meuble haut, télé)'],['tres','Très lourd : plus de 50 kg (chauffe-eau, lavabo, portail)']];
+// [cheville, Ø foret, percussion, vis, remarque]
+const CH_REGLE={
+ beton:{leger:['Cheville nylon universelle',5,true,'3,5 à 4 mm',''],moyen:['Cheville nylon à expansion',6,true,'4 à 5 mm',''],lourd:['Cheville nylon longue, ou vis à béton (sans cheville)',8,true,'5 à 6 mm','La vis à béton se visse directement dans un trou du diamètre indiqué sur la boîte.'],
+   tres:['Goujon d’ancrage (cheville métallique à expansion)',10,true,'boulon M8 à M10 fourni','Serrez au couple indiqué : trop serré, le béton éclate au bord.']},
+ plein:{leger:['Cheville nylon universelle',5,true,'3,5 à 4 mm',''],moyen:['Cheville nylon à expansion',6,true,'4 à 5 mm',''],lourd:['Cheville nylon longue (60 à 80 mm)',8,true,'5 à 6 mm',''],
+   tres:['Scellement chimique avec tige filetée',10,true,'tige filetée M8, écrou et rondelle','Dans la pierre tendre ou la brique ancienne, percez sans percussion.']},
+ creux:{leger:['Cheville nylon universelle (elle se noue derrière la paroi)',6,false,'4 mm',''],moyen:['Cheville spéciale corps creux (à bascule, ou métallique à expansion)',8,false,'4 à 5 mm',''],
+   lourd:['Scellement chimique avec tamis (manchon grillagé)',12,false,'tige filetée M8','Le tamis retient la résine dans les alvéoles.'],tres:['Scellement chimique avec tamis, en plusieurs points',16,false,'tige filetée M10','Multipliez les points de fixation pour répartir la charge.']},
+ placo:{leger:['Cheville placo autoforeuse, ou crochet X à clou',0,false,'fournie ou 4 mm','La cheville autoforeuse se visse directement dans la plaque, sans percer.'],moyen:['Cheville métallique à expansion (Molly)',8,false,'vis fournie (M4 ou M5)','Posez-la avec la pince à expansion : elle s’ouvre en parapluie derrière la plaque.'],
+   lourd:['Plusieurs Molly, ou vis dans les montants de l’ossature',10,false,'vis fournie, ou vis 5 mm dans le montant','Repérez les montants (tous les 60 cm) avec un détecteur ou un aimant sur les vis.'],
+   tres:['Pas dans le placo seul : fixez dans le mur derrière, ou dans un renfort posé derrière la plaque',0,false,'—','Un chauffe-eau ou un lavabo suspendu sur cloison demande un renfort ou un bâti-support prévu au montage.']},
+ carreau:{leger:['Cheville nylon universelle',6,false,'4 mm',''],moyen:['Cheville spéciale plâtre ou béton cellulaire (à ailettes ou en spirale)',8,false,'5 mm',''],lourd:['Scellement chimique',12,false,'tige filetée M8',''],tres:['Scellement chimique en plusieurs points',14,false,'tige filetée M10','Matériau tendre : répartissez la charge sur une platine ou un tasseau.']},
+ bois:{leger:['Pas de cheville : vis à bois directement',0,false,'3,5 à 4 mm',''],moyen:['Pas de cheville : vis à bois',0,false,'4 à 5 mm','Faites un avant-trou pour ne pas fendre le bois.'],lourd:['Vis à bois de gros diamètre ou tire-fond',0,false,'6 mm','Vissez dans un montant ou une poutre, pas dans un panneau mince.'],tres:['Tire-fond ou boulons traversants',0,false,'tire-fond 8 mm ou boulon M8','Dans la structure (poteau, poutre), jamais dans un simple lambris.']}};
+const CH_LONG={5:25,6:30,8:40,10:50,12:60,14:70,16:80};
+const STD_L=[12,16,20,25,30,35,40,45,50,60,70,80,90,100,120,140,160,180,200];
+const lStd=x=>STD_L.find(l=>l>=x)||Math.ceil(x/10)*10;
+TOOLS.chevilles={nom:'Quelle cheville ?',aide:'Choisissez le mur et le poids de ce que vous fixez : voici la cheville, le foret, la vis et la façon de percer.',
+  champs:[S('mur','Le mur (ou le support)',CH_MURS,'beton'),S('charge','Ce que je fixe',CH_CHARGES,'moyen'),N('ep','Épaisseur de l’objet à fixer (patte, tasseau…)','mm',3)],
+  calc(v){ const r=(CH_REGLE[v.mur]||CH_REGLE.beton)[v.charge]||CH_REGLE.beton.moyen, f=r[1], det=[];
+    if(f){ const lc=CH_LONG[f]||f*5; det.push(`Foret : Ø ${f} mm ${v.mur==='beton'||v.mur==='plein'?'béton (pointe carbure)':v.mur==='placo'?'à bois ou multi-matériaux (ou celui indiqué sur la boîte)':'béton ou multi-matériaux'}, ${r[2]?'AVEC percussion':'SANS percussion'}`);
+      if(v.mur!=='placo') det.push(`Profondeur du trou : ${lc+10} mm environ (longueur de la cheville + 1 cm)`); else det.push('Choisissez la longueur de Molly selon l’épaisseur de la plaque (indiquée sur la boîte : BA13 simple ou double).');
+      if(!/tige|boulon|fournie/.test(r[3])) det.push(`Vis : diamètre ${r[3]}, longueur ${lStd(v.ep+lc+5)} mm au moins (objet ${v.ep} mm + cheville ${lc} mm + 5 mm)`); else det.push(`Vis : ${r[3]}`); }
+    else det.push(`Vis : ${r[3]}`);
+    if(r[4]) det.push(r[4]);
+    if(!r[2]&&f) det.push({warn:'Sans percussion ! Elle casserait les cloisons des briques creuses ou la plaque.'});
+    if(v.charge==='tres') det.push({warn:'Pour une charge très lourde ou suspendue au-dessus de quelqu’un (chauffe-eau, meuble haut de cuisine), respectez la notice de l’appareil et multipliez les points de fixation.'});
+    const extra=`<h3>Avant de percer</h3><div class="sch-txt">${plListe('Sécurité',['Passez un détecteur de câbles et de tuyaux : les câbles descendent souvent à la verticale d’une prise ou d’un interrupteur.','Lunettes de protection ; masque pour le béton et le plâtre.'])}
+      ${plListe('Bien percer',['Trou bien perpendiculaire au mur, au bon diamètre (un trou trop large ne tient pas).','Dépoussiérez le trou (soufflette, aspirateur) : la cheville tient beaucoup mieux.','La cheville doit entrer à fond, collerette contre le mur (ou au fond de l’enduit).'])}
+      ${plListe('Reconnaître son mur',['Poussière grise et dure : béton ou parpaing. Le foret « tombe » d’un coup : creux.','Poussière rouge : brique. Si elle tombe dans des vides : brique creuse.','Poussière blanche et le mur sonne creux : placo.'])}</div>
+      <h3>Quelle vis pour quelle cheville nylon ?</h3><div class="tbl"><table><thead><tr><th>Cheville (= foret)</th><th>Diamètre de vis</th><th>Longueur de cheville</th></tr></thead><tbody>
+      <tr><td>Ø 5 mm</td><td>3 à 4 mm</td><td>25 mm</td></tr><tr><td>Ø 6 mm</td><td>4 à 5 mm</td><td>30 mm</td></tr><tr><td>Ø 8 mm</td><td>5 à 6 mm</td><td>40 mm</td></tr><tr><td>Ø 10 mm</td><td>6 à 8 mm</td><td>50 mm</td></tr></tbody></table></div>
+      <h3>Toutes les combinaisons</h3><div class="tbl"><table><thead><tr><th>Mur</th>${CH_CHARGES.map(c=>`<th>${c[1].split(' :')[0]}</th>`).join('')}</tr></thead><tbody>
+      ${CH_MURS.map(m=>`<tr${m[0]===v.mur?' class="hl"':''}><td>${m[1]}</td>${CH_CHARGES.map(c=>`<td>${CH_REGLE[m[0]][c[0]][0]}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <p class="hint">Les charges sont indicatives : la charge que supporte vraiment une cheville est écrite sur sa boîte et dépend de l’état du mur.</p>`;
+    return {big:r[0],detail:det,extra,item:`Fixation ${CH_MURS.find(m=>m[0]===v.mur)[1].toLowerCase()} : ${r[0].toLowerCase()}${f?`, foret Ø ${f}`:''}`};
+  }};
+const VIS_USAGE=[['bois','Bois sur bois'],['agglo','Aggloméré, MDF, mélaminé'],['ext','Extérieur (terrasse, bardage, jardin)'],['placo','Plaque de plâtre sur ossature'],['metal','Tôle sur métal']];
+TOOLS.vis={nom:'Quelle vis ?',aide:'Le diamètre, la longueur et l’avant-trou d’une vis, selon ce que vous assemblez et l’épaisseur de la pièce à fixer.',
+  champs:[S('usage','J’assemble…',VIS_USAGE,'bois'),N('ep','Épaisseur de la pièce à fixer','mm',18,{k:'usage',v:['bois','agglo','ext']}),C('dur','Bois dur (chêne, hêtre, bois exotique)',false,{k:'usage',v:['bois','ext']}),
+    S('pl','Épaisseur de plaque',[['1','Une plaque BA13'],['2','Deux plaques'],['3','Trois plaques']],'1',{k:'usage',v:['placo']})],
+  calc(v){ let big, det=[];
+    if(v.usage==='placo'){ const L={1:25,2:35,3:45}[v.pl]||25; big=`Vis placo 3,5 × ${L} mm`; det.push('Vis à tête trompette, pointe fine pour ossature métallique (ou à pas large pour l’ossature bois).','Une vis tous les 30 cm environ, à 1 cm du bord de la plaque.','La tête doit affleurer sans déchirer le carton : réglez la butée de la visseuse.'); }
+    else if(v.usage==='metal'){ big='Vis autoperceuse 4,2 à 5,5 mm'; det.push('La pointe en forme de foret perce la tôle toute seule (jusqu’à environ 3 mm d’acier).','En toiture ou bardage : tête hexagonale avec rondelle d’étanchéité.','Plus épais : percez puis utilisez une vis à métaux et un écrou, ou taraudez.'); }
+    else { const e=Math.max(3,v.ep), d=e<=10?3:e<=16?3.5:e<=22?4:e<=30?5:6, L=lStd(e*2.5);
+      big=`Vis ${fr(d,1)} × ${L} mm`; det.push(`La vis doit entrer dans le support d’au moins la moitié de sa longueur : ${L} mm pour une pièce de ${e} mm.`);
+      const at=v.dur?Math.round(d*0.7*2)/2:Math.round(d*0.5*2)/2;
+      if(v.usage==='agglo') det.push(`Vis spéciale aggloméré (filet profond). Avant-trou Ø ${fr(Math.round(d*0.7*2)/2,1)} mm, à 2 cm au moins du bord, sinon le panneau éclate.`);
+      else det.push(`Avant-trou Ø ${fr(at,1)} mm${v.dur?' indispensable (bois dur)':', surtout près des bouts de planche'} ; fraisez pour noyer la tête.`);
+      if(v.usage==='ext') det.push('Extérieur : vis en inox A2 (A4 au bord de la mer). Les vis zinguées rouillent et tachent le bois (surtout le chêne).');
+      if(v.usage==='ext'&&e>=19&&e<=28) det.push('Lames de terrasse : 2 vis par lambourde, à 15-20 mm des bords, avant-trou et fraisage dans les bois durs.'); }
+    const extra=`<h3>Les vis courantes</h3><div class="tbl"><table><tbody>
+      <tr><td>Vis à bois agglo (VBA)</td><td>La vis à tout faire : bois, panneaux, chevilles. Pointe autoperceuse.</td></tr>
+      <tr><td>Tête fraisée / tête ronde</td><td>Fraisée : noyée dans le bois. Ronde ou cylindrique : pour fixer une patte métallique.</td></tr>
+      <tr><td>Vis terrasse inox</td><td>Tête fraisée à nervures, inox, pour l’extérieur.</td></tr>
+      <tr><td>Tire-fond</td><td>Grosse vis à tête hexagonale, serrée à la clé : poutres, gros assemblages.</td></tr>
+      <tr><td>Vis placo</td><td>Tête trompette, pour les plaques de plâtre.</td></tr>
+      <tr><td>Vis à métaux</td><td>Filet régulier (M4, M5, M6…), avec écrou ou dans un taraudage.</td></tr>
+      <tr><td>Vis autoperceuse</td><td>Pointe-foret pour la tôle.</td></tr>
+      <tr><td>Vis à béton</td><td>Se visse dans un trou percé dans le béton, sans cheville.</td></tr></tbody></table></div>
+      <h3>Les empreintes (la forme du creux de la tête)</h3><div class="tbl"><table><tbody>
+      <tr><td>Pozidriv (PZ)</td><td>Croix avec petits traits : la plus courante sur les vis à bois en France. Embout PZ2 en général.</td></tr>
+      <tr><td>Phillips (PH)</td><td>Croix simple : vis placo, petites vis. L’embout ripe facilement si on se trompe (PH et PZ ne sont pas interchangeables).</td></tr>
+      <tr><td>Torx (TX)</td><td>Étoile à 6 branches : ne ripe pas, idéale pour les vis longues et la terrasse.</td></tr>
+      <tr><td>Fente</td><td>Ancienne, pour la quincaillerie décorative.</td></tr>
+      <tr><td>Hexagonale</td><td>Tête à 6 pans serrée à la clé : tire-fond, boulons.</td></tr></tbody></table></div>`;
+    return {big,detail:det,extra,item:`${big} (${VIS_USAGE.find(u=>u[0]===v.usage)[1].toLowerCase()})`};
+  }};
+
+/* ============ ESSENCES DE BOIS ============ */
+const ESS=[
+ ['chene','Chêne','Brun clair à doré, veiné','Dur','Jusqu’à 3 (4 sans aubier)','€€€',['Meubles, parquets, escaliers, portes.','Charpente traditionnelle, bardage, piquets.'],['Très solide et durable, magnifique.','Vieillit très bien.'],['Cher, lourd, dur à travailler.','Contient des tanins : il noircit au contact du fer et de l’eau (vis inox obligatoires dehors).'],'#c49a6c','#94693e','bois'],
+ ['hetre','Hêtre','Blanc rosé, grain fin','Dur','1 (intérieur)','€€',['Meubles, chaises, jouets, plans de travail, manches d’outils.'],['Dur, fin, se tourne et se ponce très bien.','Bon marché pour un bois dur.'],['Pourrit vite dehors : intérieur seulement.','Bouge beaucoup avec l’humidité.'],'#e3c59f','#c19a6b','bois'],
+ ['frene','Frêne','Blanc crème, veines marquées','Dur','1 (intérieur)','€€',['Meubles, manches d’outils (il est souple), escaliers.'],['Résistant aux chocs, se cintre à la vapeur.'],['Craint l’humidité et les insectes.'],'#e8d6b4','#bba07a','bois'],
+ ['noyer','Noyer','Brun chocolat','Mi-dur','1 à 2','€€€€',['Ébénisterie, beaux meubles, objets tournés.'],['Superbe couleur, se travaille bien.'],['Très cher et rare.'],'#7a5236','#4e321f','bois'],
+ ['chataignier','Châtaignier','Brun clair, proche du chêne','Mi-dur','3 (4 en piquets)','€€',['Piquets, clôtures, bardage, charpente, parquets.'],['Durable dehors sans traitement, moins cher que le chêne.'],['Tanins : taches noires avec le fer.','Peut avoir des fentes (roulures).'],'#b98b55','#87602f','bois'],
+ ['pin','Pin (sylvestre, maritime)','Jaune à orangé, nœuds','Tendre','2 (3 ou 4 traité autoclave)','€',['Lambris, meubles simples, charpente, tasseaux.','Traité autoclave : terrasse, jardin, jardinières.'],['Bon marché, facile à travailler.'],['Nœuds qui peuvent couler (résine).','Sans traitement, ne tient pas dehors.'],'#e8c88e','#c39046','bois'],
+ ['sapin','Sapin, épicéa (« bois blanc »)','Blanc à jaune pâle','Tendre','2 (3 traité)','€',['Charpente, ossature, tasseaux, planches de coffrage, lambris.'],['Le moins cher, léger, droit.'],['Tendre (marque facilement), pas pour l’extérieur sans protection.'],'#efe0c0','#d1b47f','bois'],
+ ['douglas','Douglas','Rose saumon à brun rouge','Mi-dur','3 (purgé d’aubier)','€€',['Bardage, terrasse, charpente, menuiserie extérieure.'],['Durable dehors sans traitement s’il est « purgé d’aubier ».','Bois français, prix raisonnable.'],['Vérifiez qu’il est bien purgé d’aubier.','Grisaille au soleil si on ne le protège pas.'],'#d9a274','#ae6e43','bois'],
+ ['meleze','Mélèze','Orangé à brun rouge','Mi-dur','3','€€',['Bardage, terrasse, menuiserie extérieure, bateaux.'],['Durable dehors, résineux et dense.'],['Résine, peut fendre au vissage : avant-trous.'],'#d8a06a','#a5673a','bois'],
+ ['cedre','Cèdre rouge (red cedar)','Brun rouge, très parfumé','Tendre','3','€€€',['Bardage, bardeaux, saunas, nichoirs.'],['Très léger, stable, se travaille bien, durable.'],['Cher, tendre, importé.','Attaque l’acier : vis inox.'],'#b56a46','#87472b','bois'],
+ ['robinier','Robinier (acacia)','Jaune verdâtre, brunit','Très dur','4','€€€',['Piquets, terrasse, jeux d’enfants, jardinières, mobilier de jardin.'],['Le plus durable des bois d’Europe, même dans la terre.'],['Très dur à travailler, souvent tordu, petites longueurs.'],'#c9b25a','#957e31','bois'],
+ ['peuplier','Peuplier','Blanc crème','Tendre','1','€',['Contreplaqué léger, caisses, cagettes, fonds de tiroirs.'],['Très léger, bon marché.'],['Très tendre, pelucheux au ponçage.'],'#ece3cc','#cdbf98','bois'],
+ ['cp','Contreplaqué','Couches de bois croisées','Selon essence','1 à 3 (CTBX extérieur)','€€',['Meubles, étagères, coffrages, dos de meubles. CTBX (« marine ») pour l’extérieur.'],['Très stable et solide, ne fend pas.'],['Chants à protéger (ils boivent l’eau et se voient).'],'#e2c595','#b98a50','mince'],
+ ['osb','OSB','Gros copeaux pressés','Mi-dur','2 (OSB/3 pour l’humidité)','€',['Planchers, contreventement d’ossature, rangements d’atelier.'],['Bon marché, solide, grands panneaux.'],['Aspect brut ; gonfle à l’eau sur les chants.'],'#d9b77a','#a7803f','flocons'],
+ ['mdf','MDF (médium)','Fibres très fines, lisse','Mi-dur','1 (MDF hydrofuge vert pour l’humidité)','€',['Meubles peints, façades, moulures, découpes décoratives.'],['Parfaitement lisse, se peint et se découpe très bien.'],['Poussière très fine (masque !), lourd, ne tient pas les vis sur les chants.'],'#b88a5e','#a07650','lisse'],
+ ['agglo','Aggloméré et mélaminé','Particules collées, souvent plaquées blanc','Mi-dur','1 (CTB-H pour les planchers)','€',['Meubles en kit, caissons, plans de travail (stratifiés), planchers (CTB-H).'],['Le moins cher, déjà fini (mélaminé).'],['Craint l’eau, éclate au vissage près des bords.','Fléchit sous les livres : portée courte pour les étagères.'],'#d8c09a','#9a7c50','liege'],
+].map(e=>({id:'ess-'+e[0],nom:e[1],court:`${e[2]} · ${e[3].toLowerCase()} · classe d’emploi ${e[4]} · prix ${e[5]}`,motif:e[11],c1:e[9],c2:e[10],forme:e[2].toLowerCase(),dur:e[3],cl:e[4],prix:e[5],sec:[['Pour quoi',e[6]],['Avantages',e[7]],['Inconvénients',e[8]]]})).map(e=>({...e,svg:isoBloc(e)}));
+FICHE_L.ess=ESS;
+TOOLS.essences={nom:'Les essences de bois',aide:'Les bois massifs et les panneaux : leur aspect, leur dureté, s’ils tiennent dehors, et à quoi ils servent. Choisissez un bois.',special:'fiches',fiches:'ess'};
+FICHE_BAS.ess=()=>`<section class="card"><h2>Tous les bois en un coup d’œil</h2><div class="tbl"><table><thead><tr><th>Bois</th><th>Dureté</th><th>Classe d’emploi</th><th>Prix</th></tr></thead><tbody>
+  ${ESS.map(e=>`<tr><td>${e.nom}</td><td>${e.dur}</td><td>${e.cl}</td><td>${e.prix}</td></tr>`).join('')}</tbody></table></div>
+  <h3>Les classes d’emploi</h3><div class="tbl"><table><tbody><tr><td>1</td><td>Intérieur sec : meubles, lambris.</td></tr><tr><td>2</td><td>Intérieur avec humidité possible : charpente, combles, salle de bain.</td></tr>
+  <tr><td>3</td><td>Dehors, sans contact avec la terre : bardage, volets, terrasse sur plots.</td></tr><tr><td>4</td><td>Dehors en contact avec la terre ou l’eau : piquets, poteaux, jardinières.</td></tr><tr><td>5</td><td>Eau de mer.</td></tr></tbody></table></div>
+  <p class="hint">« Aubier » : la partie extérieure, plus claire, du tronc. Elle pourrit vite. Un bois « purgé d’aubier » n’a gardé que le cœur (le duramen), bien plus durable.</p></section>`;
+
+/* ============ FINITIONS ============ */
+function finSvg(t){ const bois=`<rect x="40" y="90" width="320" height="56" fill="#d9b27a" stroke="#8a6236"/>${[100,112,124,136].map(y=>`<path d="M40 ${y}q80 -6 160 0t160 0" stroke="#b58a52" fill="none"/>`).join('')}`;
+  const L={huile:`<rect x="40" y="90" width="320" height="16" fill="#b87d3a" opacity=".55"/>`+plLab(200,98,250,40,'l’huile pénètre dans le bois'),
+   satur:`<rect x="40" y="90" width="320" height="18" fill="#8a5a2b" opacity=".55"/>`+plLab(200,98,250,40,'pénètre et colore'),
+   lasure:`<rect x="40" y="84" width="320" height="6" fill="#a8622e" opacity=".75"/><rect x="40" y="90" width="320" height="6" fill="#b87d3a" opacity=".35"/>`+plLab(200,86,250,40,'film fin, teinté, qui « respire »'),
+   vernis:`<rect x="40" y="80" width="320" height="10" fill="#f6e7b0" opacity=".8" stroke="#c8a94a"/><path d="M60 83h80" stroke="#fff" stroke-width="2"/>`+plLab(200,84,250,40,'film dur et transparent'),
+   peinture:`<rect x="40" y="80" width="320" height="10" fill="#5f8f6b" stroke="#3f6a4b"/>`+plLab(200,84,250,40,'film opaque coloré'),
+   cire:`<rect x="40" y="86" width="320" height="4" fill="#e8cf8f"/>`+plLab(200,88,250,40,'fine couche douce, lustrée'),
+   teinte:`<rect x="40" y="90" width="320" height="14" fill="#5a3a20" opacity=".6"/>`+plLab(200,96,250,40,'colore sans protéger')}[t]||'';
+  return bois+L+`<text class="pl-tx" x="200" y="168" text-anchor="middle">coupe d’une planche</text>`; }
+const FIN=[
+ {id:'huile',nom:'Huile',court:'Elle pénètre dans le bois, le nourrit et laisse un aspect naturel, mat ou satiné.',svg:finSvg('huile'),
+  sec:[['Pour quoi',['Meubles, plans de travail (huile alimentaire), mobilier de jardin (huile de teck ou spéciale extérieur).']],['Avantages',['Aspect naturel, toucher du bois.','Se répare par endroits sans tout poncer.']],['Inconvénients',['Entretien régulier : 1 à 2 fois par an dehors.','Protège moins des taches qu’un vernis.']],
+   ['#Application',['Poncez au grain 120 puis 180, dépoussiérez.','Passez l’huile au pinceau ou au chiffon, généreusement.','Après 15 à 20 minutes, essuyez tout l’excédent.','2 à 3 couches à 24 h d’intervalle.']]],
+  note:'Attention : un chiffon imbibé d’huile de lin peut s’enflammer tout seul en séchant. Étalez-le à plat dehors ou mettez-le dans un bocal d’eau fermé.'},
+ {id:'satur',nom:'Saturateur',court:'Une huile pour l’extérieur qui sature le bois et le protège de l’eau et du soleil.',svg:finSvg('satur'),
+  sec:[['Pour quoi',['Terrasses, bardages, mobilier de jardin, clôtures.']],['Avantages',['Ne s’écaille jamais : pas de ponçage pour l’entretien.','Teintes naturelles ou incolore.']],['Inconvénients',['À refaire chaque année (ou tous les 2 ans) sur une terrasse.']],
+   ['#Application',['Bois propre et sec (dégriseur si le bois est gris).','1 à 2 couches au pinceau ou au rouleau, dans le sens des lames.','Essuyez l’excédent qui ne pénètre pas.','Pas en plein soleil, ni avant la pluie.']]],
+  note:'Sans rien, un bois durable (douglas, mélèze, chêne) devient gris argenté : ce n’est pas grave, il ne pourrit pas pour autant.'},
+ {id:'lasure',nom:'Lasure',court:'Un film fin, teinté et transparent, qui laisse voir le bois et le laisse respirer.',svg:finSvg('lasure'),
+  sec:[['Pour quoi',['Volets, portes, fenêtres, bardages, abris de jardin, chalets.']],['Avantages',['Protège bien du soleil (si teintée).','Laisse voir le veinage.']],['Inconvénients',['À refaire tous les 3 à 6 ans selon l’exposition.','Une lasure incolore protège mal des UV.']],
+   ['#Application',['Bois neuf : poncez légèrement, dépoussiérez. Ancien : lessivez, poncez les parties écaillées.','3 couches sur bois neuf, 1 à 2 en entretien.','Ponçage très léger entre les couches.']]],
+  note:'Plus la teinte est foncée, plus elle protège du soleil… mais plus le bois chauffe. Évitez les teintes très sombres en plein sud.'},
+ {id:'vernis',nom:'Vernis et vitrificateur',court:'Un film dur et transparent qui protège des taches et de l’usure.',svg:finSvg('vernis'),
+  sec:[['Pour quoi',['Meubles, portes intérieures, boiseries.','Vitrificateur : parquets et escaliers (très résistant au passage).','Vernis marin : bateaux, quelques usages extérieurs.']],['Avantages',['Très résistant, facile à nettoyer.','Mat, satiné ou brillant.']],['Inconvénients',['Dehors, il finit par craqueler et s’écailler : il faut tout poncer.','Une rayure profonde se voit.']],
+   ['#Application',['Poncez au grain 120 puis 180, dépoussiérez soigneusement.','1re couche, puis ponçage léger (grain 240) quand elle est sèche.','2 à 3 couches fines plutôt qu’une épaisse.']]],
+  note:'Pour un parquet, le vitrificateur à l’eau sent peu et sèche vite.'},
+ {id:'peinture',nom:'Peinture pour bois',court:'Un film coloré et opaque : la protection la plus longue dehors.',svg:finSvg('peinture'),
+  sec:[['Pour quoi',['Volets, portes, fenêtres, meubles relookés, bardages.']],['Avantages',['Toutes les couleurs, protège très bien.','Microporeuse : elle laisse respirer le bois.']],['Inconvénients',['On ne voit plus le bois.','Rénovation : grattage et ponçage des parties écaillées.']],
+   ['#Application',['Bois neuf : sous-couche (ou peinture « sans sous-couche »).','Bois ancien : lessivez, poncez, rebouchez les fissures.','2 couches.']]],
+  note:'Sur le chêne et le châtaignier, une sous-couche anti-tanins évite les taches jaunes qui traversent la peinture.'},
+ {id:'cire',nom:'Cire',court:'Une finition douce et lustrée, pour les meubles d’intérieur.',svg:finSvg('cire'),
+  sec:[['Pour quoi',['Meubles anciens, objets, boiseries d’intérieur.']],['Avantages',['Toucher et aspect superbes, odeur agréable.']],['Inconvénients',['Fragile : craint l’eau et la chaleur (traces de verres).','Entretien fréquent.']],
+   ['#Application',['Bois poncé ou bouché (bouche-pores), dépoussiéré.','Étalez une couche fine à la laine d’acier 0000 ou au chiffon.','Laissez sécher, puis lustrez avec un chiffon de laine.']]],
+  note:'On ne peut pas vernir par-dessus une cire : il faudrait tout décaper.'},
+ {id:'teinte',nom:'Teinte (brou de noix…)',court:'Elle change la couleur du bois mais ne le protège pas.',svg:finSvg('teinte'),
+  sec:[['Pour quoi',['Foncer un bois clair, imiter une essence, uniformiser.']],['Avantages',['Garde le veinage visible.']],['Inconvénients',['Ne protège rien : toujours la recouvrir (vernis, huile ou cire).','Les bois tendres absorbent mal (taches) : passez d’abord un bouche-pores.']],
+   ['#Application',['Testez sur une chute du même bois.','Appliquez au chiffon ou au pinceau dans le sens du fil, essuyez.','Laissez sécher puis protégez.']]],
+  note:'Une teinte paraît toujours plus foncée une fois vernie.'},
+];
+FICHE_L.fin=FIN;
+TOOLS.finitions={nom:'Les finitions du bois',aide:'Huile, saturateur, lasure, vernis, peinture, cire, teinte : ce que chacune fait, où l’utiliser et comment l’appliquer. Choisissez une finition.',special:'fiches',fiches:'fin'};
+FICHE_BAS.fin=()=>`<section class="card"><h2>Quelle finition pour quoi ?</h2><div class="tbl"><table><tbody>
+  <tr><td>Meuble d’intérieur</td><td>Huile, vernis ou cire</td></tr><tr><td>Plan de travail, planche à découper</td><td>Huile alimentaire (ou vitrificateur spécial)</td></tr>
+  <tr><td>Parquet, escalier</td><td>Vitrificateur, ou huile dure pour parquet</td></tr><tr><td>Jouet</td><td>Huile ou vernis conformes à la norme jouets (EN 71-3)</td></tr>
+  <tr><td>Meuble de jardin</td><td>Huile spéciale extérieur ou saturateur</td></tr><tr><td>Terrasse</td><td>Saturateur, ou rien (le bois grisaille)</td></tr>
+  <tr><td>Bardage, abri</td><td>Saturateur, lasure ou peinture</td></tr><tr><td>Volets, fenêtres, portes</td><td>Lasure ou peinture microporeuse</td></tr>
+  <tr><td>Nichoir</td><td>Rien à l’intérieur, huile de lin dehors</td></tr></tbody></table></div>
+  <h3>Les bonnes conditions</h3><ul><li>Entre 10 et 25 °C, pas en plein soleil, pas de pluie dans les heures qui suivent.</li><li>Bois sec (moins de 18 % d’humidité dehors).</li><li>Toujours un essai sur une chute ou un endroit caché.</li></ul></section>`;
+
+/* ============ PRISES ET ÉCLAIRAGE PAR PIÈCE ============ */
+const PIECES=[
+ ['sejour','Séjour, salon',s=>s<28?5:7,1,'2 prises RJ45 (et 2 prises de courant à côté pour la télé et la box)','1 prise par 4 m² environ : 5 au moins, 7 au-delà de 28 m². Le point lumineux peut être une prise commandée par interrupteur.'],
+ ['chambre','Chambre',()=>3,1,'1 prise RJ45 (à partir du T2)','Le point lumineux peut être une prise commandée par interrupteur.'],
+ ['cuisine','Cuisine',s=>s<=4?3:6,1,'—','Au-delà de 4 m² : 6 prises, dont 4 au-dessus du plan de travail, sur un circuit à part. Plus une prise pour la hotte, à 1,80 m.'],
+ ['sdb','Salle de bain',s=>s>4?1:0,1,'—','Prises seulement hors des volumes 0, 1 et 2 (loin de la baignoire et de la douche). Une prise rasoir à transformateur est admise en volume 2.'],
+ ['wc','WC',()=>0,1,'—','Pas de prise obligatoire (une prise est utile pour un WC lavant ou broyeur).'],
+ ['entree','Entrée, couloir',s=>s>4?1:0,1,'—','Un couloir long se commande depuis chaque porte (va-et-vient ou télérupteur).'],
+ ['cellier','Cellier, buanderie',s=>s>4?1:0,1,'—','Le lave-linge et le sèche-linge y ont souvent leur circuit spécialisé.'],
+ ['garage','Garage, atelier',()=>1,1,'—','Conseillé : plusieurs prises à hauteur d’établi et un éclairage puissant.'],
+ ['ext','Extérieur',()=>0,0,'—','Rien d’obligatoire. Conseillé : une prise étanche (IP44 au moins) et un éclairage d’entrée, sur un différentiel 30 mA.']];
+TOOLS.pieces={nom:'Prises et éclairage par pièce',aide:'Le nombre minimal de prises et de points lumineux que demande la norme NF C 15-100, pièce par pièce, et les circuits à prévoir.',
+  champs:[S('piece','Pièce',PIECES.map(p=>[p[0],p[1]]),'sejour'),N('surf','Surface de la pièce','m²',25)],
+  calc(v){ const p=PIECES.find(x=>x[0]===v.piece)||PIECES[0], np=p[2](v.surf);
+    const det=[`Prises de courant 16 A : ${np} au minimum`,`Points lumineux : ${p[3]}`];
+    if(p[4]!=='—') det.push(`Communication : ${p[4]}`);
+    det.push(p[5]);
+    if(v.piece==='cuisine') det.push('Circuits spécialisés de la cuisine : plaque de cuisson (32 A, 6 mm²), four (20 A, 2,5 mm²), lave-vaisselle (20 A). Conseillé : congélateur sur son propre circuit.');
+    const extra=`<h3>Le minimum pièce par pièce</h3><div class="tbl"><table><thead><tr><th>Pièce</th><th>Prises 16 A</th><th>Points lumineux</th></tr></thead><tbody>
+      <tr${v.piece==='sejour'?' class="hl"':''}><td>Séjour</td><td>5 (7 au-delà de 28 m²)</td><td>1</td></tr><tr${v.piece==='chambre'?' class="hl"':''}><td>Chambre</td><td>3</td><td>1</td></tr>
+      <tr${v.piece==='cuisine'?' class="hl"':''}><td>Cuisine</td><td>6 (3 si 4 m² ou moins)</td><td>1</td></tr><tr${v.piece==='sdb'?' class="hl"':''}><td>Salle de bain</td><td>1 (si plus de 4 m²)</td><td>1</td></tr>
+      <tr${v.piece==='wc'?' class="hl"':''}><td>WC</td><td>0</td><td>1</td></tr><tr${['entree','cellier'].includes(v.piece)?' class="hl"':''}><td>Entrée, couloir, cellier</td><td>1 (si plus de 4 m²)</td><td>1</td></tr></tbody></table></div>
+      <h3>Les circuits</h3><div class="tbl"><table><thead><tr><th>Circuit</th><th>Fil</th><th>Disjoncteur</th><th>Au plus</th></tr></thead><tbody>
+      <tr><td>Éclairage</td><td>1,5 mm²</td><td>16 A (ou 10 A)</td><td>8 points lumineux</td></tr><tr><td>Prises</td><td>1,5 mm²</td><td>16 A</td><td>8 prises</td></tr><tr><td>Prises</td><td>2,5 mm²</td><td>20 A</td><td>12 prises</td></tr>
+      <tr><td>Prises du plan de travail</td><td>2,5 mm²</td><td>20 A</td><td>6 prises</td></tr><tr><td>Plaque de cuisson</td><td>6 mm²</td><td>32 A</td><td>1 appareil</td></tr>
+      <tr><td>Four, lave-linge, lave-vaisselle, sèche-linge, congélateur</td><td>2,5 mm²</td><td>20 A</td><td>1 appareil chacun</td></tr><tr><td>Chauffe-eau électrique</td><td>2,5 mm²</td><td>20 A</td><td>1 (avec contacteur heures creuses)</td></tr>
+      <tr><td>Volets roulants</td><td>1,5 mm²</td><td>16 A</td><td>—</td></tr><tr><td>VMC</td><td>1,5 mm²</td><td>2 A</td><td>1</td></tr></tbody></table></div>
+      <h3>Les hauteurs</h3><ul><li>Prises : axe à 5 cm du sol au moins (12 cm pour une prise 32 A).</li><li>Interrupteurs : entre 0,90 et 1,30 m (logements neufs, accessibilité).</li><li>Hotte : prise à 1,80 m.</li></ul>
+      <p class="hint">Ce sont les minimums les plus connus de la NF C 15-100. Une nouvelle version de la norme (2024) s’applique progressivement : pour une installation neuve ou une rénovation complète, faites valider le plan par un électricien (contrôle Consuel). <button class="lien" type="button" data-go="tableau">Composer le tableau correspondant</button></p>`;
+    return {big:`${np} prise${np>1?'s':''} · ${p[3]} point${p[3]>1?'s':''} lumineux`,detail:det,extra,item:`${p[1]} : ${np} prises, ${p[3]} point lumineux`};
+  }};
+
+/* ============ CONVERSIONS : PENTES ET POUCES ============ */
+TOOLS.pentes={nom:'Pentes',aide:'Convertir une pente en pourcentage, en degrés ou en centimètres par mètre, et savoir de combien descendre sur une longueur.',
+  champs:[S('de','Je connais…',[['pc','La pente en %'],['deg','La pente en degrés'],['cmm','Les centimètres par mètre'],['hl','La hauteur et la longueur']],'pc'),
+    N('val','Valeur','',2,{k:'de',v:['pc','deg','cmm']}),N('h','Hauteur (dénivelé)','cm',10,{k:'de',v:['hl']}),N('l','Longueur horizontale','cm',300,{k:'de',v:['hl']}),N('lg','Longueur de votre ouvrage','m',3)],
+  calc(v){ let pc; if(v.de==='deg') pc=Math.tan(Math.min(89,v.val)*Math.PI/180)*100; else if(v.de==='hl') pc=v.l>0?v.h/v.l*100:0; else pc=v.val;
+    const deg=Math.atan(pc/100)*180/Math.PI, h=pc*v.lg;
+    const det=[`${fr(pc,2)} % = ${fr(pc,2)} cm par mètre = ${fr(pc*10,1)} mm par mètre`,`${fr(deg,2)} degrés`,pc>0?`Rapport : 1 / ${fr(100/pc,1)} (1 cm de hauteur pour ${fr(100/pc,1)} cm de longueur)`:'Pente nulle : parfaitement de niveau',`Sur ${fr(v.lg,2)} m : ${fr(h,1)} cm de différence de hauteur`];
+    const extra=`<h3>Les pentes à connaître</h3><div class="tbl"><table><thead><tr><th>Ouvrage</th><th>Pente</th></tr></thead><tbody>
+      <tr><td>Évacuation des eaux usées</td><td>1 à 3 cm par mètre (1 à 3 %)</td></tr><tr><td>Gouttière</td><td>3 à 5 mm par mètre</td></tr>
+      <tr><td>Terrasse, dallage extérieur</td><td>1 à 2 % vers l’extérieur</td></tr><tr><td>Douche à l’italienne</td><td>1 à 2 % vers le siphon</td></tr>
+      <tr><td>Rampe d’accès fauteuil roulant</td><td>5 % (8 % sur 2 m au plus, 10 % sur 50 cm au plus)</td></tr><tr><td>Allée de garage</td><td>15 % au plus conseillé</td></tr>
+      <tr><td>Toiture en tuiles</td><td>Selon la tuile et la région : voir le fabricant</td></tr></tbody></table></div>
+      <h3>Correspondances</h3><div class="tbl"><table><thead><tr><th>%</th><th>Degrés</th><th>%</th><th>Degrés</th></tr></thead><tbody>
+      ${[[1,2],[2,5],[3,10],[5,20],[8,30],[10,50],[15,100]].map(([a,b])=>`<tr><td>${a} %</td><td>${fr(Math.atan(a/100)*180/Math.PI,2)}°</td><td>${b} %</td><td>${fr(Math.atan(b/100)*180/Math.PI,1)}°</td></tr>`).join('')}</tbody></table></div>
+      <p class="hint">Attention : 100 % ne veut pas dire vertical, mais 45° (autant de hauteur que de longueur).</p>`;
+    return {big:`${fr(pc,2)} % · ${fr(deg,1)}°`,detail:det,extra,item:`Pente ${fr(pc,2)} % (${fr(deg,1)}°) : ${fr(h,1)} cm sur ${fr(v.lg,2)} m`};
+  }};
+const POUCES=[['1/4"','8 × 13','13,2','petits raccords, manomètres'],['3/8"','12 × 17','16,7','robinets d’arrêt, flexibles de robinetterie, chasse d’eau'],['1/2"','15 × 21','21,0','robinets, flexible de douche, raccords d’appareils'],
+  ['3/4"','20 × 27','26,4','lave-linge, compteur, robinet de jardin, arrivées'],['1"','26 × 34','33,2','arrivée générale, chauffage'],['1" 1/4','33 × 42','41,9','gros débits, chaufferie'],['1" 1/2','40 × 49','47,8','gros débits'],['2"','50 × 60','59,6','réseaux, pompes']];
+const FRACS=[['0',0],['1/8',1/8],['1/4',1/4],['3/8',3/8],['1/2',1/2],['5/8',5/8],['3/4',3/4],['7/8',7/8]];
+TOOLS.pouces={nom:'Pouces',aide:'Convertir des pouces en millimètres, et retrouver les tailles de filetage des tuyaux et raccords (½", ¾"…).',
+  champs:[S('sens','Je veux…',[['tube','Reconnaître un filetage de tuyau'],['i2m','Pouces → millimètres'],['m2i','Millimètres → pouces']],'tube'),
+    S('t','Taille du raccord',POUCES.map(p=>[p[0],`${p[0]} (${p[1]})`]),'1/2"',{k:'sens',v:['tube']}),
+    N('ent','Pouces entiers','"',1,{k:'sens',v:['i2m']}),S('frac','Fraction',FRACS.map(f=>[f[0],f[0]==='0'?'aucune':f[0]]),'0',{k:'sens',v:['i2m']}),N('mm','Millimètres','mm',25,{k:'sens',v:['m2i']})],
+  calc(v){ let big, det=[];
+    if(v.sens==='tube'){ const p=POUCES.find(x=>x[0]===v.t)||POUCES[2]; big=`${p[0]} = « ${p[1]} »`; det.push(`Diamètre extérieur du filetage : environ ${p[2]} mm`,`Usage courant : ${p[3]}`,'Le nom en pouces ne correspond pas au diamètre réel : un raccord ½" mesure 21 mm au filetage. C’est le diamètre intérieur des anciens tubes en acier.','Pour reconnaître un raccord : mesurez le diamètre extérieur du filetage et comparez au tableau.'); }
+    else if(v.sens==='i2m'){ const f=(FRACS.find(x=>x[0]===v.frac)||FRACS[0])[1], i=Math.max(0,v.ent)+f; big=`${fr(i*25.4,2)} mm`; det.push(`${fr(i,4)} pouce × 25,4 = ${fr(i*25.4,2)} mm`); }
+    else { const i=v.mm/25.4, h=Math.round(i*8)/8, e=Math.floor(h), fr8=Math.round((h-e)*8), fN=[[0,''],[1,'1/8'],[2,'1/4'],[3,'3/8'],[4,'1/2'],[5,'5/8'],[6,'3/4'],[7,'7/8']][fr8]?.[1]||'';
+      big=`${fr(i,3)} pouce${i>=2?'s':''}`; det.push(`${fr(v.mm,1)} ÷ 25,4 = ${fr(i,3)}"`,`Au 1/8 de pouce le plus proche : ${[e||'',fN].filter(Boolean).join(' ')||'0'}"`); }
+    const extra=`<h3>Les filetages des tuyaux et raccords</h3><div class="tbl"><table><thead><tr><th>Pouces</th><th>Ancien nom</th><th>Ø filetage</th><th>Usage</th></tr></thead><tbody>
+      ${POUCES.map(p=>`<tr${v.sens==='tube'&&p[0]===v.t?' class="hl"':''}><td>${p[0]}</td><td>${p[1]}</td><td>${p[2]} mm</td><td>${p[3]}</td></tr>`).join('')}</tbody></table></div>
+      <p class="hint">Filetage « gaz » (BSP) : G = cylindrique, avec un joint plat ; R = conique, étanché avec de la filasse ou du ruban PTFE. Mâle = filets dehors, femelle = filets dedans.</p>
+      <h3>Pouces → millimètres</h3><div class="tbl"><table><thead><tr><th>Pouces</th><th>mm</th><th>Pouces</th><th>mm</th></tr></thead><tbody>
+      ${[['1/16',1/16,'5/8',5/8],['1/8',1/8,'3/4',3/4],['3/16',3/16,'7/8',7/8],['1/4',1/4,'1',1],['5/16',5/16,'1 1/4',1.25],['3/8',3/8,'1 1/2',1.5],['1/2',1/2,'2',2]].map(r=>`<tr><td>${r[0]}"</td><td>${fr(r[1]*25.4,2)}</td><td>${r[2]}"</td><td>${fr(r[3]*25.4,1)}</td></tr>`).join('')}</tbody></table></div>
+      <h3>Et les écrans ?</h3><p>La taille d’une télé est la diagonale en pouces : 32" = 81 cm, 43" = 109 cm, 55" = 140 cm, 65" = 165 cm.</p>`;
+    return {big,detail:det,extra,item:`${big}`};
+  }};
 
 function symbolesHTML(){
   return `<section class="card"><h2>Symboles électriques</h2><p class="hint">Les symboles qu’on trouve sur les plans et les schémas.</p>
