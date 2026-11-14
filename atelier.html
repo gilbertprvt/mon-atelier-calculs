@@ -221,6 +221,14 @@ i.k-te{background:repeating-linear-gradient(90deg,var(--c-te) 0 7px,var(--c-te2)
 .pl-mur{fill:#c8b79c;stroke:none!important;opacity:.5}.pl-sol{stroke:#6b5a43;stroke-width:2}.pl-toit{stroke:#8a4b2f;stroke-width:3;fill:none}.pl-app{fill:#fff;stroke:#555;stroke-width:1.2}
 .pl-p32,.pl-p40,.pl-p100{fill:none;stroke:#8e979e;stroke-linejoin:round}.pl-p32{stroke-width:4}.pl-p40{stroke-width:5}.pl-p100{stroke-width:9}
 .lien{background:none;border:0;padding:0;color:var(--accent,#1f5d8c);text-decoration:underline;font:inherit;cursor:pointer}
+.el-body{fill:#f1f2f0;stroke:#5a6066;stroke-width:1}.el-vis{fill:#c9ced2;stroke:#5a6066;stroke-width:.8}.el-fen{fill:#dfe3e6;stroke:#5a6066;stroke-width:.8}
+.el-lev{stroke:#333;stroke-width:.8}.el-lev-d{fill:#3b4046}.el-lev-b{fill:#2f6fd6}.el-lev-g{fill:#7a8087}.el-btn{fill:#f2c94c;stroke:#555;stroke-width:.8}
+.el-mt{fill:#2b2f33;font-size:8.5px;font-weight:600}.el-rail{fill:#b9bfc4;stroke:#7d858c;stroke-width:.8}.el-bp{fill:#8b4a2b}.el-bn{fill:#2f6fd6}
+.el-ph,.el-n,.el-t,.el-t2,.el-cmd{fill:none;stroke-width:3;stroke-linejoin:round}.el-ph{stroke:#8b4a2b}.el-n{stroke:#2f6fd6}.el-t{stroke:#3aa04a}.el-t2{stroke:#f2d43a;stroke-dasharray:5 5}.el-cmd{stroke:#e08a1e;stroke-width:2;stroke-dasharray:6 3}
+.el-cof{fill:var(--card,#fff);stroke:var(--muted);stroke-width:1.2}.el-mod{cursor:pointer}.el-mod:hover .el-body,.el-mod.on .el-body{fill:#ffe48a}
+.el-flux{fill:none;stroke:#f6d2b3;stroke-width:1.3;stroke-dasharray:3 9;animation:elFlux 1.2s linear infinite}@keyframes elFlux{to{stroke-dashoffset:-24}}
+@media (prefers-reduced-motion:reduce){.el-flux{animation:none}}
+.el-pastille{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}.el-pvj{background:repeating-linear-gradient(90deg,#3aa04a 0 4px,#f2d43a 4px 8px)}
 .tbl tr.hl td{background:var(--hl)}
 .tbl{overflow-x:auto} .tbl table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
 .tbl th,.tbl td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top} .tbl th{font-size:.85rem;color:var(--muted);font-weight:700}
@@ -1514,66 +1522,6 @@ const TOOLS = {
         extra:table+notes,
         item:[...sacs.map(([l,,n,sz])=>`${l} (enduit) : ${n} sacs de ${sz} kg`),`Sable 0/4 pour enduit : ${fr(sableTot*1500,0)} kg`]};
     }},
-  escalier:{nom:'Escalier', aide:'Calcule les marches, la longueur au sol et l’ouverture dans le plancher pour un escalier droit, en bois ou en béton.',
-    champs:[N('H','Hauteur à monter (de sol fini à sol fini)','cm',270),N('ep','Épaisseur du plancher du haut','cm',20),
-      N('larg','Largeur de l’escalier','cm',80),N('rec','Longueur disponible au sol (0 si pas de limite)','cm',0),
-      N('nb','Nombre de marches imposé (0 = automatique)','',0),
-      S('mat','Matériau',[['bois','Bois'],['beton','Béton (en dur)']],'bois'),
-      N('em','Épaisseur des marches','cm',4,{k:'mat',v:['bois']}),N('pa','Épaisseur de la paillasse (dalle sous les marches)','cm',15,{k:'mat',v:['beton']})],
-    calc(v){
-      const H=v.H; if(H<=0) return {big:'—',detail:['Indiquez la hauteur à monter.']};
-      let n = v.nb>1 ? Math.round(v.nb) : Math.max(2,Math.round(H/17.5));
-      if(!(v.nb>1)){ while(H/n>18.5) n++; while(H/n<16.5 && n>2) n--; }
-      const h=H/n, nG=n-1; let g=63-2*h, lim=false;
-      if(v.rec>0 && nG*g>v.rec){ g=v.rec/nG; lim=true; }
-      const recul=nG*g, bl=2*h+g, ang=Math.atan(h/g)*180/Math.PI, trem=(200+v.ep)*g/h, tremMin=(190+v.ep)*g/h, ramp=Math.hypot(recul,H);
-      const det=[`Dont ${nG} marches à fabriquer : la dernière marche est le plancher du haut`,
-        `Giron (profondeur où l’on pose le pied) : ${fr(g,1)} cm`,
-        `Longueur au sol (reculement) : ${fr(recul,0)} cm`,
-        `Loi de Blondel : 2 × ${fr(h,1)} + ${fr(g,1)} = ${fr(bl,1)} cm (confortable entre 60 et 64)`,
-        `Pente : ${fr(ang,0)}°`,
-        `Trémie (ouverture dans le plancher du haut) : ${fr(trem,0)} cm de long pour 2 m de passage de tête (${fr(tremMin,0)} cm au minimum pour 1,90 m)`];
-      const W=[];
-      if(lim) W.push('Le giron a été réduit pour tenir dans la longueur disponible.');
-      if(h>19) W.push('Marches hautes : l’escalier sera fatigant. Ajoutez une marche si possible.');
-      if(g<24) W.push('Giron court : 24 cm au minimum conseillés dans une maison.');
-      if(bl<58||bl>66) W.push('Loi de Blondel hors limites (58 à 66 cm) : l’escalier sera inconfortable.');
-      else if(bl<60||bl>64) W.push('Loi de Blondel un peu en dehors de l’idéal (60 à 64 cm).');
-      if(ang>42) W.push('Escalier raide : plus de 42°.');
-      if(v.larg<70) W.push('Largeur faible : 80 cm sont conseillés pour un escalier principal.');
-      W.forEach(w=>det.push({warn:w}));
-      let items=[];
-      if(v.mat==='bois'){
-        det.push(`Bois : 2 limons d’environ ${fr(ramp+30,0)} cm · ${nG} marches de ${fr(v.larg,0)} × ${fr(g+3,0)} cm (avec 3 cm de nez) en ${fr(v.em,0)} cm d’épaisseur`);
-        items=[`Escalier bois : 2 limons de ${fr(ramp+30,0)} cm`,`Escalier bois : ${nG} marches ${fr(v.larg,0)} × ${fr(g+3,0)} cm, épaisseur ${fr(v.em,0)} cm`];
-      } else {
-        const vol=v.larg/100*(ramp*v.pa + n*g*h/2)/1e4, sacs=up(vol*350/35);
-        det.push(`Béton : environ ${fr(vol,2)} m³ (paillasse + marches), soit ${sacs} sacs de ciment de 35 kg à 350 kg/m³`);
-        items=[`Escalier béton : ${fr(vol,2)} m³, ${sacs} sacs de ciment`];
-      }
-      // Dessin de profil, en centimètres
-      const xt=recul-trem, x0=Math.min(-50,xt-30), x1=recul+90, top=H+30, fs=(x1-x0)/26, Y=y=>-y;
-      let prof=`M0 0`; for(let i=1;i<=nG;i++) prof+=` V${Y(i*h)} H${i*g}`; prof+=` V${Y(H)}`;
-      const lim1=`M0 0 L0 ${Y(h+5)} L${recul} ${Y(H+5)} L${recul} ${Y(nG*h-20)} L${Math.min(recul,20*g/h)} 0Z`;
-      const bet=`${prof} L${recul} ${Y(H-v.ep)} L${Math.min(recul,1.5*g)} 0Z`;
-      const svg=`<svg class="stair" viewBox="${x0} ${-top-fs} ${x1-x0} ${top+fs*3.2}" role="img" aria-label="Escalier vu de côté">
-        <rect class="st-floor" x="${x0}" y="0" width="${x1-x0}" height="${fs*0.5}"/>
-        ${v.mat==='bois'?`<path class="st-limon" d="${lim1}"/><path class="st-step" d="${prof}"/>`:`<path class="st-beton" d="${bet}"/>`}
-        ${xt>x0?`<rect class="st-slab" x="${x0}" y="${Y(H)}" width="${xt-x0}" height="${v.ep}"/>`:''}
-        <rect class="st-slab" x="${recul}" y="${Y(H)}" width="${x1-recul}" height="${v.ep}"/>
-        ${xt>0?`<path class="st-dash" d="M${xt} ${Y(H-v.ep)} V${Y(h+xt*h/g)}"/><path class="st-dash" d="M${xt-fs*0.4} ${Y(h+xt*h/g)} H${xt+fs*0.4}"/>`:''}
-        <text x="${recul+fs*0.4}" y="${Y(H/2)}" font-size="${fs}">H ${fr(H,0)}</text>
-        <text x="${recul/2}" y="${fs*1.8}" font-size="${fs}" text-anchor="middle">Au sol : ${fr(recul,0)} cm</text>
-        <text x="${(Math.max(xt,x0)+recul)/2}" y="${Y(H+fs*0.5)}" font-size="${fs}" text-anchor="middle">Trémie ${fr(trem,0)}</text>
-        ${xt>0?`<text x="${xt+fs*0.4}" y="${Y(H-v.ep-100)}" font-size="${fs*0.85}" class="st-dlab">2 m</text>`:''}
-      </svg>`;
-      const notes=`<div class="tab-notes"><b>Bon à savoir</b><ul>
-        <li>Hauteur de marche idéale : 16 à 18 cm. Giron : 24 cm au minimum dans une maison, 25 à 30 cm pour un escalier confortable.</li>
-        <li>Toutes les marches doivent avoir exactement la même hauteur, y compris la première et la dernière : mesurez de sol fini à sol fini (avec carrelage ou parquet).</li>
-        <li>Passage de tête : 1,90 m au minimum, 2 m ou plus conseillés.</li>
-        <li>Garde-corps : 90 cm de haut au minimum (1 m conseillé), 11 cm au plus entre deux barreaux.</li></ul></div>`;
-      return {big:`${n} marches de ${fr(h,1)} cm`, detail:det, extra:svg+notes, item:items};
-    }},
   schemas:{nom:'Bibliothèque de schémas', aide:'Schémas de câblage commentés et animés, de l’ampoule à la borne de recharge.', special:'schemas'},
   symboles:{nom:'Symboles et couleurs', aide:'Les symboles des plans électriques, les couleurs des fils et les sections courantes.', special:'symboles'},
   liste:{nom:'Liste de courses', aide:'Les matériaux que vous avez ajoutés depuis les calculateurs.', special:'liste'},
@@ -1588,7 +1536,6 @@ const ICONES = {
   maconnerie:'<rect x="4" y="8" width="40" height="32"/><path d="M4 18.7h40M4 29.3h40M16 8v10.7M32 8v10.7M24 18.7v10.6M10 29.3V40M38 29.3V40"/>',
   electricite:'<path d="M27 4L10 27h12l-3 17 19-25H25z"/>',
   menuiserie:'<path d="M5 36L29 12h9v8L14 44H5z"/><path d="M10 36l3 3M15 31l3 3M20 26l3 3M25 21l3 3"/><rect x="35" y="3" width="10" height="15" rx="3"/>',
-  construction:'<path d="M5 42h9v-8h9v-8h9v-8h9V10h3"/><path d="M5 42V36"/>',
   isolation:'<path d="M6 40h36M6 8h36"/><path d="M6 14c4 0 4 6 8 6s4-6 8-6 4 6 8 6 4-6 8-6 4 6 6 6M6 24c4 0 4 6 8 6s4-6 8-6 4 6 8 6 4-6 8-6 4 6 6 6"/>',
   plomberie:'<path d="M6 16h20v9H6z"/><path d="M26 18h8a6 6 0 0 1 6 6v5"/><path d="M16 16v-6M10 10h12"/><path d="M40 35c-2.5 3.5-2.5 6 0 7 2.5-1 2.5-3.5 0-7z"/>',
   jardin:'<path d="M10 26h28l-4 16H14z"/><path d="M24 26V12"/><path d="M24 19c-7 0-10-4-10-10 7 0 10 4 10 10zM24 15c6 0 9-3 9-9-6 0-9 3-9 9z"/>',
@@ -1600,12 +1547,11 @@ const FAMILLES = [
   {id:'murs',       nom:'Murs',       desc:'Peinture, papier peint, placo', outils:['papier-peint','peinture','placo','enduit']},
   {id:'sols',       nom:'Sols',       desc:'Carrelage, parquet, terrasse', outils:['carrelage','parquet','plinthes','terrasse']},
   {id:'maconnerie', nom:'Maçonnerie', desc:'Béton, fondations, parpaings', outils:['beton','fondations','mortier','crepi','parpaings','pente']},
-  {id:'construction',nom:'Construction',desc:'Escalier',                 outils:['escalier']},
   {id:'menuiserie', nom:'Menuiserie', desc:'Étagères, meubles, établi',  outils:[{g:'Étagères',outils:['m-etagere','m-murale','m-echelle','m-angle']},{g:'Meubles',outils:['m-biblio','m-bas','m-placard']},{g:'Casiers',outils:['m-casier','m-bouteilles']},'m-etabli']},
   {id:'jardin',     nom:'Jardin',     desc:'Nichoir, mangeoire, jardinières', outils:[{g:'Oiseaux',outils:['j-nichoir','j-mangeoire']},{g:'Jardinières',outils:['j-jardiniere','j-echelle','j-gradins']}]},
   {id:'isolation',  nom:'Isolation',  desc:'Isolants, épaisseurs', outils:['isolants','epaisseurs','isol-qte']},
   {id:'plomberie',  nom:'Plomberie',  desc:'Tuyaux, assemblages, évacuations', outils:[{g:'Alimentation',outils:['tuyaux','assemblages']},'evacuations']},
-  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:['cables','tableau','schemas','symboles']},
+  {id:'electricite',nom:'Électricité',desc:'Câbles, tableau',              outils:[{g:'Tableau électrique',outils:['tableau','tab-elements']},'cables','schemas','symboles']},
   {id:'conversions',nom:'Conversions',desc:'Unités, surfaces, volumes',    outils:['unites','surfaces','volumes']},
 ];
 
@@ -1643,7 +1589,7 @@ golist.addEventListener('click', ()=>go('liste'));
 
 /* Couleurs pastel des rubriques : [fond, fond au survol] */
 const PASTELS={bois:['#F3E3C3','#E9CE98'],murs:['#DCEBF7','#BBD6EE'],sols:['#E1F0DA','#C3E2B6'],maconnerie:['#F2DDD3','#E6BFAD'],
-  construction:['#E7E1F4','#CFC3EC'],menuiserie:['#F7E5D3','#EFCBA7'],electricite:['#FFF2BD','#FFE48A'],conversions:['#D9F0EC','#B4E2DA'],jardin:['#EAF3CF','#D3E7A0'],plomberie:['#D2EAF6','#A8D3EC'],isolation:['#F7DDE4','#EFBDCB']};
+  menuiserie:['#F7E5D3','#EFCBA7'],electricite:['#FFF2BD','#FFE48A'],conversions:['#D9F0EC','#B4E2DA'],jardin:['#EAF3CF','#D3E7A0'],plomberie:['#D2EAF6','#A8D3EC'],isolation:['#F7DDE4','#EFBDCB']};
 function showHome(){
   sub.textContent='Choisissez une rubrique, puis un sujet.';
   view.innerHTML=`<ul class="rubs">${FAMILLES.map(f=>{ const c=PASTELS[f.id]||['#ECEDEA','#DADCD7'];
@@ -2189,13 +2135,20 @@ const PL_ALIM=[['Évier','12','12 × 14','16 × 1,5','16 × 2'],['Lavabo','10','
 function plListe(t,arr){ return `<div><b>${t}</b><ul>${arr.map(x=>`<li>${x}</li>`).join('')}</ul></div>`; }
 function plFig(svg,lab){ return `<div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 170" role="img" aria-label="${lab}">${svg}</svg></div>`; }
 function fichesHTML(kind){
-  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:PL_ASSEMB, T=TOOLS[cur];
-  let s=`<section class="card"><h2>${T.nom}</h2><p class="hint">${T.aide}</p>
+  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:PL_ASSEMB, T=TOOLS[cur];
+  let s=kind==='tableau'?`<section class="card"><h2>Le tableau, de l’arrivée aux circuits</h2><p class="hint">Touchez un module pour voir sa fiche plus bas.</p><div class="sch-fig"><svg class="pl-svg el-svg" viewBox="0 0 400 340" role="img" aria-label="Schéma d’un tableau électrique">${elSchema()}</svg></div></section>`:'';
+  s+=`<section class="card"><h2>${T.nom}</h2><p class="hint">${T.aide}</p>
     <div class="chips" id="fi-list">${L.map(x=>`<button class="chipb" type="button" data-fi="${x.id}" aria-pressed="false">${x.nom}</button>`).join('')}</div><div id="fi-view"></div></section>`;
   if(kind==='tuyaux') s+=`<section class="card"><h2>Quel diamètre pour chaque appareil ?</h2><p class="hint">Diamètre minimal du tube d’alimentation (eau froide et eau chaude), d’après les règles du DTU 60.11.</p>
     <div class="tbl"><table><thead><tr><th>Appareil</th><th>Ø intérieur mini</th><th>Cuivre</th><th>PER</th><th>Multicouche</th></tr></thead><tbody>
     ${PL_ALIM.map(r=>`<tr><td>${r[0]}</td><td>${r[1]} mm</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')}</tbody></table></div>
     <p class="hint">Arrivée générale d’une maison : Ø 25 mm en général, plus gros si la pression est faible. Au-dessus de 3 bars, un réducteur de pression protège la robinetterie.</p></section>`;
+  else if(kind==='tableau') s+=`<section class="card"><h2>Dans quel ordre tout se branche</h2><ol>${EL_ORDRE.map(t=>`<li>${t}</li>`).join('')}</ol>
+    <h3>Les couleurs des fils</h3><div class="tbl"><table><tbody><tr><td><span class="el-pastille" style="background:#8b4a2b"></span>Phase</td><td>Marron, rouge ou noir (jamais bleu ni vert et jaune)</td></tr>
+    <tr><td><span class="el-pastille" style="background:#2f6fd6"></span>Neutre</td><td>Bleu, toujours</td></tr><tr><td><span class="el-pastille el-pvj"></span>Terre</td><td>Vert et jaune, toujours</td></tr>
+    <tr><td><span class="el-pastille" style="background:#e08a1e"></span>Commande</td><td>Fils de commande (boutons poussoirs, fil pilote noir ou gris…)</td></tr></tbody></table></div>
+    <p class="hint">Avant de toucher à un tableau : coupez le disjoncteur de branchement et vérifiez l’absence de tension. Pour un tableau complet, faites contrôler par un électricien (attestation Consuel pour une installation neuve ou rénovée).</p>
+    <p><button class="lien" type="button" data-go="tableau">Composer mon tableau avec l’outil « Tableau électrique »</button></p></section>`;
   else if(kind==='isolants') s+=`<section class="card"><h2>Quel isolant, à quel endroit ?</h2><div class="tbl"><table><thead><tr><th>Où</th><th>Isolants qui conviennent</th></tr></thead><tbody>
     ${ISO_OU.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table></div></section>
     <section class="card"><h2>Les bons réflexes</h2><div class="sch-txt">
@@ -2209,10 +2162,15 @@ function fichesHTML(kind){
   return s;
 }
 function fiOpen(kind,id){
-  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:PL_ASSEMB, x=L.find(f=>f.id===id)||L[0];
+  const L=kind==='tuyaux'?PL_TUYAUX:kind==='isolants'?ISOLANTS:kind==='tableau'?EL_ELEMS:PL_ASSEMB, x=L.find(f=>f.id===id)||L[0];
   try{ localStorage.setItem('atelier-fi-'+kind,x.id); }catch(e){}
   document.querySelectorAll('#fi-list .chipb').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.fi===x.id)));
   const v=document.getElementById('fi-view');
+  if(kind==='tableau'){ const fig=x.peigne?elPeigne():x.terre?elTerre():elDessin(x);
+    v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">${x.court}</p><div class="sch-fig"><svg class="pl-svg" viewBox="0 0 400 180" role="img" aria-label="${x.nom}">${fig}</svg></div>
+    <div class="sch-txt">${plListe('À quoi il sert',x.fonction)}${plListe('Ce qu’il faut savoir',x.carac)}<div><b>Comment il se branche</b><ol>${x.branch.map(t=>`<li>${t}</li>`).join('')}</ol></div></div>
+    <p class="hint">💡 ${x.conseil}</p>`;
+    document.querySelectorAll('.el-svg .el-mod').forEach(m=>m.classList.toggle('on',m.dataset.fi===x.id)); return; }
   if(kind==='isolants'){ v.innerHTML=`<h3>${x.nom}</h3><p class="sch-res">Forme : ${x.forme}${x.lt?` · λ ${x.lam} W/m.K`:' · isole très peu seul'}</p>${plFig(isoBloc(x),'Isolant '+x.nom)}
     <div class="sch-txt">${plListe('Où l’utiliser',x.usage)}${plListe('Avantages',x.plus)}${plListe('Inconvénients',x.moins)}</div>
     ${x.lt?`<p><b>Épaisseur pour des combles perdus (R 7) :</b> ${isoEp(7,x.lt)} cm · <b>pour un mur (R 3,7) :</b> ${isoEp(3.7,x.lt)} cm. <button class="lien" type="button" data-go="epaisseurs">Toutes les épaisseurs</button></p>`:''}`; return; }
@@ -2225,7 +2183,7 @@ function fiOpen(kind,id){
 }
 view.addEventListener('click',e=>{
   const T=TOOLS[cur]; if(!T||T.special!=='fiches') return;
-  const b=e.target.closest('[data-fi]'); if(b){ fiOpen(T.fiches,b.dataset.fi); return; }
+  const b=e.target.closest('[data-fi]'); if(b){ fiOpen(T.fiches,b.dataset.fi); if(b.closest('svg')) document.getElementById('fi-view').scrollIntoView({behavior:'smooth',block:'start'}); return; }
   const a=e.target.closest('[data-goa]'); if(a){ try{ localStorage.setItem('atelier-fi-assemb',a.dataset.goa); }catch(err){} go('assemblages'); }
 });
 /* Évacuations */
@@ -2364,6 +2322,176 @@ Object.assign(TOOLS,{
       return {big:`${e} cm de ${nom}`,detail:det,extra,item:`Isolation ${P[1].toLowerCase()} : ${e} cm de ${nom} (R ${fr(P[2],1)})`};
     }},
 });
+
+
+/* ============ ÉLÉMENTS DU TABLEAU ============ */
+const EL_FIL={ph:'el-ph',n:'el-n',t:'el-t',cmd:'el-cmd'};
+/* Un module modulaire vu de face (s = largeur d’un module en px) */
+function elMod(x,y,m,s=26,h=100){
+  const w=m.w*s, cx=x+w/2; let g=`<rect class="el-body" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"/>`;
+  const vis=n=>Array.from({length:n},(_,i)=>x+w*(i+0.5)/n);
+  const nb=Math.max(2,Math.min(m.w*2,4));
+  vis(nb).forEach(vx=>{ g+=`<circle class="el-vis" cx="${vx}" cy="${y+8}" r="${Math.min(4,s*0.16)}"/><circle class="el-vis" cx="${vx}" cy="${y+h-8}" r="${Math.min(4,s*0.16)}"/>`; });
+  if(m.kind==='bornier'){ for(let i=0;i<m.w*2;i++) g+=`<rect class="${i%2?'el-bn':'el-bp'}" x="${x+4+i*(w-8)/(m.w*2)}" y="${y+20}" width="${(w-8)/(m.w*2)-2}" height="${h-40}" rx="2"/>`; return g; }
+  if(m.lev){ const lw=Math.min(w*0.5,s*0.7); g+=`<rect class="el-fen" x="${cx-lw/2-3}" y="${y+h*0.34}" width="${lw+6}" height="${h*0.3}" rx="2"/><rect class="el-lev el-lev-${m.lev}" x="${cx-lw/2}" y="${y+h*0.36}" width="${lw}" height="${h*0.14}" rx="2"/>`; }
+  if(m.btn) g+=`<rect class="el-btn" x="${x+w-s*0.42}" y="${y+h*0.7}" width="${s*0.3}" height="${s*0.3}" rx="2"/><text class="el-mt" x="${x+w-s*0.27}" y="${y+h*0.7+s*0.23}" text-anchor="middle">T</text>`;
+  if(m.win) g+=`<rect x="${cx-s*0.35}" y="${y+h*0.4}" width="${s*0.7}" height="${h*0.14}" rx="2" fill="#3fbf5f"/>`;
+  if(m.sel) g+=`<rect class="el-fen" x="${cx-s*0.3}" y="${y+h*0.3}" width="${s*0.6}" height="${h*0.36}" rx="2"/><rect class="el-lev el-lev-d" x="${cx-s*0.22}" y="${y+h*0.43}" width="${s*0.44}" height="${h*0.1}" rx="2"/>${s>=30?`<text class="el-mt" x="${cx}" y="${y+h*0.27}" text-anchor="middle">1 · A · 0</text>`:''}`;
+  if(m.dial) g+=`<circle class="el-fen" cx="${cx}" cy="${y+h*0.48}" r="${s*0.32}"/><path d="M${cx} ${y+h*0.48}l${s*0.2} ${-s*0.15}" stroke="#333" stroke-width="2"/>`;
+  if(m.lcd) g+=`<rect x="${x+5}" y="${y+h*0.32}" width="${w-10}" height="${h*0.22}" rx="2" fill="#bfe3c8" stroke="#555"/>`;
+  if(m.socket) g+=`<circle class="el-fen" cx="${cx}" cy="${y+h*0.5}" r="${Math.min(w,h)*0.3}"/><circle cx="${cx-8}" cy="${y+h*0.5}" r="3" fill="#333"/><circle cx="${cx+8}" cy="${y+h*0.5}" r="3" fill="#333"/>`;
+  if(m.bp) g+=`<rect class="el-fen" x="${cx-s*0.3}" y="${y+h*0.38}" width="${s*0.6}" height="${h*0.2}" rx="2"/>`;
+  if(m.t1) g+=`<text class="el-mt" x="${cx}" y="${m.sel?y+h*0.82:Math.max(y+h*0.24,y+22)}" text-anchor="middle">${m.t1}</text>`;
+  if(m.t2) g+=`<text class="el-mt" x="${cx}" y="${y+h*0.86}" text-anchor="middle">${m.t2}</text>`;
+  return g;
+}
+/* Dessin d’une fiche : le module sur son rail, les fils qui arrivent en haut et repartent en bas */
+function elDessin(E){
+  const s=34, h=110, W=E.mods.reduce((t,m)=>t+m.w,0)*s, x0=Math.max(20,150-W/2), y0=36;
+  let g=`<rect class="el-rail" x="10" y="${y0+h/2-9}" width="380" height="18"/>`, x=x0;
+  const fils=(arr,y1,y2,lab,ytx)=>{ if(!arr||!arr.length) return ''; let r=''; const n=arr.length;
+    arr.forEach((c,i)=>{ const fx=x0+W*(i+0.5)/n; r+=`<path class="${EL_FIL[c]}" d="M${fx} ${y1}V${y2}"/>`; if(c==='t') r+=`<path class="el-t2" d="M${fx} ${y1}V${y2}"/>`; });
+    return r+`<text class="pl-tx" x="${x0+W+12}" y="${ytx}">${lab}</text>`; };
+  g+=fils(E.haut,y0+8,4,E.hautLab,20)+fils(E.bas,y0+h-8,176,E.basLab,170);
+  E.mods.forEach(m=>{ g+=elMod(x,y0,m,s,h); x+=m.w*s; });
+  return g;
+}
+const EL_ELEMS=[
+ {id:'agcp',nom:'Disjoncteur de branchement',court:'L’interrupteur général de la maison, réglé sur la puissance de l’abonnement.',
+  mods:[{w:3,t1:'500 mA',t2:'15 à 45 A',lev:'g',btn:true}],haut:['ph','n'],hautLab:'arrivée du compteur',bas:['ph','n'],basLab:'départ vers le tableau',
+  fonction:['Coupe tout le courant de la maison d’un seul geste.','Déclenche si on dépasse la puissance de l’abonnement (trop d’appareils en même temps).','Différentiel 500 mA : il protège l’installation contre les gros défauts d’isolement (risque d’incendie).'],
+  carac:['Réglé par le distributeur (Enedis) selon l’abonnement : 15 A pour 3 kVA, 30 A pour 6 kVA, 45 A pour 9 kVA, 60 A pour 12 kVA (en monophasé).','Plombé : on ne le règle pas soi-même.','Placé dans la gaine technique (GTL), à côté du tableau.'],
+  branch:['En haut : les fils qui viennent du compteur (partie distributeur, on n’y touche pas).','En bas : le câble qui part vers le tableau, en 10 mm² ou 16 mm² selon la puissance, vers le répartiteur ou le peigne vertical.'],
+  conseil:'Pour couper toute la maison avant de travailler, c’est lui qu’on abaisse. Vérifiez ensuite l’absence de tension avec un testeur.'},
+ {id:'parafoudre',nom:'Parafoudre',court:'Il protège les appareils contre les surtensions de la foudre.',
+  mods:[{w:2,t1:'Parafoudre',win:true}],haut:['ph','n'],hautLab:'phase et neutre, en tête du tableau',bas:['t'],basLab:'vers le bornier de terre',
+  fonction:['Quand la foudre tombe près de la maison, une surtension arrive par les fils : le parafoudre l’envoie à la terre avant qu’elle n’abîme les appareils.','Le voyant passe au rouge quand il a « encaissé » un gros choc : il faut alors le changer.'],
+  carac:['Obligatoire si la maison a un paratonnerre, ou si elle est alimentée par une ligne aérienne dans une commune très foudroyée (Ng supérieur à 2,5).','Conseillé partout ailleurs. S’il y en a un sur l’électricité, il en faut aussi un sur la ligne téléphone en cuivre.','Les modèles pour la maison intègrent leur propre protection : pas besoin de disjoncteur à côté.'],
+  branch:['Tout en haut du tableau, avant les interrupteurs différentiels, avec un peigne vertical ou un bornier de répartition.','Le fil de terre (vert et jaune) part vers le bornier de terre.','Règle des 50 cm : la longueur totale des fils du parafoudre (arrivée + terre) doit rester sous 50 cm. Des fils courts et droits, sans boucle.'],
+  conseil:'Un parafoudre ne sert à rien sans une bonne prise de terre.'},
+ {id:'repartiteur',nom:'Répartiteur (bornier de répartition)',court:'Il partage l’arrivée de courant entre les différents interrupteurs différentiels.',
+  mods:[{w:3,kind:'bornier'}],haut:['ph','n'],hautLab:'arrivée générale',bas:['ph','n','ph','n','ph','n'],basLab:'départs vers chaque différentiel',
+  fonction:['Distribuer proprement la phase et le neutre vers chaque rangée, sans faire de « repiquage » d’un appareil à l’autre.'],
+  carac:['Bornier phase (marron ou rouge) et bornier neutre (bleu), souvent sur un seul module de 3 à 4 places.','On peut le remplacer par un peigne vertical, qui relie directement les rangées.'],
+  branch:['En haut : le câble 10 ou 16 mm² venant du disjoncteur de branchement.','En bas : un câble de même section vers chaque interrupteur différentiel (et le parafoudre).'],
+  conseil:'Serrez fort et vérifiez chaque vis : un mauvais serrage sur une grosse section chauffe et peut provoquer un incendie.'},
+ {id:'id',nom:'Interrupteur différentiel 30 mA',court:'Il protège les personnes contre l’électrocution. Chaque rangée commence par lui.',
+  mods:[{w:2,t1:'30 mA',t2:'40 A · AC',lev:'b',btn:true}],haut:['ph','n'],hautLab:'arrivée : répartiteur ou peigne vertical',bas:['ph','n'],basLab:'départ : peigne de la rangée',
+  fonction:['Il compare le courant qui part par la phase et celui qui revient par le neutre. S’il manque 30 mA (le courant qui passe dans une personne ou dans un appareil défectueux), il coupe en quelques millisecondes.','Il ne protège pas contre les surcharges : ce sont les disjoncteurs qui le font.'],
+  carac:['Au moins 2 interrupteurs différentiels par logement, 8 circuits au plus par différentiel.','Type AC : circuits courants (éclairage, prises).','Type A : obligatoire pour la plaque de cuisson, le lave-linge et la voiture électrique.','Type F : pompe à chaleur, climatisation, pompe de piscine.','Calibre 40 A (ou 63 A) : il doit être au moins égal à la somme qu’il alimente, selon les règles du fabricant.'],
+  branch:['En haut (ou en bas selon le modèle) : la phase et le neutre venant du répartiteur ou du peigne vertical.','Sa sortie alimente le peigne horizontal qui dessert les disjoncteurs de sa rangée.','Le bouton « T » (test) : appuyez une fois par mois, il doit déclencher.'],
+  conseil:'S’il déclenche souvent, débranchez les appareils un par un : c’est souvent un appareil humide ou un circuit extérieur.'},
+ {id:'disj',nom:'Disjoncteur divisionnaire',court:'Un disjoncteur par circuit : il protège le câble contre la surchauffe et les courts-circuits.',
+  mods:[{w:1,t1:'C20',lev:'d'}],haut:['ph','n'],hautLab:'du peigne de la rangée',bas:['ph','n'],basLab:'vers le circuit',
+  fonction:['Surcharge : si on tire trop de courant, le câble chauffe ; le disjoncteur coupe avant.','Court-circuit : il coupe instantanément.'],
+  carac:['Le calibre dépend de la section du fil : 1,5 mm² → 16 A au plus (éclairage souvent en 10 A ou 16 A), 2,5 mm² → 20 A, 6 mm² → 32 A (plaque de cuisson).','Courbe C : l’usage courant à la maison.','Phase + neutre dans un seul module de 18 mm.'],
+  branch:['En haut : le peigne horizontal (phase et neutre).','En bas : la phase (marron ou rouge) et le neutre (bleu) du circuit. La terre du circuit va au bornier de terre, pas au disjoncteur.','Jamais deux circuits sur le même disjoncteur.'],
+  conseil:'Notez sur l’étiquette ce que protège chaque disjoncteur : c’est obligatoire et très pratique en cas de panne.'},
+ {id:'dd',nom:'Disjoncteur différentiel',court:'Un disjoncteur et un différentiel 30 mA réunis, pour protéger un seul circuit à part.',
+  mods:[{w:2,t1:'C32 30 mA',t2:'type F',lev:'b',btn:true}],haut:['ph','n'],hautLab:'du répartiteur ou du peigne',bas:['ph','n'],basLab:'un circuit seul',
+  fonction:['Protège à la fois les personnes (30 mA) et le câble (surcharge, court-circuit).','Un défaut sur ce circuit ne coupe pas le reste de la maison.'],
+  carac:['Utile pour un circuit sensible ou extérieur : borne de voiture, piscine, congélateur, abri de jardin.','Existe en type AC, A ou F.'],
+  branch:['Alimenté comme un interrupteur différentiel (répartiteur ou peigne vertical).','En bas : un seul circuit.'],
+  conseil:'Pour une borne de recharge, suivez exactement le type demandé par la notice de la borne.'},
+ {id:'peigne',nom:'Peigne de raccordement',court:'Une barre isolée qui relie la phase et le neutre de tous les modules d’une rangée.',
+  peigne:true,hautLab:'',basLab:'',
+  fonction:['Évite de câbler des petits fils (ponts) d’un disjoncteur à l’autre : plus rapide, plus sûr, plus propre.'],
+  carac:['Peigne horizontal : relie le différentiel aux disjoncteurs de sa rangée.','Peigne vertical : relie les rangées entre elles (remplace le répartiteur).','Il se coupe à la longueur ; les dents inutilisées sont protégées par des embouts.'],
+  branch:['On pose les modules sur le rail, on enfonce le peigne dans les bornes du haut, puis on serre toutes les vis.','Respectez le sens : dents de phase côté phase, dents de neutre côté neutre (repérées sur le peigne).'],
+  conseil:'Les peignes d’une marque vont avec les modules de la même marque.'},
+ {id:'terre',nom:'Bornier de terre',court:'Tous les fils vert et jaune s’y rejoignent, puis partent vers la prise de terre.',
+  terre:true,
+  fonction:['Rassembler les conducteurs de protection (vert et jaune) de tous les circuits.','Les relier à la prise de terre : en cas de défaut, le courant part dans la terre et le différentiel coupe.'],
+  carac:['Le conducteur principal de terre (en général 16 mm² en cuivre) va du bornier à la barrette de mesure, puis au piquet de terre.','La barrette de mesure permet à l’électricien de vérifier la résistance de terre : moins de 100 ohms avec un disjoncteur de branchement 500 mA.'],
+  branch:['Un fil vert et jaune par circuit, dans une borne séparée.','Le parafoudre y est raccordé avec un fil le plus court possible.'],
+  conseil:'Ne jamais utiliser le fil vert et jaune pour autre chose que la terre.'},
+ {id:'hc',nom:'Contacteur heures creuses',court:'Il met le chauffe-eau en marche seulement aux heures creuses, quand le compteur le lui demande.',
+  mods:[{w:1,t1:'HC',sel:true}],haut:['ph','n','cmd','cmd'],hautLab:'puissance + ordre du compteur',bas:['ph','n'],basLab:'vers le chauffe-eau',
+  fonction:['Un interrupteur commandé à distance : le compteur ferme un petit contact aux heures creuses, le contacteur colle et alimente le chauffe-eau.','Sélecteur 3 positions : Auto (heures creuses), 1 (marche forcée), 0 (arrêt).'],
+  carac:['Calibre 20 ou 25 A pour un chauffe-eau.','Bobine en 230 V protégée par un petit disjoncteur 2 A.'],
+  branch:['Puissance : disjoncteur 20 A → contacts du contacteur → chauffe-eau (2,5 mm²).','Commande : disjoncteur 2 A → contact heures creuses du compteur (bornes C1 et C2 du Linky) → bobine du contacteur (A1 et A2).'],
+  conseil:'Si l’eau est froide le matin, essayez la position 1 (marche forcée) : si ça chauffe, c’est la commande qui ne passe pas.'},
+ {id:'tele',nom:'Télérupteur',court:'Il allume et éteint une lumière depuis 3 boutons poussoirs ou plus.',
+  mods:[{w:1,t1:'TL',bp:true}],haut:['ph','cmd'],hautLab:'phase + fil des boutons poussoirs',bas:['ph'],basLab:'vers les lampes',
+  fonction:['Une impulsion sur un bouton poussoir allume, l’impulsion suivante éteint. Pratique pour un long couloir ou un grand séjour.'],
+  carac:['Bobine 230 V, contact 16 A.','Alimenté par le disjoncteur du circuit d’éclairage.'],
+  branch:['La phase du circuit alimente les boutons poussoirs (montés en parallèle) qui renvoient l’ordre vers la bobine (A1), le neutre va sur A2.','Le contact de puissance envoie la phase aux lampes ; le neutre des lampes vient directement du disjoncteur.'],
+  conseil:'Voir aussi le schéma « Télérupteur » dans la bibliothèque de schémas.'},
+ {id:'minuterie',nom:'Minuterie',court:'Elle allume la lumière pendant un temps réglable puis l’éteint toute seule.',
+  mods:[{w:1,t1:'MIN',dial:true}],haut:['ph','cmd'],hautLab:'phase + fil des boutons poussoirs',bas:['ph'],basLab:'vers les lampes',
+  fonction:['Éclairage de cage d’escalier, de cave, de garage : on ne l’oublie jamais allumé.'],
+  carac:['Durée réglable de quelques secondes à une dizaine de minutes.','Souvent un bouton « marche forcée ».'],
+  branch:['Même branchement qu’un télérupteur : boutons poussoirs vers la commande, contact vers les lampes.'],
+  conseil:'Vérifiez qu’elle accepte le type de lampes (LED) et leur nombre.'},
+ {id:'delesteur',nom:'Délesteur',court:'Il coupe le chauffage quelques instants pour éviter que le disjoncteur de branchement ne saute.',
+  mods:[{w:2,t1:'Délest.',t2:'2 voies'}],haut:['ph','n'],hautLab:'alimentation + mesure du courant',bas:['cmd','cmd'],basLab:'fil pilote des radiateurs',
+  fonction:['Il mesure en permanence le courant total de la maison. Si on approche de la limite de l’abonnement (four + plaques + chauffage), il coupe le chauffage le temps nécessaire, puis le remet.'],
+  carac:['De 1 à plusieurs voies (on coupe d’abord les pièces les moins importantes).','Commande les radiateurs par leur fil pilote, ou des contacteurs.'],
+  branch:['La mesure se fait sur l’arrivée générale (tore ou bornes de mesure).','Ses sorties vont au fil pilote (fil noir) des radiateurs, ou aux bobines des contacteurs de chauffage.'],
+  conseil:'Il permet souvent de garder un abonnement moins puissant, donc moins cher.'},
+ {id:'prog',nom:'Programmateur (horloge)',court:'Il allume et éteint un circuit à des heures choisies.',
+  mods:[{w:2,t1:'00:00',lcd:true}],haut:['ph','n'],hautLab:'alimentation',bas:['ph'],basLab:'vers l’appareil commandé',
+  fonction:['Éclairage extérieur, pompe de piscine, chauffage d’une pièce, chauffe-eau sans heures creuses…'],
+  carac:['Mécanique (à cavaliers) ou numérique, journalier ou hebdomadaire.','Contact 16 A : au-delà, il commande un contacteur.'],
+  branch:['Alimenté par le disjoncteur du circuit commandé.','Sa sortie envoie la phase à l’appareil, ou à la bobine d’un contacteur pour les grosses puissances.'],
+  conseil:'Choisissez un modèle avec réserve de marche : il garde l’heure pendant une coupure.'},
+ {id:'autres',nom:'Prise modulaire, transformateur de sonnette',court:'Les petits modules utiles du tableau.',
+  mods:[{w:3,socket:true},{w:2,t1:'8 / 12 V',t2:'sonnette'}],haut:['ph','n','t'],hautLab:'arrivée 230 V',bas:['cmd','cmd'],basLab:'vers la sonnette (8 ou 12 V)',
+  fonction:['Prise modulaire : brancher un appareil près du tableau (box, outil de mesure).','Transformateur : abaisse le 230 V en 8 ou 12 V, sans danger, pour une sonnette ou un carillon.'],
+  carac:['Réserve : laissez au moins 20 % de places libres dans le tableau pour les ajouts futurs.','Les places vides sont fermées par des obturateurs.'],
+  branch:['Prise : alimentée par un disjoncteur 16 A.','Transformateur : primaire 230 V sur un disjoncteur, secondaire 8 ou 12 V vers le bouton de sonnette et le carillon.'],
+  conseil:'Le coffret de communication (box, prises RJ45, télévision) est un tableau à part, placé lui aussi dans la GTL.'},
+];
+/* Dessins spéciaux : peigne et bornier de terre */
+function elPeigne(){ const s=34,x0=60,y0=40,h=110; let g=`<rect class="el-rail" x="10" y="${y0+h/2-9}" width="380" height="18"/>`;
+  const ms=[{w:2,t1:'30 mA',t2:'ID',lev:'b',btn:true},{w:1,t1:'C10',lev:'d'},{w:1,t1:'C16',lev:'d'},{w:1,t1:'C20',lev:'d'},{w:1,t1:'C20',lev:'d'},{w:1,t1:'C32',lev:'d'}]; let x=x0;
+  ms.forEach(m=>{ g+=elMod(x,y0,m,s,h); x+=m.w*s; });
+  g+=`<rect x="${x0}" y="${y0-16}" width="${x-x0}" height="10" rx="2" fill="#e8dfc9" stroke="#555"/>`;
+  for(let i=0;i<14;i++){ const dx=x0+s*0.25+i*s/2; if(dx>x-4) break; g+=`<path class="${i%2?'el-n':'el-ph'}" d="M${dx} ${y0-6}V${y0+8}"/>`; }
+  return g+`<text class="pl-tx" x="${x0}" y="${y0-22}">peigne horizontal : phase et neutre pour toute la rangée</text>`; }
+function elTerre(){ let g=`<rect x="60" y="40" width="230" height="22" rx="3" fill="#cfe6c8" stroke="#555"/>`;
+  for(let i=0;i<8;i++){ const x=76+i*27; g+=`<circle class="el-vis" cx="${x}" cy="51" r="5"/><path class="el-t" d="M${x} 51V10"/><path class="el-t2" d="M${x} 51V10"/>`; }
+  g+=`<path class="el-t" d="M76 51H40V150"/><path class="el-t2" d="M76 51H40V150"/><rect x="28" y="110" width="24" height="16" rx="2" fill="#e0e0e0" stroke="#555"/>`
+   +`<path d="M40 150v20M30 170h20M33 174h14M36 178h8" stroke="#555" stroke-width="2"/>`
+   +`<text class="pl-tx" x="300" y="30">un fil vert et jaune</text><text class="pl-tx" x="300" y="44">par circuit</text>`
+   +`<text class="pl-tx" x="60" y="122">barrette de mesure</text><text class="pl-tx" x="60" y="168">piquet de terre (moins de 100 ohms)</text>`
+   +`<text class="pl-tx" x="60" y="88">conducteur principal de terre, 16 mm²</text>`;
+  return g; }
+/* Le tableau complet, cliquable */
+function elSchema(){
+  const s=22,h=64,ph=d=>`<path class="el-ph" d="${d}"/><path class="el-flux" d="${d}"/>`,nt=d=>`<path class="el-n" d="${d}"/>`,te=d=>`<path class="el-t" d="${d}"/><path class="el-t2" d="${d}"/>`,dot=(x,y,c)=>`<circle cx="${x}" cy="${y}" r="3" fill="${c}"/>`;
+  let g=`<rect class="el-cof" x="104" y="70" width="290" height="250" rx="8"/>`;
+  g+=`<rect class="el-body" x="8" y="6" width="70" height="40" rx="4"/><text class="el-mt" x="43" y="23" text-anchor="middle">Compteur</text><text class="el-mt" x="43" y="36" text-anchor="middle">Linky</text>`;
+  g+=ph('M54 46V74')+nt('M30 46V74');
+  g+=`<g class="el-mod" data-fi="agcp">${elMod(14,74,{w:3,t1:'Disj. de',t2:'branch.',lev:'g'},20,60)}</g>`;
+  // alimentation du peigne vertical (phase x=112, neutre x=118)
+  g+=ph('M54 134V284H112V86')+nt('M30 134V290H118V86')+`<text class="pl-tx" x="8" y="150">10 ou</text><text class="pl-tx" x="8" y="162">16 mm²</text>`;
+  g+=`<g class="el-mod" data-fi="repartiteur"><rect x="108" y="80" width="14" height="214" rx="3" fill="transparent" stroke="var(--muted)" stroke-dasharray="3 3"/></g>`;
+  let x; const r1=96, r2=196, add=(m,id,y)=>{ g+=`<g class="el-mod" data-fi="${id}">${elMod(x,y,m,s,h)}</g>`; x+=m.w*s; };
+  // rangée 1 : parafoudre puis différentiel AC
+  x=126; add({w:2,t1:'PF',win:true},'parafoudre',r1);
+  g+=ph('M112 90H131.5V104')+nt('M118 86H142.5V104')+dot(112,90,'#8b4a2b')+dot(118,86,'#2f6fd6');
+  const xid1=x; add({w:2,t1:'ID AC',lev:'b',btn:true},'id',r1);
+  ['C10','C16','C20','C20','C20'].forEach(t=>add({w:1,t1:t,lev:'d'},'disj',r1)); const xhc=x; add({w:1,t1:'HC',sel:true},'hc',r1); add({w:1,t1:'C2',lev:'d'},'disj',r1);
+  g+=`<g class="el-mod" data-fi="peigne"><rect x="${xid1}" y="${r1-9}" width="${x-xid1}" height="7" rx="2" fill="#e8dfc9" stroke="#555"/></g>`;
+  g+=ph(`M112 168H${xid1+5.5}V${r1+h-8}`)+nt(`M118 172H${xid1+16.5}V${r1+h-8}`)+dot(112,168,'#8b4a2b')+dot(118,172,'#2f6fd6');
+  // rangée 2 : différentiel A
+  x=126; const xid2=x; add({w:2,t1:'ID A',lev:'b',btn:true},'id',r2);
+  ['C32','C20','C20','C20'].forEach(t=>add({w:1,t1:t,lev:'d'},'disj',r2)); add({w:1,t1:'TL',bp:true},'tele',r2); add({w:2,t1:'Délest.'},'delesteur',r2); add({w:2,t1:'Prog.',lcd:true},'prog',r2);
+  g+=`<g class="el-mod" data-fi="peigne"><rect x="${xid2}" y="${r2-9}" width="${6*s+2*s}" height="7" rx="2" fill="#e8dfc9" stroke="#555"/></g>`;
+  g+=ph(`M112 268H${xid2+5.5}V${r2+h-8}`)+nt(`M118 274H${xid2+16.5}V${r2+h-8}`)+dot(112,268,'#8b4a2b')+dot(118,274,'#2f6fd6');
+  // terre
+  g+=te(`M${126+38.5} ${r1+h-8}V180H124V306H200`)+`<g class="el-mod" data-fi="terre"><rect x="200" y="300" width="160" height="12" rx="3" fill="#cfe6c8" stroke="#555"/><text class="el-mt" x="280" y="309" text-anchor="middle">bornier de terre</text></g>`;
+  g+=te('M200 312H90V330')+`<text class="pl-tx" x="96" y="332">vers la prise de terre</text>`;
+  // commande heures creuses
+  g+=`<path class="el-cmd" d="M${xhc+11} ${r1}V58H78"/><text class="pl-tx" x="150" y="54">ordre « heures creuses » du compteur</text>`;
+  g+=`<text class="pl-tx" x="200" y="180">rangée 1 : différentiel type AC</text><text class="pl-tx" x="200" y="282">rangée 2 : différentiel type A</text>`;
+  return g;
+}
+const EL_ORDRE=['Le compteur, puis le disjoncteur de branchement (partie du distributeur).','Le parafoudre, en tête, avant toutes les protections.','Le répartiteur ou le peigne vertical, qui alimente chaque rangée.',
+  'Sur chaque rangée : l’interrupteur différentiel 30 mA en premier, puis ses disjoncteurs (8 au plus), reliés par le peigne horizontal.','Les modules de commande (contacteur, télérupteur, programmateur) sont alimentés par le disjoncteur du circuit qu’ils commandent.',
+  'Toutes les terres vont au bornier de terre, puis au piquet de terre.'];
+TOOLS['tab-elements']={nom:'Les éléments du tableau',aide:'Tout ce qui peut prendre place dans un tableau électrique : à quoi ça sert et comment ça se branche. Touchez un module sur le schéma ou un nom dans la liste.',special:'fiches',fiches:'tableau'};
 
 function symbolesHTML(){
   return `<section class="card"><h2>Symboles électriques</h2><p class="hint">Les symboles qu’on trouve sur les plans et les schémas.</p>
